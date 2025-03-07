@@ -1,39 +1,68 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import React, { useEffect } from 'react';
+import { Tabs } from 'expo-router';
+import { Home, BarChart2, PlusCircle } from 'lucide-react-native';
+import { useHabitStore } from '../store/habitStore';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+export default function AppLayout() {
+  const { loadHabitsFromStorage } = useHabitStore();
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
+  // Load habits from storage when the app starts
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
+    loadHabitsFromStorage();
+  }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar style="auto" />
+        <Tabs
+          screenOptions={{
+            tabBarActiveTintColor: '#4A6572',
+            tabBarInactiveTintColor: '#B0BEC5',
+            tabBarStyle: {
+              backgroundColor: '#FFFFFF',
+              borderTopWidth: 0,
+              elevation: 10,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -3 },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+            },
+            headerStyle: {
+              backgroundColor: '#FFFFFF',
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTitleStyle: {
+              fontWeight: 'bold',
+              fontSize: 18,
+            },
+          }}
+        >
+          <Tabs.Screen
+            name="(tabs)/today"
+            options={{
+              title: 'Today',
+              tabBarIcon: ({ color, size }) => (
+                <Home color={color} size={size} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="(tabs)/stats"
+            options={{
+              title: 'Stats',
+              tabBarIcon: ({ color, size }) => (
+                <BarChart2 color={color} size={size} />
+              ),
+            }}
+          />
+        </Tabs>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
