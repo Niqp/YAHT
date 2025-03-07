@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,96 +7,198 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  SectionList,
 } from 'react-native';
 import { router } from 'expo-router';
 import DateSlider from '../../components/DateSlider';
 import HabitItem from '../../components/HabitItem';
 import HabitBottomSheet from '../../components/HabitBottomSheet';
 import { useHabitStore } from '../../store/habitStore';
-import { shouldCompleteHabitOnDate } from '../../utils/date';
+import { shouldCompleteHabitOnDate, clearCompletionCache } from '../../utils/date';
 import { Habit } from '../../types/habit';
-import { Plus } from 'lucide-react-native';
+import { Plus, CheckCircle, Circle } from 'lucide-react-native';
+import { useTheme } from '../../hooks/useTheme';
+
+// Custom separator component for task groups
+const TaskGroupSeparator = React.memo(({ title, completed, count, colors }: { 
+  title: string;
+  completed: boolean;
+  count: number;
+  colors: any;
+}) => {
+  return (
+    <View style={[styles.sectionHeader, { backgroundColor: colors.background }]}>
+      <View style={[styles.sectionIconContainer, { backgroundColor: completed ? colors.success : colors.divider }]}>
+        {completed ? (
+          <CheckCircle size={16} color="#fff" />
+        ) : (
+          <Circle size={16} color={colors.textSecondary} />
+        )}
+      </View>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>
+        {title} • {count}
+      </Text>
+    </View>
+  );
+});
 
 export default function TodayScreen() {
+  const { colors } = useTheme();
   const {
     habits,
     selectedDate,
     isLoading,
     loadHabitsFromStorage,
   } = useHabitStore();
-  const [filteredHabits, setFilteredHabits] = useState<Habit[]>([]);
+  
   const [refreshing, setRefreshing] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
 
+  // Clear completion cache when habits or date change
   useEffect(() => {
-    // Filter habits based on the selected date
-    const filtered = habits.filter(habit =>
-      shouldCompleteHabitOnDate(habit, selectedDate)
-    );
-    setFilteredHabits(filtered);
+    clearCompletionCache();
   }, [habits, selectedDate]);
 
-  const onRefresh = async () => {
+  // Get all valid habits for the selected date
+  const filteredHabits = useMemo(() => {
+    return habits.filter(habit => 
+      shouldCompleteHabitOnDate(habit, selectedDate)
+    );
+  }, [habits, selectedDate]);
+
+  // Group habits by completion status
+  const groupedHabits = useMemo(() => {
+    // Get completed habits
+    const completedHabits = filteredHabits.filter(habit => 
+      habit.completionHistory[selectedDate]?.completed
+    );
+
+    // Get incomplete habits
+    const incompleteHabits = filteredHabits.filter(habit => 
+      !habit.completionHistory[selectedDate]?.completed
+    );
+
+    // Create sections for SectionList
+    const sections = [];
+
+    // Add completed section if there are completed habits
+    if (completedHabits.length > 0) {
+      sections.push({
+        title: 'Completed',
+        data: completedHabits,
+        completed: true,
+      });
+    }
+
+    // Add incomplete section if there are incomplete habits
+    if (incompleteHabits.length > 0) {
+      sections.push({
+        title: 'To Do',
+        data: incompleteHabits,
+        completed: false,
+      });
+    }
+
+    return sections;
+  }, [filteredHabits, selectedDate]);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadHabitsFromStorage();
     setRefreshing(false);
-  };
+  }, [loadHabitsFromStorage]);
 
-  const handleHabitLongPress = (habit: Habit) => {
+  const handleHabitAction = useCallback((habit: Habit) => {
     setSelectedHabit(habit);
     setBottomSheetVisible(true);
-  };
+  }, []);
 
-  const closeBottomSheet = () => {
+  const closeBottomSheet = useCallback(() => {
     setBottomSheetVisible(false);
     setSelectedHabit(null);
-  };
+  }, []);
 
-  const navigateToAddHabit = () => {
+  const navigateToAddHabit = useCallback(() => {
     router.push('/add');
-  };
+  }, []);
+
+  const renderHabitItem = useCallback(({ item }: { item: Habit }) => (
+    <HabitItem
+      habit={item}
+      onLongPress={handleHabitAction}
+    />
+  ), [handleHabitAction]);
+
+  const renderSectionHeader = useCallback(({ section }) => (
+    <TaskGroupSeparator
+      title={section.title}
+      completed={section.completed}
+      count={section.data.length}
+      colors={colors}
+    />
+  ), [colors]);
+
+  const keyExtractor = useCallback((item: Habit) => item.id, []);
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A6572" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <DateSlider />
       
       {filteredHabits.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No habits for this day</Text>
+          <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
+            No habits for this day
+          </Text>
+          <TouchableOpacity 
+            style={[styles.addHabitButton, { backgroundColor: colors.primary }]}
+            onPress={navigateToAddHabit}
+          >
+            <Text style={[styles.addHabitButtonText, { color: colors.textInverse }]}>
+              Add a habit
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
-          data={filteredHabits}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <HabitItem
-              habit={item}
-              onLongPress={handleHabitLongPress}
-            />
-          )}
-          contentContainerStyle={styles.habitList}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
+        <View style={styles.listWrapper}>
+          <SectionList
+            sections={groupedHabits}
+            keyExtractor={keyExtractor}
+            renderItem={renderHabitItem}
+            renderSectionHeader={renderSectionHeader}
+            stickySectionHeadersEnabled={false}
+            ItemSeparatorComponent={() => <View style={{ height: 7 }} />}
+            contentContainerStyle={styles.habitList}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh}
+                tintColor={colors.primary} 
+              />
+            }
+            SectionSeparatorComponent={() => <View style={{ height: 20 }} />}
+            ListHeaderComponent={() => <View style={{ height: 10 }} />}
+            ListFooterComponent={() => <View style={{ height: 80 }} />}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
       )}
       
       {/* Floating Action Button */}
       <TouchableOpacity 
-        style={styles.floatingButton}
+        style={[styles.floatingButton, { backgroundColor: colors.primary }]}
         onPress={navigateToAddHabit}
         activeOpacity={0.8}
       >
-        <Plus size={24} color="#FFFFFF" />
+        <Plus size={24} color={colors.textInverse} />
       </TouchableOpacity>
       
       {bottomSheetVisible && selectedHabit && (
@@ -112,16 +214,17 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  listWrapper: {
+    flex: 1,
+  },
   habitList: {
-    paddingVertical: 10,
-    paddingBottom: 80, // Add padding at the bottom for the floating button
+    padding: 0,
   },
   emptyContainer: {
     flex: 1,
@@ -131,8 +234,16 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#9E9E9E',
     marginBottom: 20,
+  },
+  addHabitButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  addHabitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   floatingButton: {
     position: 'absolute',
@@ -141,7 +252,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4A6572',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
@@ -153,5 +263,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     zIndex: 999,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 7,
+  },
+  sectionIconContainer: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

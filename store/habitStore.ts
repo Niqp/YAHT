@@ -9,7 +9,7 @@ interface HabitState {
   addHabit: (habit: Omit<Habit, 'id' | 'createdAt' | 'completionHistory'>) => Promise<void>;
   updateHabit: (id: string, habit: Partial<Habit>) => Promise<void>;
   deleteHabit: (id: string) => Promise<void>;
-  completeHabit: (id: string, value?: number) => Promise<void>;
+  completeHabit: (id: string, value?: number, forcedState?: boolean) => Promise<void>;
   setSelectedDate: (date: string) => void;
   loadHabitsFromStorage: () => Promise<void>;
   getHabitById: (id: string) => Habit | undefined;
@@ -53,18 +53,42 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     });
   },
   
-  completeHabit: async (id, value) => {
+  // Enhanced to support toggling and forced completion states
+  completeHabit: async (id, value, forcedState) => {
     const { selectedDate } = get();
     
     set((state) => {
       const updatedHabits = state.habits.map(habit => {
         if (habit.id === id) {
           const currentCompletion = habit.completionHistory[selectedDate] || { completed: false };
+          let newCompleted = currentCompletion.completed;
           
-          // For repetitions type, increment the value
+          // Handle the new forcedState parameter 
+          if (forcedState !== undefined) {
+            // If a forced state is provided, use that
+            newCompleted = forcedState;
+          } else if (habit.completionType === 'simple') {
+            // For simple habits, toggle the completion if no forced state
+            newCompleted = !currentCompletion.completed;
+          } else if (habit.completionType === 'repetitions') {
+            // For repetitions, only mark completed if we reach the goal
+            newCompleted = (value !== undefined && value >= (habit.completionGoal || 0));
+          } else if (habit.completionType === 'timed') {
+            // For timed habits, mark as completed if time exceeds goal
+            // This will be handled by the value parameter
+            newCompleted = (value !== undefined && value >= (habit.completionGoal || 0));
+          }
+          
+          // For repetitions type, use the provided value
           let newValue = value;
-          if (habit.completionType === 'repetitions' && !newValue) {
-            newValue = (currentCompletion.value || 0) + 1;
+          
+          // For repetitions, always use the value passed in
+          if (habit.completionType === 'repetitions') {
+            newValue = value;
+          }
+          // For timed habits without an explicit value, keep using the current value
+          else if (habit.completionType === 'timed' && newValue === undefined) {
+            newValue = currentCompletion.value;
           }
           
           return {
@@ -72,8 +96,8 @@ export const useHabitStore = create<HabitState>((set, get) => ({
             completionHistory: {
               ...habit.completionHistory,
               [selectedDate]: {
-                completed: true,
-                value: newValue !== undefined ? newValue : currentCompletion.value,
+                completed: newCompleted,
+                value: newValue,
               },
             },
           };

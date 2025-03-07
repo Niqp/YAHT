@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,12 @@ import { useHabitStore } from '../../store/habitStore';
 import { Habit } from '../../types/habit';
 import { Dimensions } from 'react-native';
 import { formatDate } from '../../utils/date';
+import { useTheme } from '../../hooks/useTheme';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function StatsScreen() {
+  const { colors, isDarkMode } = useTheme();
   const { habits, isLoading } = useHabitStore();
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [overallStats, setOverallStats] = useState({
@@ -29,6 +31,24 @@ export default function StatsScreen() {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [{ data: [0, 0, 0, 0, 0, 0, 0] }],
   });
+
+  // Memoize chart config to avoid recreating on each render
+  const chartConfig = useMemo(() => ({
+    backgroundColor: colors.cardBackground,
+    backgroundGradientFrom: colors.cardBackground,
+    backgroundGradientTo: colors.cardBackground,
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(${isDarkMode ? '200, 200, 255' : '74, 101, 114'}, ${opacity})`,
+    labelColor: (opacity = 1) => colors.text,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: '6',
+      strokeWidth: '2',
+      stroke: colors.primary,
+    },
+  }), [colors, isDarkMode]);
 
   useEffect(() => {
     if (habits.length > 0) {
@@ -170,7 +190,8 @@ export default function StatsScreen() {
         key={habit.id}
         style={[
           styles.habitButton,
-          selectedHabit?.id === habit.id && styles.selectedHabitButton,
+          { backgroundColor: colors.input },
+          selectedHabit?.id === habit.id && { backgroundColor: colors.primary },
         ]}
         onPress={() => setSelectedHabit(habit)}
       >
@@ -178,7 +199,8 @@ export default function StatsScreen() {
         <Text 
           style={[
             styles.habitButtonText,
-            selectedHabit?.id === habit.id && styles.selectedHabitButtonText,
+            { color: colors.textSecondary },
+            selectedHabit?.id === habit.id && { color: colors.textInverse },
           ]}
           numberOfLines={1}
         >
@@ -190,17 +212,17 @@ export default function StatsScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4A6572" />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (habits.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
             Add habits to see your statistics
           </Text>
         </View>
@@ -209,36 +231,36 @@ export default function StatsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Overall Stats</Text>
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Overall Stats</Text>
           <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{overallStats.totalHabits}</Text>
-              <Text style={styles.statLabel}>Total Habits</Text>
+            <View style={[styles.statItem, { backgroundColor: colors.input }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{overallStats.totalHabits}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Habits</Text>
             </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{overallStats.completedToday}</Text>
-              <Text style={styles.statLabel}>Completed Today</Text>
+            <View style={[styles.statItem, { backgroundColor: colors.input }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{overallStats.completedToday}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Completed Today</Text>
             </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{overallStats.completionRate}%</Text>
-              <Text style={styles.statLabel}>Completion Rate</Text>
+            <View style={[styles.statItem, { backgroundColor: colors.input }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{overallStats.completionRate}%</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Completion Rate</Text>
             </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{overallStats.currentStreak}</Text>
-              <Text style={styles.statLabel}>Current Streak</Text>
+            <View style={[styles.statItem, { backgroundColor: colors.input }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{overallStats.currentStreak}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Current Streak</Text>
             </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{overallStats.bestStreak}</Text>
-              <Text style={styles.statLabel}>Best Streak</Text>
+            <View style={[styles.statItem, { backgroundColor: colors.input }]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{overallStats.bestStreak}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Best Streak</Text>
             </View>
           </View>
         </View>
         
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Habit Performance</Text>
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Habit Performance</Text>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -249,27 +271,17 @@ export default function StatsScreen() {
           
           {selectedHabit && (
             <View style={styles.chartContainer}>
-              <Text style={styles.habitTitle}>
+              <Text style={[styles.habitTitle, { color: colors.text }]}>
                 {selectedHabit.icon} {selectedHabit.title}
               </Text>
-              <Text style={styles.chartTitle}>Last 7 Days Activity</Text>
+              <Text style={[styles.chartTitle, { color: colors.textSecondary }]}>Last 7 Days Activity</Text>
               
               {selectedHabit.completionType === 'simple' ? (
                 <BarChart
                   data={chartData}
                   width={screenWidth - 40}
                   height={220}
-                  chartConfig={{
-                    backgroundColor: '#FFFFFF',
-                    backgroundGradientFrom: '#FFFFFF',
-                    backgroundGradientTo: '#FFFFFF',
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(74, 101, 114, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(74, 101, 114, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                  }}
+                  chartConfig={chartConfig}
                   style={styles.chart}
                   showValuesOnTopOfBars
                 />
@@ -278,41 +290,25 @@ export default function StatsScreen() {
                   data={chartData}
                   width={screenWidth - 40}
                   height={220}
-                  chartConfig={{
-                    backgroundColor: '#FFFFFF',
-                    backgroundGradientFrom: '#FFFFFF',
-                    backgroundGradientTo: '#FFFFFF',
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(74, 101, 114, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(74, 101, 114, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                    propsForDots: {
-                      r: '6',
-                      strokeWidth: '2',
-                      stroke: '#4A6572',
-                    },
-                  }}
+                  chartConfig={chartConfig}
                   style={styles.chart}
                   bezier
                 />
               )}
               
               <View style={styles.habitStatsContainer}>
-                {/* Calculate habit-specific stats here */}
-                <View style={styles.habitStat}>
-                  <Text style={styles.habitStatValue}>
+                <View style={[styles.habitStat, { backgroundColor: colors.input }]}>
+                  <Text style={[styles.habitStatValue, { color: colors.primary }]}>
                     {Object.values(selectedHabit.completionHistory).filter(h => h.completed).length}
                   </Text>
-                  <Text style={styles.habitStatLabel}>Total Completions</Text>
+                  <Text style={[styles.habitStatLabel, { color: colors.textSecondary }]}>Total Completions</Text>
                 </View>
                 
-                <View style={styles.habitStat}>
-                  <Text style={styles.habitStatValue}>
+                <View style={[styles.habitStat, { backgroundColor: colors.input }]}>
+                  <Text style={[styles.habitStatValue, { color: colors.primary }]}>
                     {calculateConsistency(selectedHabit)}%
                   </Text>
-                  <Text style={styles.habitStatLabel}>Consistency</Text>
+                  <Text style={[styles.habitStatLabel, { color: colors.textSecondary }]}>Consistency</Text>
                 </View>
               </View>
             </View>
@@ -344,7 +340,6 @@ const calculateConsistency = (habit: Habit): number => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   loadingContainer: {
     flex: 1,
@@ -359,12 +354,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#9E9E9E',
   },
   section: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
@@ -378,7 +371,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#212121',
     marginBottom: 15,
   },
   statsGrid: {
@@ -388,7 +380,6 @@ const styles = StyleSheet.create({
   },
   statItem: {
     width: '45%',
-    backgroundColor: '#F5F5F5',
     borderRadius: 8,
     padding: 16,
     marginBottom: 15,
@@ -397,12 +388,10 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4A6572',
     marginBottom: 5,
   },
   statLabel: {
     fontSize: 14,
-    color: '#757575',
   },
   habitButtonsContainer: {
     paddingVertical: 10,
@@ -410,14 +399,10 @@ const styles = StyleSheet.create({
   habitButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginRight: 10,
-  },
-  selectedHabitButton: {
-    backgroundColor: '#4A6572',
   },
   habitButtonIcon: {
     fontSize: 16,
@@ -425,11 +410,7 @@ const styles = StyleSheet.create({
   },
   habitButtonText: {
     fontSize: 14,
-    color: '#757575',
     maxWidth: 100,
-  },
-  selectedHabitButtonText: {
-    color: '#FFFFFF',
   },
   chartContainer: {
     marginTop: 20,
@@ -437,12 +418,10 @@ const styles = StyleSheet.create({
   habitTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#212121',
     marginBottom: 10,
   },
   chartTitle: {
     fontSize: 14,
-    color: '#757575',
     marginBottom: 15,
   },
   chart: {
@@ -456,7 +435,6 @@ const styles = StyleSheet.create({
   },
   habitStat: {
     width: '48%',
-    backgroundColor: '#F5F5F5',
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
@@ -464,11 +442,9 @@ const styles = StyleSheet.create({
   habitStatValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4A6572',
     marginBottom: 5,
   },
   habitStatLabel: {
     fontSize: 14,
-    color: '#757575',
   },
 });

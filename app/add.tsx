@@ -11,13 +11,15 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, CheckBox } from 'react-native-elements';
+import { Button } from 'react-native-elements';
 import { useHabitStore } from '../store/habitStore';
 import { router, useLocalSearchParams, Stack } from 'expo-router';
 import { CompletionType, RepetitionType } from '../types/habit';
 import { Clock, RotateCcw, CheckSquare } from 'lucide-react-native';
+import { useTheme } from '../hooks/useTheme';
 
 export default function AddEditHabitScreen() {
+  const { colors } = useTheme();
   const params = useLocalSearchParams();
   const habitId = params.habitId as string | undefined;
   const { addHabit, updateHabit, deleteHabit, getHabitById } = useHabitStore();
@@ -139,7 +141,9 @@ export default function AddEditHabitScreen() {
     switch (repetitionType) {
       case 'daily':
         return (
-          <Text style={styles.repetitionDescription}>Repeat every day</Text>
+          <Text style={[styles.repetitionDescription, { color: colors.textSecondary }]}>
+            Repeat every day
+          </Text>
         );
       case 'weekly':
         return (
@@ -149,14 +153,22 @@ export default function AddEditHabitScreen() {
                 key={day.value}
                 style={[
                   styles.dayButton,
-                  selectedDays.includes(day.value) && styles.selectedDayButton,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input
+                  },
+                  selectedDays.includes(day.value) && { 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary
+                  },
                 ]}
                 onPress={() => handleDayToggle(day.value)}
               >
                 <Text
                   style={[
                     styles.dayButtonText,
-                    selectedDays.includes(day.value) && styles.selectedDayButtonText,
+                    { color: colors.textSecondary },
+                    selectedDays.includes(day.value) && { color: colors.textInverse },
                   ]}
                 >
                   {day.label.substring(0, 3)}
@@ -168,9 +180,18 @@ export default function AddEditHabitScreen() {
       case 'custom':
         return (
           <View style={styles.customDaysContainer}>
-            <Text style={styles.repetitionDescription}>Repeat every</Text>
+            <Text style={[styles.repetitionDescription, { color: colors.textSecondary }]}>
+              Repeat every
+            </Text>
             <TextInput
-              style={styles.customDaysInput}
+              style={[
+                styles.customDaysInput,
+                { 
+                  borderColor: colors.border,
+                  backgroundColor: colors.input,
+                  color: colors.text
+                }
+              ]}
               value={customDays.toString()}
               onChangeText={text => {
                 const value = parseInt(text);
@@ -179,8 +200,11 @@ export default function AddEditHabitScreen() {
                 }
               }}
               keyboardType="number-pad"
+              placeholderTextColor={colors.textTertiary}
             />
-            <Text style={styles.repetitionDescription}>days</Text>
+            <Text style={[styles.repetitionDescription, { color: colors.textSecondary }]}>
+              days
+            </Text>
           </View>
         );
       default:
@@ -193,8 +217,8 @@ export default function AddEditHabitScreen() {
       case 'simple':
         return (
           <View style={styles.completionTypeDescription}>
-            <CheckSquare size={24} color="#4A6572" />
-            <Text style={styles.completionDescription}>
+            <CheckSquare size={24} color={colors.primary} />
+            <Text style={[styles.completionDescription, { color: colors.textSecondary }]}>
               Simple completion (done or not done)
             </Text>
           </View>
@@ -203,15 +227,24 @@ export default function AddEditHabitScreen() {
         return (
           <View style={styles.completionTypeContainer}>
             <View style={styles.completionTypeDescription}>
-              <RotateCcw size={24} color="#4A6572" />
-              <Text style={styles.completionDescription}>
+              <RotateCcw size={24} color={colors.primary} />
+              <Text style={[styles.completionDescription, { color: colors.textSecondary }]}>
                 Track repetitions (e.g., number of exercises)
               </Text>
             </View>
             <View style={styles.goalContainer}>
-              <Text style={styles.goalLabel}>Target repetitions:</Text>
+              <Text style={[styles.goalLabel, { color: colors.textSecondary }]}>
+                Target repetitions:
+              </Text>
               <TextInput
-                style={styles.goalInput}
+                style={[
+                  styles.goalInput,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input,
+                    color: colors.text
+                  }
+                ]}
                 value={completionGoal.toString()}
                 onChangeText={text => {
                   const value = parseInt(text);
@@ -220,6 +253,7 @@ export default function AddEditHabitScreen() {
                   }
                 }}
                 keyboardType="number-pad"
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
           </View>
@@ -228,15 +262,24 @@ export default function AddEditHabitScreen() {
         return (
           <View style={styles.completionTypeContainer}>
             <View style={styles.completionTypeDescription}>
-              <Clock size={24} color="#4A6572" />
-              <Text style={styles.completionDescription}>
+              <Clock size={24} color={colors.primary} />
+              <Text style={[styles.completionDescription, { color: colors.textSecondary }]}>
                 Track time (e.g., minutes of exercise)
               </Text>
             </View>
             <View style={styles.goalContainer}>
-              <Text style={styles.goalLabel}>Target minutes:</Text>
+              <Text style={[styles.goalLabel, { color: colors.textSecondary }]}>
+                Target minutes:
+              </Text>
               <TextInput
-                style={styles.goalInput}
+                style={[
+                  styles.goalInput,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input,
+                    color: colors.text
+                  }
+                ]}
                 value={Math.floor(completionGoal / 60).toString()}
                 onChangeText={text => {
                   const value = parseInt(text);
@@ -245,6 +288,7 @@ export default function AddEditHabitScreen() {
                   }
                 }}
                 keyboardType="number-pad"
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
           </View>
@@ -255,17 +299,19 @@ export default function AddEditHabitScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen 
         options={{
           title: isEditMode ? 'Edit Habit' : 'Add New Habit',
           headerStyle: {
-            backgroundColor: '#FFFFFF',
+            backgroundColor: colors.cardBackground,
           },
           headerTitleStyle: {
             fontWeight: 'bold',
             fontSize: 18,
+            color: colors.text
           },
+          headerTintColor: colors.text,
         }} 
       />
       <KeyboardAvoidingView
@@ -273,21 +319,38 @@ export default function AddEditHabitScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView style={styles.scrollContainer}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+          <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Basic Information
+            </Text>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Title</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Title</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input,
+                    color: colors.text
+                  }
+                ]}
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Enter habit title"
+                placeholderTextColor={colors.textTertiary}
               />
             </View>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Icon/Emoji</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Icon/Emoji</Text>
               <TextInput
-                style={styles.emojiInput}
+                style={[
+                  styles.emojiInput,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input,
+                    color: colors.text
+                  }
+                ]}
                 value={icon}
                 onChangeText={setIcon}
                 maxLength={2}
@@ -295,20 +358,30 @@ export default function AddEditHabitScreen() {
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Repetition Pattern</Text>
+          <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Repetition Pattern
+            </Text>
             <View style={styles.optionsContainer}>
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  repetitionType === 'daily' && styles.selectedOptionButton,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input
+                  },
+                  repetitionType === 'daily' && { 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary
+                  },
                 ]}
                 onPress={() => setRepetitionType('daily')}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    repetitionType === 'daily' && styles.selectedOptionText,
+                    { color: colors.textSecondary },
+                    repetitionType === 'daily' && { color: colors.textInverse },
                   ]}
                 >
                   Daily
@@ -317,14 +390,22 @@ export default function AddEditHabitScreen() {
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  repetitionType === 'weekly' && styles.selectedOptionButton,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input
+                  },
+                  repetitionType === 'weekly' && { 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary
+                  },
                 ]}
                 onPress={() => setRepetitionType('weekly')}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    repetitionType === 'weekly' && styles.selectedOptionText,
+                    { color: colors.textSecondary },
+                    repetitionType === 'weekly' && { color: colors.textInverse },
                   ]}
                 >
                   Weekly
@@ -333,14 +414,22 @@ export default function AddEditHabitScreen() {
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  repetitionType === 'custom' && styles.selectedOptionButton,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input
+                  },
+                  repetitionType === 'custom' && { 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary
+                  },
                 ]}
                 onPress={() => setRepetitionType('custom')}
               >
                 <Text
                   style={[
                     styles.optionText,
-                    repetitionType === 'custom' && styles.selectedOptionText,
+                    { color: colors.textSecondary },
+                    repetitionType === 'custom' && { color: colors.textInverse },
                   ]}
                 >
                   Custom
@@ -352,14 +441,23 @@ export default function AddEditHabitScreen() {
             </View>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Completion Type</Text>
+          <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Completion Type
+            </Text>
             <View style={styles.optionsContainer}>
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  completionType === 'simple' && styles.selectedOptionButton,
-                  isEditMode && styles.disabledOptionButton,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input
+                  },
+                  completionType === 'simple' && { 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary
+                  },
+                  isEditMode && { opacity: 0.6 },
                 ]}
                 onPress={() => !isEditMode && setCompletionType('simple')}
                 disabled={isEditMode}
@@ -367,8 +465,9 @@ export default function AddEditHabitScreen() {
                 <Text
                   style={[
                     styles.optionText,
-                    completionType === 'simple' && styles.selectedOptionText,
-                    isEditMode && completionType !== 'simple' && styles.disabledOptionText,
+                    { color: colors.textSecondary },
+                    completionType === 'simple' && { color: colors.textInverse },
+                    isEditMode && completionType !== 'simple' && { color: colors.textTertiary },
                   ]}
                 >
                   Simple
@@ -377,8 +476,15 @@ export default function AddEditHabitScreen() {
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  completionType === 'repetitions' && styles.selectedOptionButton,
-                  isEditMode && styles.disabledOptionButton,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input
+                  },
+                  completionType === 'repetitions' && { 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary
+                  },
+                  isEditMode && { opacity: 0.6 },
                 ]}
                 onPress={() => !isEditMode && setCompletionType('repetitions')}
                 disabled={isEditMode}
@@ -386,8 +492,9 @@ export default function AddEditHabitScreen() {
                 <Text
                   style={[
                     styles.optionText,
-                    completionType === 'repetitions' && styles.selectedOptionText,
-                    isEditMode && completionType !== 'repetitions' && styles.disabledOptionText,
+                    { color: colors.textSecondary },
+                    completionType === 'repetitions' && { color: colors.textInverse },
+                    isEditMode && completionType !== 'repetitions' && { color: colors.textTertiary },
                   ]}
                 >
                   Repetitions
@@ -396,8 +503,15 @@ export default function AddEditHabitScreen() {
               <TouchableOpacity
                 style={[
                   styles.optionButton,
-                  completionType === 'timed' && styles.selectedOptionButton,
-                  isEditMode && styles.disabledOptionButton,
+                  { 
+                    borderColor: colors.border,
+                    backgroundColor: colors.input
+                  },
+                  completionType === 'timed' && { 
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary
+                  },
+                  isEditMode && { opacity: 0.6 },
                 ]}
                 onPress={() => !isEditMode && setCompletionType('timed')}
                 disabled={isEditMode}
@@ -405,8 +519,9 @@ export default function AddEditHabitScreen() {
                 <Text
                   style={[
                     styles.optionText,
-                    completionType === 'timed' && styles.selectedOptionText,
-                    isEditMode && completionType !== 'timed' && styles.disabledOptionText,
+                    { color: colors.textSecondary },
+                    completionType === 'timed' && { color: colors.textInverse },
+                    isEditMode && completionType !== 'timed' && { color: colors.textTertiary },
                   ]}
                 >
                   Timed
@@ -417,7 +532,7 @@ export default function AddEditHabitScreen() {
               {renderCompletionOptions()}
             </View>
             {isEditMode && (
-              <Text style={styles.editNotice}>
+              <Text style={[styles.editNotice, { color: colors.error }]}>
                 Note: Completion type cannot be changed after a habit is created.
               </Text>
             )}
@@ -426,14 +541,14 @@ export default function AddEditHabitScreen() {
           <View style={styles.buttonsContainer}>
             <Button
               title={isEditMode ? 'Update Habit' : 'Add Habit'}
-              buttonStyle={styles.saveButton}
-              titleStyle={styles.buttonText}
+              buttonStyle={[styles.saveButton, { backgroundColor: colors.primary }]}
+              titleStyle={[styles.buttonText, { color: colors.textInverse }]}
               onPress={handleSave}
             />
             {isEditMode && (
               <Button
                 title="Delete"
-                buttonStyle={styles.deleteButton}
+                buttonStyle={[styles.deleteButton, { backgroundColor: colors.error }]}
                 titleStyle={styles.buttonText}
                 onPress={handleDelete}
               />
@@ -448,14 +563,12 @@ export default function AddEditHabitScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   scrollContainer: {
     flex: 1,
     padding: 20,
   },
   section: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
@@ -471,7 +584,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#212121',
     marginBottom: 15,
   },
   inputContainer: {
@@ -479,24 +591,19 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#757575',
     marginBottom: 5,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#F5F5F5',
   },
   emojiInput: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 12,
     fontSize: 24,
-    backgroundColor: '#F5F5F5',
     textAlign: 'center',
     width: 70,
   },
@@ -510,35 +617,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#F5F5F5',
     marginHorizontal: 4,
     borderRadius: 8,
   },
-  selectedOptionButton: {
-    backgroundColor: '#4A6572',
-    borderColor: '#4A6572',
-  },
-  disabledOptionButton: {
-    opacity: 0.6,
-  },
   optionText: {
     fontSize: 14,
-    color: '#757575',
-  },
-  selectedOptionText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  disabledOptionText: {
-    color: '#BDBDBD',
   },
   repetitionOptionsContainer: {
     marginTop: 10,
   },
   repetitionDescription: {
     fontSize: 14,
-    color: '#757575',
   },
   daysContainer: {
     flexDirection: 'row',
@@ -547,24 +636,14 @@ const styles = StyleSheet.create({
   },
   dayButton: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 10,
     marginVertical: 5,
     width: '30%',
     alignItems: 'center',
   },
-  selectedDayButton: {
-    backgroundColor: '#4A6572',
-    borderColor: '#4A6572',
-  },
   dayButtonText: {
     fontSize: 14,
-    color: '#757575',
-  },
-  selectedDayButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
   },
   customDaysContainer: {
     flexDirection: 'row',
@@ -572,14 +651,12 @@ const styles = StyleSheet.create({
   },
   customDaysInput: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 10,
     marginHorizontal: 10,
     width: 60,
     textAlign: 'center',
     fontSize: 16,
-    backgroundColor: '#F5F5F5',
   },
   completionOptionsContainer: {
     marginTop: 10,
@@ -594,7 +671,6 @@ const styles = StyleSheet.create({
   },
   completionDescription: {
     fontSize: 14,
-    color: '#757575',
     marginLeft: 10,
   },
   goalContainer: {
@@ -604,30 +680,25 @@ const styles = StyleSheet.create({
   },
   goalLabel: {
     fontSize: 14,
-    color: '#757575',
     marginRight: 10,
   },
   goalInput: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 10,
     width: 70,
     textAlign: 'center',
     fontSize: 16,
-    backgroundColor: '#F5F5F5',
   },
   buttonsContainer: {
     marginBottom: 30,
   },
   saveButton: {
-    backgroundColor: '#4A6572',
     borderRadius: 8,
     paddingVertical: 15,
     marginBottom: 15,
   },
   deleteButton: {
-    backgroundColor: '#F44336',
     borderRadius: 8,
     paddingVertical: 15,
   },
@@ -637,7 +708,6 @@ const styles = StyleSheet.create({
   },
   editNotice: {
     fontSize: 14,
-    color: '#F44336',
     fontStyle: 'italic',
     marginTop: 10,
   },

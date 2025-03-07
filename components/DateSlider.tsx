@@ -1,120 +1,234 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
 import { useHabitStore } from '../store/habitStore';
 import { formatDate, getDayName, addDays, getMonthName } from '../utils/date';
+import { useTheme } from '../hooks/useTheme';
+import { ChevronLeft } from 'lucide-react-native';
+
+interface DateInfo {
+  date: string;
+  dayName: string;
+  dayNumber: number;
+  month: string;
+  year: number;
+  timestamp: number;
+}
 
 interface DateItemProps {
-  date: string;
+  item: DateInfo;
   isSelected: boolean;
   isToday: boolean;
   onPress: (date: string) => void;
 }
 
-const DateItem = ({ date, isSelected, isToday, onPress }: DateItemProps) => {
-  const dateObj = new Date(date);
-  const dayName = getDayName(dateObj);
-  const dayNumber = dateObj.getDate();
+const windowWidth = Dimensions.get('window').width;
+const ITEM_WIDTH = 57; // Width of each date item including margins
+const VISIBLE_ITEMS = Math.ceil(windowWidth / ITEM_WIDTH);
+const BUFFER_ITEMS = 15; // Number of items to load before/after visible range
+
+// Memoize the DateItem component to prevent unnecessary re-renders
+const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) => {
+  const { colors } = useTheme();
+  const { date, dayName, dayNumber } = item;
+  
+  // Memoize the onPress callback for this specific date
+  const handlePress = useCallback(() => {
+    onPress(date);
+  }, [date, onPress]);
+
+  // Create styles with theme colors
+  const containerStyle = [
+    styles.dateItem,
+    { backgroundColor: colors.input },
+    isSelected && { backgroundColor: colors.selectedItem },
+    isToday && !isSelected && { 
+      backgroundColor: colors.input,
+      borderWidth: 2,
+      borderColor: colors.todayIndicator 
+    }
+  ];
+
+  const dayNameStyle = [
+    styles.dayName,
+    { color: colors.textSecondary },
+    isSelected && { color: colors.textInverse },
+    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: 'bold' }
+  ];
+
+  const dayNumberStyle = [
+    styles.dayNumber,
+    { color: colors.text },
+    isSelected && { color: colors.textInverse },
+    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: 'bold' }
+  ];
 
   return (
     <TouchableOpacity
-      style={[
-        styles.dateItem, 
-        isSelected && styles.selectedDateItem,
-        isToday && styles.todayDateItem
-      ]}
-      onPress={() => onPress(date)}
+      style={containerStyle}
+      onPress={handlePress}
     >
-      <Text 
-        style={[
-          styles.dayName, 
-          isSelected && styles.selectedText,
-          isToday && !isSelected && styles.todayText
-        ]}
-      >
+      <Text style={dayNameStyle}>
         {dayName}
       </Text>
-      <Text 
-        style={[
-          styles.dayNumber, 
-          isSelected && styles.selectedText,
-          isToday && !isSelected && styles.todayText
-        ]}
-      >
+      <Text style={dayNumberStyle}>
         {dayNumber}
       </Text>
     </TouchableOpacity>
   );
+});
+
+// Generate a range of dates
+const generateDateRange = (startDate: Date, numDays: number): DateInfo[] => {
+  const result: DateInfo[] = [];
+  
+  for (let i = 0; i < numDays; i++) {
+    const date = addDays(startDate, i);
+    const formattedDate = formatDate(date);
+    
+    result.push({
+      date: formattedDate,
+      dayName: getDayName(date),
+      dayNumber: date.getDate(),
+      month: getMonthName(date),
+      year: date.getFullYear(),
+      timestamp: date.getTime(),
+    });
+  }
+  
+  return result;
 };
 
+// Implement getItemLayout for FlatList to improve performance
+const getItemLayout = (_data: any, index: number) => ({
+  length: ITEM_WIDTH,
+  offset: ITEM_WIDTH * index,
+  index,
+});
+
 export default function DateSlider() {
+  const { colors } = useTheme();
   const { selectedDate, setSelectedDate } = useHabitStore();
   const flatListRef = useRef<FlatList>(null);
-  const [dates, setDates] = useState<string[]>([]);
-  const [currentMonth, setCurrentMonth] = useState('');
-  const [today] = useState(formatDate(new Date()));
+  const today = useMemo(() => formatDate(new Date()), []);
+  const [showTodayButton, setShowTodayButton] = useState(false);
+  
+  // Initial date range centered on today
+  const [dateRange, setDateRange] = useState<DateInfo[]>(() => {
+    const todayDate = new Date();
+    const pastDates = generateDateRange(addDays(todayDate, -180), 180);
+    const futureDates = generateDateRange(todayDate, 365);
+    return [...pastDates, ...futureDates];
+  });
+  
+  // Find index of today in the date range
+  const todayIndex = useMemo(() => {
+    return dateRange.findIndex(item => item.date === today);
+  }, [dateRange, today]);
 
-  // Generate dates (today + 6 days before + 15 days ahead)
+  // Get the current month name from the selected date
+  const currentMonth = useMemo(() => {
+    const selectedItem = dateRange.find(item => item.date === selectedDate);
+    return selectedItem ? `${selectedItem.month} ${selectedItem.year}` : '';
+  }, [selectedDate, dateRange]);
+
+  // Initialize scroll position to today
   useEffect(() => {
-    const today = new Date();
-    const datesArray: string[] = [];
-
-    // Add 6 days before today
-    for (let i = 6; i > 0; i--) {
-      const date = addDays(today, -i);
-      datesArray.push(formatDate(date));
-    }
-
-    // Add today
-    datesArray.push(formatDate(today));
-
-    // Add 15 days after today
-    for (let i = 1; i <= 15; i++) {
-      const date = addDays(today, i);
-      datesArray.push(formatDate(date));
-    }
-
-    setDates(datesArray);
-    setCurrentMonth(getMonthName(new Date(selectedDate)));
-  }, []);
-
-  // Update current month when selected date changes
-  useEffect(() => {
-    setCurrentMonth(getMonthName(new Date(selectedDate)));
-  }, [selectedDate]);
-
-  // Scroll to today initially
-  useEffect(() => {
-    if (flatListRef.current && dates.length > 0) {
-      const todayIndex = dates.findIndex(date => date === formatDate(new Date()));
-      if (todayIndex !== -1) {
-        flatListRef.current.scrollToIndex({
+    if (flatListRef.current && todayIndex >= 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({
           index: todayIndex,
           animated: false,
           viewPosition: 0.5,
         });
-      }
+      }, 100);
     }
-  }, [dates]);
+  }, [todayIndex]);
+
+  // Handle scrolling and decide whether to show the Today button
+  const handleScroll = useCallback((event: any) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const centerIndex = Math.floor(offsetX / ITEM_WIDTH) + Math.floor(VISIBLE_ITEMS / 2);
+    
+    const centerDate = dateRange[centerIndex]?.date;
+    setShowTodayButton(centerDate !== today && todayIndex >= 0);
+    
+    // Dynamically extend the date range if we're nearing the end
+    const remainingItems = dateRange.length - centerIndex;
+    if (remainingItems < BUFFER_ITEMS * 2) {
+      const lastDate = dateRange[dateRange.length - 1];
+      const nextDay = new Date(lastDate.date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const newDates = generateDateRange(nextDay, BUFFER_ITEMS * 2);
+      setDateRange(prevDates => [...prevDates, ...newDates]);
+    }
+  }, [dateRange, today, todayIndex]);
+
+  // Scroll to today when the Today button is pressed
+  const scrollToToday = useCallback(() => {
+    if (flatListRef.current && todayIndex >= 0) {
+      flatListRef.current.scrollToIndex({
+        index: todayIndex,
+        animated: true,
+        viewPosition: 0.5,
+      });
+      setSelectedDate(today);
+    }
+  }, [todayIndex, today, setSelectedDate]);
+
+  // Memoize the renderItem function
+  const renderItem = useCallback(({ item }: { item: DateInfo }) => (
+    <DateItem
+      item={item}
+      isSelected={item.date === selectedDate}
+      isToday={item.date === today}
+      onPress={setSelectedDate}
+    />
+  ), [selectedDate, today, setSelectedDate]);
+
+  // Memoize the keyExtractor function
+  const keyExtractor = useCallback((item: DateInfo) => item.date, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.monthText}>{currentMonth}</Text>
+    <View style={[styles.container, { backgroundColor: colors.cardBackground, borderBottomColor: colors.divider }]}>
+      <View style={styles.headerContainer}>
+        <Text style={[styles.monthText, { color: colors.primary }]}>
+          {currentMonth}
+        </Text>
+        {showTodayButton && (
+          <TouchableOpacity 
+            style={[styles.todayButton, { backgroundColor: colors.primary }]} 
+            onPress={scrollToToday}
+          >
+            <ChevronLeft size={14} color={colors.textInverse} />
+            <Text style={[styles.todayButtonText, { color: colors.textInverse }]}>Today</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
         ref={flatListRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        data={dates}
-        keyExtractor={(item) => item}
-        renderItem={({ item }) => (
-          <DateItem
-            date={item}
-            isSelected={item === selectedDate}
-            isToday={item === today}
-            onPress={setSelectedDate}
-          />
-        )}
+        data={dateRange}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        getItemLayout={getItemLayout}
         contentContainerStyle={styles.flatListContent}
-        onScrollToIndexFailed={() => {}}
+        initialNumToRender={VISIBLE_ITEMS + BUFFER_ITEMS}
+        maxToRenderPerBatch={BUFFER_ITEMS}
+        windowSize={VISIBLE_ITEMS}
+        onScroll={handleScroll}
+        onScrollToIndexFailed={() => {
+          // If scroll to index fails, try again with a delay
+          setTimeout(() => {
+            if (flatListRef.current && todayIndex >= 0) {
+              flatListRef.current.scrollToIndex({
+                index: Math.max(0, todayIndex),
+                animated: false,
+                viewPosition: 0.5,
+              });
+            }
+          }, 500);
+        }}
       />
     </View>
   );
@@ -122,18 +236,32 @@ export default function DateSlider() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    marginTop: -1, // Remove gap between header and slider
+  },
+  headerContainer: {
+    height: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginBottom: 10,
   },
   monthText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4A6572',
-    marginLeft: 15,
-    marginBottom: 10,
+  },
+  todayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+  },
+  todayButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 2,
   },
   flatListContent: {
     paddingHorizontal: 10,
@@ -145,31 +273,13 @@ const styles = StyleSheet.create({
     width: 45,
     height: 70,
     borderRadius: 22.5,
-    backgroundColor: '#F5F5F5',
-  },
-  selectedDateItem: {
-    backgroundColor: '#4A6572',
-  },
-  todayDateItem: {
-    backgroundColor: '#F5F5F5',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
   },
   dayName: {
     fontSize: 12,
-    color: '#757575',
     marginBottom: 4,
   },
   dayNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#212121',
-  },
-  selectedText: {
-    color: '#FFFFFF',
-  },
-  todayText: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
-  },
+  }
 });
