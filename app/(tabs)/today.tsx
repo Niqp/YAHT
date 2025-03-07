@@ -6,8 +6,8 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import DateSlider from '../../components/DateSlider';
 import HabitItem from '../../components/HabitItem';
@@ -15,10 +15,9 @@ import HabitBottomSheet from '../../components/HabitBottomSheet';
 import { useHabitStore } from '../../store/habitStore';
 import { shouldCompleteHabitOnDate } from '../../utils/date';
 import { Habit } from '../../types/habit';
-import { Button } from 'react-native-elements';
 import { Plus } from 'lucide-react-native';
 
-export default function MainScreen() {
+export default function TodayScreen() {
   const {
     habits,
     selectedDate,
@@ -67,19 +66,12 @@ export default function MainScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <DateSlider />
       
       {filteredHabits.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No habits for this day</Text>
-          <Button
-            title="Add a habit"
-            buttonStyle={styles.addButton}
-            titleStyle={styles.addButtonTitle}
-            icon={<Plus size={20} color="#FFFFFF" style={styles.addButtonIcon} />}
-            onPress={navigateToAddHabit}
-          />
         </View>
       ) : (
         <FlatList
@@ -98,13 +90,22 @@ export default function MainScreen() {
         />
       )}
       
-      {bottomSheetVisible && (
+      {/* Floating Action Button */}
+      <TouchableOpacity 
+        style={styles.floatingButton}
+        onPress={navigateToAddHabit}
+        activeOpacity={0.8}
+      >
+        <Plus size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      
+      {bottomSheetVisible && selectedHabit && (
         <HabitBottomSheet
           habit={selectedHabit}
           onClose={closeBottomSheet}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -120,6 +121,7 @@ const styles = StyleSheet.create({
   },
   habitList: {
     paddingVertical: 10,
+    paddingBottom: 80, // Add padding at the bottom for the floating button
   },
   emptyContainer: {
     flex: 1,
@@ -132,15 +134,24 @@ const styles = StyleSheet.create({
     color: '#9E9E9E',
     marginBottom: 20,
   },
-  addButton: {
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#4A6572',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-  },
-  addButtonTitle: {
-    fontSize: 16,
-  },
-  addButtonIcon: {
-    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 999,
   },
 });

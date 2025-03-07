@@ -6,23 +6,40 @@ import { formatDate, getDayName, addDays, getMonthName } from '../utils/date';
 interface DateItemProps {
   date: string;
   isSelected: boolean;
+  isToday: boolean;
   onPress: (date: string) => void;
 }
 
-const DateItem = ({ date, isSelected, onPress }: DateItemProps) => {
+const DateItem = ({ date, isSelected, isToday, onPress }: DateItemProps) => {
   const dateObj = new Date(date);
   const dayName = getDayName(dateObj);
   const dayNumber = dateObj.getDate();
 
   return (
     <TouchableOpacity
-      style={[styles.dateItem, isSelected && styles.selectedDateItem]}
+      style={[
+        styles.dateItem, 
+        isSelected && styles.selectedDateItem,
+        isToday && styles.todayDateItem
+      ]}
       onPress={() => onPress(date)}
     >
-      <Text style={[styles.dayName, isSelected && styles.selectedText]}>
+      <Text 
+        style={[
+          styles.dayName, 
+          isSelected && styles.selectedText,
+          isToday && !isSelected && styles.todayText
+        ]}
+      >
         {dayName}
       </Text>
-      <Text style={[styles.dayNumber, isSelected && styles.selectedText]}>
+      <Text 
+        style={[
+          styles.dayNumber, 
+          isSelected && styles.selectedText,
+          isToday && !isSelected && styles.todayText
+        ]}
+      >
         {dayNumber}
       </Text>
     </TouchableOpacity>
@@ -34,6 +51,7 @@ export default function DateSlider() {
   const flatListRef = useRef<FlatList>(null);
   const [dates, setDates] = useState<string[]>([]);
   const [currentMonth, setCurrentMonth] = useState('');
+  const [today] = useState(formatDate(new Date()));
 
   // Generate dates (today + 6 days before + 15 days ahead)
   useEffect(() => {
@@ -91,6 +109,7 @@ export default function DateSlider() {
           <DateItem
             date={item}
             isSelected={item === selectedDate}
+            isToday={item === today}
             onPress={setSelectedDate}
           />
         )}
@@ -107,6 +126,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
+    marginTop: -1, // Remove gap between header and slider
   },
   monthText: {
     fontSize: 16,
@@ -130,6 +150,11 @@ const styles = StyleSheet.create({
   selectedDateItem: {
     backgroundColor: '#4A6572',
   },
+  todayDateItem: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
   dayName: {
     fontSize: 12,
     color: '#757575',
@@ -142,5 +167,9 @@ const styles = StyleSheet.create({
   },
   selectedText: {
     color: '#FFFFFF',
+  },
+  todayText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
   },
 });

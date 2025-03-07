@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import { useHabitStore } from '../../store/habitStore';
 import { Habit } from '../../types/habit';
@@ -199,18 +198,18 @@ export default function StatsScreen() {
 
   if (habits.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
             Add habits to see your statistics
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Overall Stats</Text>
@@ -320,7 +319,7 @@ export default function StatsScreen() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, CheckBox } from 'react-native-elements';
-import { useHabitStore } from '../../store/habitStore';
-import { router, useLocalSearchParams } from 'expo-router';
-import { CompletionType, RepetitionType } from '../../types/habit';
+import { useHabitStore } from '../store/habitStore';
+import { router, useLocalSearchParams, Stack } from 'expo-router';
+import { CompletionType, RepetitionType } from '../types/habit';
 import { Clock, RotateCcw, CheckSquare } from 'lucide-react-native';
 
 export default function AddEditHabitScreen() {
@@ -256,6 +256,18 @@ export default function AddEditHabitScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Stack.Screen 
+        options={{
+          title: isEditMode ? 'Edit Habit' : 'Add New Habit',
+          headerStyle: {
+            backgroundColor: '#FFFFFF',
+          },
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 18,
+          },
+        }} 
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -347,13 +359,16 @@ export default function AddEditHabitScreen() {
                 style={[
                   styles.optionButton,
                   completionType === 'simple' && styles.selectedOptionButton,
+                  isEditMode && styles.disabledOptionButton,
                 ]}
-                onPress={() => setCompletionType('simple')}
+                onPress={() => !isEditMode && setCompletionType('simple')}
+                disabled={isEditMode}
               >
                 <Text
                   style={[
                     styles.optionText,
                     completionType === 'simple' && styles.selectedOptionText,
+                    isEditMode && completionType !== 'simple' && styles.disabledOptionText,
                   ]}
                 >
                   Simple
@@ -363,13 +378,16 @@ export default function AddEditHabitScreen() {
                 style={[
                   styles.optionButton,
                   completionType === 'repetitions' && styles.selectedOptionButton,
+                  isEditMode && styles.disabledOptionButton,
                 ]}
-                onPress={() => setCompletionType('repetitions')}
+                onPress={() => !isEditMode && setCompletionType('repetitions')}
+                disabled={isEditMode}
               >
                 <Text
                   style={[
                     styles.optionText,
                     completionType === 'repetitions' && styles.selectedOptionText,
+                    isEditMode && completionType !== 'repetitions' && styles.disabledOptionText,
                   ]}
                 >
                   Repetitions
@@ -379,13 +397,16 @@ export default function AddEditHabitScreen() {
                 style={[
                   styles.optionButton,
                   completionType === 'timed' && styles.selectedOptionButton,
+                  isEditMode && styles.disabledOptionButton,
                 ]}
-                onPress={() => setCompletionType('timed')}
+                onPress={() => !isEditMode && setCompletionType('timed')}
+                disabled={isEditMode}
               >
                 <Text
                   style={[
                     styles.optionText,
                     completionType === 'timed' && styles.selectedOptionText,
+                    isEditMode && completionType !== 'timed' && styles.disabledOptionText,
                   ]}
                 >
                   Timed
@@ -395,6 +416,11 @@ export default function AddEditHabitScreen() {
             <View style={styles.completionOptionsContainer}>
               {renderCompletionOptions()}
             </View>
+            {isEditMode && (
+              <Text style={styles.editNotice}>
+                Note: Completion type cannot be changed after a habit is created.
+              </Text>
+            )}
           </View>
 
           <View style={styles.buttonsContainer}>
@@ -493,6 +519,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A6572',
     borderColor: '#4A6572',
   },
+  disabledOptionButton: {
+    opacity: 0.6,
+  },
   optionText: {
     fontSize: 14,
     color: '#757575',
@@ -500,6 +529,9 @@ const styles = StyleSheet.create({
   selectedOptionText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
+  },
+  disabledOptionText: {
+    color: '#BDBDBD',
   },
   repetitionOptionsContainer: {
     marginTop: 10,
@@ -602,5 +634,11 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  editNotice: {
+    fontSize: 14,
+    color: '#F44336',
+    fontStyle: 'italic',
+    marginTop: 10,
   },
 });
