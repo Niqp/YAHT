@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { useHabitStore } from '../store/habitStore';
 import { formatDate, getDayName, addDays, getMonthName } from '../utils/date';
 import { useTheme } from '../hooks/useTheme';
@@ -112,6 +112,9 @@ export default function DateSlider() {
   const today = useMemo(() => formatDate(new Date()), []);
   const [showTodayButton, setShowTodayButton] = useState(false);
   
+  // State to track the visible month and year as user scrolls
+  const [visibleMonthYear, setVisibleMonthYear] = useState('');
+  
   // Initial date range centered on today
   const [dateRange, setDateRange] = useState<DateInfo[]>(() => {
     const todayDate = new Date();
@@ -125,13 +128,7 @@ export default function DateSlider() {
     return dateRange.findIndex(item => item.date === today);
   }, [dateRange, today]);
 
-  // Get the current month name from the selected date
-  const currentMonth = useMemo(() => {
-    const selectedItem = dateRange.find(item => item.date === selectedDate);
-    return selectedItem ? `${selectedItem.month} ${selectedItem.year}` : '';
-  }, [selectedDate, dateRange]);
-
-  // Initialize scroll position to today
+  // Initialize scroll position to today and set initial visible month
   useEffect(() => {
     if (flatListRef.current && todayIndex >= 0) {
       setTimeout(() => {
@@ -140,17 +137,35 @@ export default function DateSlider() {
           animated: false,
           viewPosition: 0.5,
         });
+        
+        // Set initial visible month/year based on today
+        if (dateRange[todayIndex]) {
+          const { month, year } = dateRange[todayIndex];
+          setVisibleMonthYear(`${month} ${year}`);
+        }
       }, 100);
     }
-  }, [todayIndex]);
+  }, [todayIndex, dateRange]);
 
-  // Handle scrolling and decide whether to show the Today button
-  const handleScroll = useCallback((event: any) => {
+  // Handle scrolling, track visible month/year, and decide whether to show the Today button
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const centerIndex = Math.floor(offsetX / ITEM_WIDTH) + Math.floor(VISIBLE_ITEMS / 2);
     
     const centerDate = dateRange[centerIndex]?.date;
     setShowTodayButton(centerDate !== today && todayIndex >= 0);
+    
+    // Find the first visible item
+    const firstVisibleIndex = Math.floor(offsetX / ITEM_WIDTH);
+    if (dateRange[firstVisibleIndex]) {
+      const item = dateRange[firstVisibleIndex];
+      const monthYearString = `${item.month} ${item.year}`;
+      
+      // Only update if changed
+      if (monthYearString !== visibleMonthYear) {
+        setVisibleMonthYear(monthYearString);
+      }
+    }
     
     // Dynamically extend the date range if we're nearing the end
     const remainingItems = dateRange.length - centerIndex;
@@ -161,7 +176,7 @@ export default function DateSlider() {
       const newDates = generateDateRange(nextDay, BUFFER_ITEMS * 2);
       setDateRange(prevDates => [...prevDates, ...newDates]);
     }
-  }, [dateRange, today, todayIndex]);
+  }, [dateRange, today, todayIndex, visibleMonthYear]);
 
   // Scroll to today when the Today button is pressed
   const scrollToToday = useCallback(() => {
@@ -192,7 +207,7 @@ export default function DateSlider() {
     <View style={[styles.container, { backgroundColor: colors.cardBackground, borderBottomColor: colors.divider }]}>
       <View style={styles.headerContainer}>
         <Text style={[styles.monthText, { color: colors.primary }]}>
-          {currentMonth}
+          {visibleMonthYear}
         </Text>
         {showTodayButton && (
           <TouchableOpacity 
