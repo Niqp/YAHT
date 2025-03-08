@@ -132,7 +132,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
       case 'simple':
         return isCompleted ? 'Completed' : '';
       case 'repetitions':
-        return `${completionValue} / ${completionGoal} repetitions`;
+        return `${completionValue} / ${completionGoal}`;
       case 'timed':
         return `${formatTime(timerValue)} / ${formatTime(completionGoal)}`;
       default:
@@ -185,6 +185,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
         onPress={habit.completionType !== 'repetitions' ? handlePress : undefined}
         onLongPress={() => onLongPress(habit)}
         activeOpacity={0.7}
+        disabled={habit.completionType === 'repetitions'}
       >
         {/* Left section - Icon */}
         <View style={[styles.iconContainer, { backgroundColor: colors.input }]}>
@@ -193,13 +194,21 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
         
         {/* Middle section - Title and Subtitle */}
         <View style={styles.infoContainer}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+          <Text 
+            style={[styles.title, { color: colors.text }]} 
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {habit.title}
           </Text>
           {habit.completionType !== 'simple' && (
             <View style={styles.subtitleContainer}>
               {getSubtitleIcon()}
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              <Text 
+                style={[styles.subtitle, { color: colors.textSecondary }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {getSubtitleText()}
               </Text>
             </View>
@@ -207,37 +216,42 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
         </View>
         
         {/* Right section - Action buttons or completion indicator */}
-        <View style={styles.actionsContainer}>
+        <View style={styles.actionButtons}>
           {habit.completionType === 'repetitions' ? (
-            <View style={styles.repetitionControls}>
-              <TouchableOpacity 
-                style={[styles.repButton, { backgroundColor: colors.input }]} 
-                onPress={handleDecrement}
-              >
-                <Minus size={16} color={colors.textSecondary} />
-              </TouchableOpacity>
-              
-              <Text style={[styles.repCount, { color: colors.text }]}>
-                {completionValue}
-              </Text>
-              
-              <TouchableOpacity 
-                style={[styles.repButton, { backgroundColor: colors.input }]} 
-                onPress={handleIncrement}
-              >
-                <Plus size={16} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+            <>
+              {/* For repetition habits, show - and count left of + */}
+              <View style={styles.repControlsContainer}>
+                <TouchableOpacity 
+                  style={[styles.repButton, { backgroundColor: colors.input }]} 
+                  onPress={handleDecrement}
+                >
+                  <Minus size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+                
+                <Text style={[styles.repCount, { color: colors.text }]}>
+                  {completionValue}
+                </Text>
+                
+                <TouchableOpacity 
+                  style={[styles.repButton, { backgroundColor: colors.input }]} 
+                  onPress={handleIncrement}
+                >
+                  <Plus size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+            </>
           ) : (
-            isCompleted ? (
-              <CheckCircle size={22} color={colors.success} />
-            ) : (
-              habit.completionType === 'timed' && timerActive ? (
-                <Timer size={22} color={colors.accent} />
+            <View style={styles.statusContainer}>
+              {isCompleted ? (
+                <CheckCircle size={22} color={colors.success} />
               ) : (
-                <Circle size={22} color={colors.textSecondary} />
-              )
-            )
+                habit.completionType === 'timed' && timerActive ? (
+                  <Timer size={22} color={colors.accent} />
+                ) : (
+                  <Circle size={22} color={colors.textSecondary} />
+                )
+              )}
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -278,7 +292,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 14,
     paddingRight: 0,
-    height: '100%',
   },
   iconContainer: {
     width: 42,
@@ -294,6 +307,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     flex: 1,
     justifyContent: 'center',
+    marginRight: 8,
   },
   title: {
     fontSize: 16,
@@ -308,29 +322,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginLeft: 4,
   },
-  actionsContainer: {
-    marginRight: 10,
+  actionButtons: {
+    width: 88,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+  },
+  statusContainer: {
+    width: 22,
+    height: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 40,
   },
-  repetitionControls: {
+  repControlsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    width: 88,
   },
   repButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
   repCount: {
     fontSize: 16,
     fontWeight: '600',
-    marginHorizontal: 8,
-    minWidth: 24,
+    marginHorizontal: 6,
+    width: 16,
     textAlign: 'center',
   },
   moreButton: {
