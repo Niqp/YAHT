@@ -1,11 +1,30 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Github, Star, Info } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Github, Star, Info, Download, Upload, ChevronRight } from 'lucide-react-native';
 import ThemeToggle from '../../components/ThemeToggle';
 import { useTheme } from '../../hooks/useTheme';
+import { exportData, importData } from '../../utils/fileOperations';
 
 export default function SettingsScreen() {
   const { colors } = useTheme();
+
+  const handleExport = async () => {
+    try {
+      await exportData();
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      Alert.alert('Export Failed', 'Failed to export data. Please try again.');
+    }
+  };
+
+  const handleImport = async () => {
+    try {
+      await importData();
+    } catch (error) {
+      console.error('Error importing data:', error);
+      // Alert is already shown in importData function
+    }
+  };
 
   const menuItems = [
     {
@@ -22,6 +41,16 @@ export default function SettingsScreen() {
       title: 'Rate App',
       icon: <Star size={24} color={colors.primary} />,
       onPress: () => {},
+    },
+    {
+      title: 'Export Data',
+      icon: <Download size={24} color={colors.primary} />,
+      onPress: handleExport,
+    },
+    {
+      title: 'Import Data',
+      icon: <Upload size={24} color={colors.primary} />,
+      onPress: handleImport,
     },
   ];
 
@@ -52,6 +81,7 @@ export default function SettingsScreen() {
                   {item.title}
                 </Text>
               </View>
+              <ChevronRight size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           ))}
         </View>

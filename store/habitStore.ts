@@ -22,6 +22,7 @@ interface HabitState {
   setSelectedDate: (date: string) => void;
   loadHabitsFromStorage: () => Promise<void>;
   getHabitById: (id: string) => Habit | undefined;
+  importHabits: (importedHabits: Habit[]) => Promise<number>;
 }
 
 // Helper to convert habit array to map
@@ -247,5 +248,42 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   
   getHabitById: (id) => {
     return get().habitsMap[id]; // O(1) lookup from map
+  },
+  
+  importHabits: async (importedHabits: Habit[]) => {
+    try {
+      // Validate habits array
+      if (!Array.isArray(importedHabits)) {
+        throw new Error('Invalid habits data: not an array');
+      }
+      
+      // Make sure habits have all required properties
+      const validHabits = importedHabits.filter(habit => 
+        habit && typeof habit === 'object' && habit.id && habit.title
+      );
+      
+      // Create a map for efficient lookups
+      const habitsMap = habitsArrayToMap(validHabits);
+      
+      // Save to storage first to ensure persistence
+      await saveHabits(validHabits);
+      
+      // Then update state
+      set({ 
+        habits: validHabits, 
+        habitsMap, 
+        isLoading: false,
+        error: null
+      });
+      
+      // Clear cache for all imported habits
+      validHabits.forEach(habit => clearHabitCache(habit.id));
+      
+      return validHabits.length;
+    } catch (error) {
+      console.error('Error importing habits:', error);
+      set({ error: 'Failed to import habits' });
+      throw error;
+    }
   },
 }));
