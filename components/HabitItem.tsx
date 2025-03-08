@@ -19,13 +19,15 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  // Check completion status
-  const isCompleted = habit.completionHistory[selectedDate]?.completed || false;
-  const completionValue = habit.completionHistory[selectedDate]?.value || 0;
-  const completionGoal = habit.completionGoal || 0;
+  // Check completion status with safety checks
+  const isCompleted = habit?.completionHistory?.[selectedDate]?.completed || false;
+  const completionValue = habit?.completionHistory?.[selectedDate]?.value || 0;
+  const completionGoal = habit?.completionGoal || 0;
 
   // Progress calculation for visual indicator
   const progress = useMemo(() => {
+    if (!habit) return 0;
+    
     if (habit.completionType === 'simple') {
       return isCompleted ? 1 : 0;
     } else {
@@ -33,16 +35,17 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
       const goal = completionGoal || 1; // Prevent division by zero
       return Math.min(1, value / goal);
     }
-  }, [habit.completionType, isCompleted, completionValue, completionGoal]);
+  }, [habit, isCompleted, completionValue, completionGoal]);
 
   // Set initial timer value from history if exists
   useEffect(() => {
-    if (habit.completionType === 'timed' && habit.completionHistory[selectedDate]?.value) {
+    if (habit?.completionType === 'timed' && 
+        habit?.completionHistory?.[selectedDate]?.value !== undefined) {
       setTimerValue(habit.completionHistory[selectedDate].value as number);
     } else {
       setTimerValue(0);
     }
-  }, [selectedDate, habit.id, habit.completionHistory, habit.completionType]);
+  }, [selectedDate, habit?.id, habit?.completionHistory, habit?.completionType]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -55,6 +58,9 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 
   // Handle main press action with animation
   const handlePress = () => {
+    // Fail early if habit is undefined
+    if (!habit) return;
+
     // Animate the press
     Animated.sequence([
       Animated.timing(scaleAnim, {
@@ -109,6 +115,9 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 
   // Handle increment for repetition habits
   const handleIncrement = () => {
+    // Fail early if habit is undefined
+    if (!habit) return;
+    
     const newValue = (completionValue || 0) + 1;
     const shouldComplete = newValue >= completionGoal;
     completeHabit(habit.id, newValue, shouldComplete);
@@ -116,12 +125,18 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 
   // Handle decrement for repetition habits
   const handleDecrement = () => {
+    // Fail early if habit is undefined
+    if (!habit) return;
+    
     if (completionValue <= 0) return;
     
     const newValue = Math.max(0, (completionValue || 0) - 1);
     const shouldComplete = newValue >= completionGoal;
     completeHabit(habit.id, newValue, shouldComplete);
   };
+
+  // Fail early if habit is undefined
+  if (!habit) return null;
 
   // Calculate the width of the progress bar
   const progressBarWidth = `${Math.round(progress * 100)}%`;

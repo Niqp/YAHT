@@ -12,6 +12,11 @@ const DEBOUNCE_TIME = 300; // ms
  * This prevents rapid consecutive saves when multiple habits are updated at once
  */
 export const saveHabits = async (habits: Habit[]): Promise<void> => {
+  // Validate habits array to prevent saving invalid data
+  if (!Array.isArray(habits)) {
+    throw new Error('Cannot save habits: habits is not an array');
+  }
+  
   // Clear any pending save operations
   if (saveTimeout) {
     clearTimeout(saveTimeout);
@@ -40,10 +45,23 @@ export const loadHabits = async (): Promise<Habit[]> => {
     const data = await AsyncStorage.getItem(HABITS_STORAGE_KEY);
     if (!data) return [];
     
-    const parsedData = JSON.parse(data) as Habit[];
-    return Array.isArray(parsedData) ? parsedData : [];
+    try {
+      const parsedData = JSON.parse(data) as Habit[];
+      if (!Array.isArray(parsedData)) {
+        console.error('Parsed habits data is not an array:', parsedData);
+        return [];
+      }
+      
+      // Filter out any undefined or malformed habits
+      return parsedData.filter(habit => 
+        habit && typeof habit === 'object' && habit.id && habit.title
+      );
+    } catch (parseError) {
+      console.error('Error parsing habits JSON:', parseError);
+      return [];
+    }
   } catch (error) {
-    console.error('Error loading habits:', error);
+    console.error('Error loading habits from storage:', error);
     return [];
   }
 };
@@ -53,6 +71,10 @@ export const loadHabits = async (): Promise<Habit[]> => {
  * More efficient than saving the entire array for each update
  */
 export const updateHabitBatch = async (updatedHabits: Habit[]): Promise<void> => {
+  if (!Array.isArray(updatedHabits) || updatedHabits.length === 0) {
+    return;
+  }
+  
   try {
     const existingData = await loadHabits();
     
@@ -61,7 +83,9 @@ export const updateHabitBatch = async (updatedHabits: Habit[]): Promise<void> =>
     
     // Update only the habits that have changed
     updatedHabits.forEach(habit => {
-      habitsMap.set(habit.id, habit);
+      if (habit && habit.id) {
+        habitsMap.set(habit.id, habit);
+      }
     });
     
     // Convert back to array
@@ -80,5 +104,9 @@ export const updateHabitBatch = async (updatedHabits: Habit[]): Promise<void> =>
  * More efficient than saving the entire array for a single update
  */
 export const updateSingleHabit = async (updatedHabit: Habit): Promise<void> => {
+  if (!updatedHabit || !updatedHabit.id) {
+    throw new Error('Cannot update habit: Invalid habit data');
+  }
+  
   return updateHabitBatch([updatedHabit]);
 };

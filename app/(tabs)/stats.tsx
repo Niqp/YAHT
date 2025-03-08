@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { LineChart, BarChart, ProgressChart, ContributionGraph } from 'react-native-chart-kit';
+import { LineChart, ProgressChart } from 'react-native-chart-kit';
 import { useHabitStore } from '../../store/habitStore';
 import { Habit } from '../../types/habit';
 import { formatDate, formatTime } from '../../utils/date';
@@ -81,34 +81,8 @@ export default function StatsScreen() {
     },
   }), [colors, isDarkMode]);
 
-  // Initialize habits and calculate overall stats
-  useEffect(() => {
-    if (habits.length > 0) {
-      calculateOverallStats();
-      if (!selectedHabit) {
-        setSelectedHabit(habits[0]);
-      } else {
-        // If the selected habit still exists, refresh its data
-        const existingHabit = habits.find(h => h.id === selectedHabit.id);
-        if (existingHabit) {
-          setSelectedHabit(existingHabit);
-        } else {
-          setSelectedHabit(habits[0]);
-        }
-      }
-    }
-  }, [habits]);
-
-  // Update charts and stats when selected habit changes
-  useEffect(() => {
-    if (selectedHabit) {
-      generateChartData(selectedHabit);
-      calculateHabitStats(selectedHabit);
-    }
-  }, [selectedHabit]);
-
   // Calculate overall stats across all habits
-  const calculateOverallStats = () => {
+  const calculateOverallStats = useCallback(() => {
     const today = formatDate(new Date());
     
     // Count habits completed today
@@ -184,10 +158,10 @@ export default function StatsScreen() {
       currentStreak,
       bestStreak,
     });
-  };
+  }, [habits]);
   
   // Calculate habit-specific stats based on habit type
-  const calculateHabitStats = (habit: Habit) => {
+  const calculateHabitStats = useCallback((habit: Habit) => {
     const completionHistory = habit.completionHistory;
     const completionDates = Object.keys(completionHistory);
     
@@ -329,10 +303,10 @@ export default function StatsScreen() {
     setProgressData({
       data: [Math.min(1, Math.max(0, progressValue))]
     });
-  };
+  }, []);
 
   // Generate chart data based on habit type
-  const generateChartData = (habit: Habit) => {
+  const generateChartData = useCallback((habit: Habit) => {
     // Get the last 7 days for all habit types
     const last7Days = [];
     
@@ -371,19 +345,45 @@ export default function StatsScreen() {
         datasets: [{ data: values }],
       });
     }
-  };
+  }, []);
+
+  // Initialize habits and calculate overall stats
+  useEffect(() => {
+    if (habits.length > 0) {
+      calculateOverallStats();
+      if (!selectedHabit) {
+        setSelectedHabit(habits[0]);
+      } else {
+        // If the selected habit still exists, refresh its data
+        const existingHabit = habits.find(h => h.id === selectedHabit.id);
+        if (existingHabit) {
+          // Just keep the existing selected habit
+        } else {
+          setSelectedHabit(habits[0]);
+        }
+      }
+    }
+  }, [habits, calculateOverallStats]);
+
+  // Update charts and stats when selected habit changes
+  useEffect(() => {
+    if (selectedHabit) {
+      generateChartData(selectedHabit);
+      calculateHabitStats(selectedHabit);
+    }
+  }, [selectedHabit, generateChartData, calculateHabitStats]);
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Render habit selection dropdown
   const renderHabitDropdown = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    
     if (!selectedHabit) return null;
     
     return (
       <View style={styles.dropdownContainer}>
         <TouchableOpacity 
           style={[styles.dropdownButton, { backgroundColor: colors.input }]}
-          onPress={() => setIsOpen(!isOpen)}
+          onPress={() => setIsDropdownOpen(!isDropdownOpen)}
         >
           <View style={styles.selectedHabitContainer}>
             <Text style={styles.selectedHabitIcon}>{selectedHabit.icon}</Text>
@@ -394,7 +394,7 @@ export default function StatsScreen() {
           <ChevronDown size={20} color={colors.textSecondary} />
         </TouchableOpacity>
         
-        {isOpen && (
+        {isDropdownOpen && (
           <View style={[styles.dropdownMenu, { backgroundColor: colors.cardBackground }]}>
             <ScrollView 
               style={styles.dropdownScroll}
@@ -410,7 +410,7 @@ export default function StatsScreen() {
                   ]}
                   onPress={() => {
                     setSelectedHabit(habit);
-                    setIsOpen(false);
+                    setIsDropdownOpen(false);
                   }}
                 >
                   <Text style={styles.dropdownItemIcon}>{habit.icon}</Text>

@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
@@ -43,66 +42,89 @@ const TaskGroupSeparator = React.memo(({ title, completed, count, colors }: {
 });
 
 export default function TodayScreen() {
+  // Always call these hooks at the top level, before any early returns
   const { colors } = useTheme();
-  const {
-    habits,
-    selectedDate,
-    isLoading,
-    loadHabitsFromStorage,
-  } = useHabitStore();
   
+  // Get habit store data
+  const habits = useHabitStore(state => state.habits);
+  const selectedDate = useHabitStore(state => state.selectedDate);
+  const isLoading = useHabitStore(state => state.isLoading);
+  const loadHabitsFromStorage = useHabitStore(state => state.loadHabitsFromStorage);
+  
+  // Local state always initialized at top-level
   const [refreshing, setRefreshing] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
 
   // Get all valid habits for the selected date
-  // This is now memoized with dependencies only on the essential data
   const filteredHabits = useMemo(() => {
-    return habits.filter(habit => 
-      shouldCompleteHabitOnDate(habit, selectedDate)
-    );
+    if (!habits || !selectedDate) return [];
+    
+    try {
+      return habits.filter(habit => 
+        shouldCompleteHabitOnDate(habit, selectedDate)
+      );
+    } catch (error) {
+      console.error('Error filtering habits:', error);
+      return [];
+    }
   }, [habits, selectedDate]);
 
   // Group habits by completion status - swapped To Do and Completed order
   const groupedHabits = useMemo(() => {
-    // Get incomplete habits
-    const incompleteHabits = filteredHabits.filter(habit => 
-      !habit.completionHistory[selectedDate]?.completed
-    );
+    // Safely handle potentially undefined or empty filteredHabits
+    if (!filteredHabits || filteredHabits.length === 0) return [];
+    
+    try {
+      // Get incomplete habits
+      const incompleteHabits = filteredHabits.filter(habit => 
+        !habit.completionHistory?.[selectedDate]?.completed
+      );
 
-    // Get completed habits
-    const completedHabits = filteredHabits.filter(habit => 
-      habit.completionHistory[selectedDate]?.completed
-    );
+      // Get completed habits
+      const completedHabits = filteredHabits.filter(habit => 
+        habit.completionHistory?.[selectedDate]?.completed
+      );
 
-    // Create sections for SectionList - To Do first, then Completed
-    const sections = [];
+      // Create sections for SectionList - To Do first, then Completed
+      const sections = [];
 
-    // Add incomplete section if there are incomplete habits
-    if (incompleteHabits.length > 0) {
-      sections.push({
-        title: 'To Do',
-        data: incompleteHabits,
-        completed: false,
-      });
+      // Add incomplete section if there are incomplete habits
+      if (incompleteHabits.length > 0) {
+        sections.push({
+          title: 'To Do',
+          data: incompleteHabits,
+          completed: false,
+        });
+      }
+
+      // Add completed section if there are completed habits
+      if (completedHabits.length > 0) {
+        sections.push({
+          title: 'Completed',
+          data: completedHabits,
+          completed: true,
+        });
+      }
+
+      return sections;
+    } catch (error) {
+      console.error('Error grouping habits:', error);
+      return [];
     }
-
-    // Add completed section if there are completed habits
-    if (completedHabits.length > 0) {
-      sections.push({
-        title: 'Completed',
-        data: completedHabits,
-        completed: true,
-      });
-    }
-
-    return sections;
   }, [filteredHabits, selectedDate]);
 
+  // Define callbacks
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadHabitsFromStorage();
-    setRefreshing(false);
+    try {
+      await loadHabitsFromStorage();
+    } catch (error) {
+      console.error('Error refreshing habits:', error);
+    } finally {
+      // Ensure refreshing is set to false even if an error occurs
+      setRefreshing(false);
+    }
   }, [loadHabitsFromStorage]);
 
   const handleHabitAction = useCallback((habit: Habit) => {
@@ -119,12 +141,18 @@ export default function TodayScreen() {
     router.push('/add');
   }, []);
 
-  const renderHabitItem = useCallback(({ item }: { item: Habit }) => (
-    <HabitItem
-      habit={item}
-      onLongPress={handleHabitAction}
-    />
-  ), [handleHabitAction]);
+  // Memoized render functions
+  const renderHabitItem = useCallback(({ item }: { item: Habit }) => {
+    // Safety check for null items
+    if (!item) return null;
+    
+    return (
+      <HabitItem
+        habit={item}
+        onLongPress={handleHabitAction}
+      />
+    );
+  }, [handleHabitAction]);
 
   const renderSectionHeader = useCallback(({ section }) => (
     <TaskGroupSeparator
@@ -135,76 +163,87 @@ export default function TodayScreen() {
     />
   ), [colors]);
 
-  const keyExtractor = useCallback((item: Habit) => item.id, []);
+  const keyExtractor = useCallback((item: Habit) => item?.id || Math.random().toString(), []);
+  
+  // Create UI elements
+  const loadingView = (
+    <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  );
+  
+  const emptyView = (
+    <View style={styles.emptyContainer}>
+      <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
+        No habits for this day
+      </Text>
+      <TouchableOpacity 
+        style={[styles.addHabitButton, { backgroundColor: colors.primary }]}
+        onPress={navigateToAddHabit}
+      >
+        <Text style={[styles.addHabitButtonText, { color: colors.textInverse }]}>
+          Add a habit
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+  
+  const habitListView = (
+    <View style={styles.listWrapper}>
+      <SectionList
+        sections={groupedHabits}
+        keyExtractor={keyExtractor}
+        renderItem={renderHabitItem}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={false}
+        ItemSeparatorComponent={() => <View style={{ height: 7 }} />}
+        contentContainerStyle={styles.habitList}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={colors.primary} 
+          />
+        }
+        SectionSeparatorComponent={() => <View style={{ height: 20 }} />}
+        ListHeaderComponent={() => <View style={{ height: 10 }} />}
+        ListFooterComponent={() => <View style={{ height: 80 }} />}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={20}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+      />
+    </View>
+  );
+  
+  const floatingButton = (
+    <TouchableOpacity 
+      style={[styles.floatingButton, { backgroundColor: colors.primary }]}
+      onPress={navigateToAddHabit}
+      activeOpacity={0.8}
+    >
+      <Plus size={24} color={colors.textInverse} />
+    </TouchableOpacity>
+  );
+  
+  const bottomSheet = bottomSheetVisible && selectedHabit ? (
+    <HabitBottomSheet
+      habit={selectedHabit}
+      onClose={closeBottomSheet}
+    />
+  ) : null;
 
-  if (isLoading) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
+  // Main render - avoid conditional returns that change the hook call order
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <DateSlider />
       
-      {filteredHabits.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: colors.textTertiary }]}>
-            No habits for this day
-          </Text>
-          <TouchableOpacity 
-            style={[styles.addHabitButton, { backgroundColor: colors.primary }]}
-            onPress={navigateToAddHabit}
-          >
-            <Text style={[styles.addHabitButtonText, { color: colors.textInverse }]}>
-              Add a habit
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.listWrapper}>
-          <SectionList
-            sections={groupedHabits}
-            keyExtractor={keyExtractor}
-            renderItem={renderHabitItem}
-            renderSectionHeader={renderSectionHeader}
-            stickySectionHeadersEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 7 }} />}
-            contentContainerStyle={styles.habitList}
-            refreshControl={
-              <RefreshControl 
-                refreshing={refreshing} 
-                onRefresh={onRefresh}
-                tintColor={colors.primary} 
-              />
-            }
-            SectionSeparatorComponent={() => <View style={{ height: 20 }} />}
-            ListHeaderComponent={() => <View style={{ height: 10 }} />}
-            ListFooterComponent={() => <View style={{ height: 80 }} />}
-            showsVerticalScrollIndicator={false}
-            initialNumToRender={20}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-          />
-        </View>
-      )}
-      
-      {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={[styles.floatingButton, { backgroundColor: colors.primary }]}
-        onPress={navigateToAddHabit}
-        activeOpacity={0.8}
-      >
-        <Plus size={24} color={colors.textInverse} />
-      </TouchableOpacity>
-      
-      {bottomSheetVisible && selectedHabit && (
-        <HabitBottomSheet
-          habit={selectedHabit}
-          onClose={closeBottomSheet}
-        />
+      {isLoading ? loadingView : (
+        <>
+          {!filteredHabits || filteredHabits.length === 0 ? emptyView : habitListView}
+          {floatingButton}
+          {bottomSheet}
+        </>
       )}
     </View>
   );

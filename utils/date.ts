@@ -31,6 +31,10 @@ export const getMonthName = (date: Date): string => {
 };
 
 export const formatTime = (seconds: number): string => {
+  // Safety check for non-number values
+  if (typeof seconds !== 'number' || isNaN(seconds)) {
+    seconds = 0;
+  }
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -66,56 +70,67 @@ export const shouldCompleteHabitOnDate = (
   habit: Habit,
   date: string
 ): boolean => {
-  // Create a cache key using habit ID and date
-  const cacheKey = `${habit.id}:${date}`;
-  
-  // Check if result is already cached
-  if (completionCache.has(cacheKey)) {
-    return completionCache.get(cacheKey)!;
-  }
-  
-  const habitDate = new Date(date);
-  const dayOfWeek = habitDate.getDay(); // 0 = Sunday, 6 = Saturday
-  let result = false;
+  // Safety check for null/undefined inputs
+  if (!habit || !date) return false;
 
-  switch (habit.repetitionType) {
-    case 'daily':
-      result = true;
-      break;
-    case 'weekly':
-      // Check if the current day is in the selected days
-      result = (habit.repetitionValue as number[]).includes(dayOfWeek);
-      break;
-    case 'custom':
-      // For custom "Every X days" pattern
-      if (typeof habit.repetitionValue === 'number') {
-        const createdAt = new Date(habit.createdAt);
-        const daysDiff = Math.floor(
-          (habitDate.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        result = daysDiff % habit.repetitionValue === 0;
-      }
-      // For "X times per Y" pattern
-      else if (
-        habit.repetitionValue &&
-        typeof habit.repetitionValue.times === 'number' &&
-        typeof habit.repetitionValue.period === 'string'
-      ) {
-        // A simple implementation would be to allow it on all days for the period
+  try {
+    // Create a cache key using habit ID and date
+    const cacheKey = `${habit.id}:${date}`;
+    
+    // Check if result is already cached
+    if (completionCache.has(cacheKey)) {
+      return completionCache.get(cacheKey) === true;
+    }
+    
+    const habitDate = new Date(date);
+    const dayOfWeek = habitDate.getDay(); // 0 = Sunday, 6 = Saturday
+    let result = false;
+
+    switch (habit.repetitionType) {
+      case 'daily':
         result = true;
-      }
-      break;
-    default:
-      result = false;
+        break;
+      case 'weekly':
+        // Type safety check - ensure repetitionValue is an array before using includes
+        result = Array.isArray(habit.repetitionValue) && 
+                habit.repetitionValue.includes(dayOfWeek);
+        break;
+      case 'custom':
+        // For custom "Every X days" pattern
+        if (typeof habit.repetitionValue === 'number' && habit.repetitionValue > 0) {
+          const createdAt = new Date(habit.createdAt);
+          const daysDiff = Math.floor(
+            (habitDate.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          result = daysDiff % habit.repetitionValue === 0;
+        }
+        // For "X times per Y" pattern
+        else if (
+          habit.repetitionValue &&
+          typeof habit.repetitionValue === 'object' &&
+          typeof habit.repetitionValue.times === 'number' &&
+          typeof habit.repetitionValue.period === 'string'
+        ) {
+          // A simple implementation would be to allow it on all days for the period
+          result = true;
+        }
+        break;
+      default:
+        result = false;
+    }
+    
+    // Cache the result
+    completionCache.set(cacheKey, result);
+    
+    // Setup cache cleanup if not already running
+    setupCacheCleanup();
+    
+    return result;
+  } catch (error) {
+    console.error('Error in shouldCompleteHabitOnDate:', error, 'habit:', habit, 'date:', date);
+    // Fail safe by returning false instead of crashing
+    return false;
   }
-  
-  // Cache the result
-  completionCache.set(cacheKey, result);
-  
-  // Setup cache cleanup if not already running
-  setupCacheCleanup();
-  
-  return result;
 };
 
 /**
