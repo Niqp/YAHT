@@ -13,7 +13,14 @@ interface HabitItemProps {
 
 export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   const { colors } = useTheme();
-  const { completeHabit, selectedDate } = useHabitStore();
+  const { 
+    completeHabit, 
+    selectedDate, 
+    registerActiveTimer,
+    unregisterActiveTimer,
+    activeTimers
+  } = useHabitStore();
+  
   const [timerActive, setTimerActive] = useState(false);
   const [baseTime, setBaseTime] = useState(0); // Time accumulated from previous sessions
   const [startTimestamp, setStartTimestamp] = useState<number | null>(null);
@@ -24,6 +31,9 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   const isCompleted = habit?.completionHistory?.[selectedDate]?.completed || false;
   const completionValue = habit?.completionHistory?.[selectedDate]?.value || 0;
   const completionGoal = habit?.completionGoal || 0;
+
+  // Get active timer for this habit
+  const activeTimer = habit ? activeTimers[habit.id] : undefined;
 
   // Progress calculation for visual indicator
   const progress = useMemo(() => {
@@ -38,17 +48,28 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
     }
   }, [habit, isCompleted, completionValue, completionGoal]);
 
-  // Set initial timer value from history if exists
+  // Set initial timer value from history if exists or from active timer
   useEffect(() => {
-    if (habit?.completionType === 'timed' && 
-        habit?.completionHistory?.[selectedDate]?.value !== undefined) {
-      setBaseTime(habit.completionHistory[selectedDate].value as number);
-    } else {
-      setBaseTime(0);
+    if (habit?.completionType === 'timed') {
+      if (activeTimer && activeTimer.date === selectedDate) {
+        // Timer is active (either from the beginning or restored after background)
+        console.log(`HabitItem: Initializing active timer for habit ${habit.id} with baseTime: ${activeTimer.baseTime}s`);
+        setTimerActive(true);
+        setBaseTime(activeTimer.baseTime);
+        setStartTimestamp(activeTimer.startTimestamp);
+      } else if (habit?.completionHistory?.[selectedDate]?.value !== undefined) {
+        // Timer is not active, but we have a stored value
+        setBaseTime(habit.completionHistory[selectedDate].value as number);
+        setTimerActive(false);
+        setStartTimestamp(null);
+      } else {
+        // Reset timer
+        setBaseTime(0);
+        setTimerActive(false);
+        setStartTimestamp(null);
+      }
     }
-    setTimerActive(false);
-    setStartTimestamp(null);
-  }, [selectedDate, habit?.id, habit?.completionHistory, habit?.completionType]);
+  }, [selectedDate, habit?.id, habit?.completionHistory, habit?.completionType, activeTimer]);
 
   // Timer effect: setup display refresh when timer is active
   useEffect(() => {
@@ -110,6 +131,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
         setTimerActive(false);
         setStartTimestamp(null);
         completeHabit(habit.id, 0, false);
+        unregisterActiveTimer(habit.id);
         
         if (displayTimeRef.current) {
           clearInterval(displayTimeRef.current);
@@ -117,14 +139,18 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
         }
       } else if (!timerActive) {
         // Start timer
-        setStartTimestamp(Date.now());
+        const now = Date.now();
+        setStartTimestamp(now);
         setTimerActive(true);
+        console.log(`Starting timer for habit ${habit.id} with baseTime: ${baseTime}s`);
+        registerActiveTimer(habit.id, now, baseTime, selectedDate);
       } else {
         // Pause timer - calculate and store the accumulated time
         const totalElapsedTime = getTotalElapsedTime();
         setBaseTime(totalElapsedTime);
         setTimerActive(false);
         setStartTimestamp(null);
+        unregisterActiveTimer(habit.id);
         
         if (displayTimeRef.current) {
           clearInterval(displayTimeRef.current);

@@ -17,6 +17,8 @@ import { router, useLocalSearchParams, Stack } from 'expo-router';
 import { CompletionType, RepetitionType } from '../types/habit';
 import { Clock, RotateCcw, CheckSquare } from 'lucide-react-native';
 import { useTheme } from '../hooks/useTheme';
+import RepetitionControls from '../components/controls/RepetitionControls';
+import TimedControls from '../components/controls/TimedControls';
 
 export default function AddEditHabitScreen() {
   const { colors } = useTheme();
@@ -233,27 +235,11 @@ export default function AddEditHabitScreen() {
               </Text>
             </View>
             <View style={styles.goalContainer}>
-              <Text style={[styles.goalLabel, { color: colors.textSecondary }]}>
-                Target repetitions:
-              </Text>
-              <TextInput
-                style={[
-                  styles.goalInput,
-                  { 
-                    borderColor: colors.border,
-                    backgroundColor: colors.input,
-                    color: colors.text
-                  }
-                ]}
-                value={completionGoal.toString()}
-                onChangeText={text => {
-                  const value = parseInt(text);
-                  if (!isNaN(value) && value > 0) {
-                    setCompletionGoal(value);
-                  }
-                }}
-                keyboardType="number-pad"
-                placeholderTextColor={colors.textTertiary}
+              <RepetitionControls
+                value={completionGoal}
+                onChange={setCompletionGoal}
+                min={1}
+                max={100}
               />
             </View>
           </View>
@@ -268,27 +254,11 @@ export default function AddEditHabitScreen() {
               </Text>
             </View>
             <View style={styles.goalContainer}>
-              <Text style={[styles.goalLabel, { color: colors.textSecondary }]}>
-                Target minutes:
-              </Text>
-              <TextInput
-                style={[
-                  styles.goalInput,
-                  { 
-                    borderColor: colors.border,
-                    backgroundColor: colors.input,
-                    color: colors.text
-                  }
-                ]}
-                value={Math.floor(completionGoal / 60).toString()}
-                onChangeText={text => {
-                  const value = parseInt(text);
-                  if (!isNaN(value) && value >= 0) {
-                    setCompletionGoal(value * 60); // Convert minutes to seconds
-                  }
-                }}
-                keyboardType="number-pad"
-                placeholderTextColor={colors.textTertiary}
+              <TimedControls
+                value={completionGoal}
+                onChange={setCompletionGoal}
+                min={60}  // 1 minute minimum
+                max={7200}  // 2 hours maximum
               />
             </View>
           </View>
@@ -667,16 +637,15 @@ const styles = StyleSheet.create({
   completionTypeDescription: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   completionDescription: {
     fontSize: 14,
     marginLeft: 10,
   },
   goalContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginLeft: 34,
+    marginTop: 8,
   },
   goalLabel: {
     fontSize: 14,

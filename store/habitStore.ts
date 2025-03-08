@@ -8,12 +8,25 @@ interface HabitsMap {
   [id: string]: Habit;
 }
 
+// Type to hold active timer information
+interface ActiveTimer {
+  startTimestamp: number;
+  baseTime: number;
+  date: string;
+}
+
+// Type to hold active timers map
+interface ActiveTimersMap {
+  [habitId: string]: ActiveTimer;
+}
+
 interface HabitState {
   habits: Habit[];
   habitsMap: HabitsMap; // Added for O(1) lookups
   selectedDate: string;
   isLoading: boolean;
   error: string | null;
+  activeTimers: ActiveTimersMap; // Added to track active timers
   
   addHabit: (habit: Omit<Habit, 'id' | 'createdAt' | 'completionHistory'>) => Promise<void>;
   updateHabit: (id: string, habit: Partial<Habit>) => Promise<void>;
@@ -23,6 +36,11 @@ interface HabitState {
   loadHabitsFromStorage: () => Promise<void>;
   getHabitById: (id: string) => Habit | undefined;
   importHabits: (importedHabits: Habit[]) => Promise<number>;
+  
+  // New functions for active timer management
+  registerActiveTimer: (habitId: string, startTimestamp: number, baseTime: number, date: string) => void;
+  unregisterActiveTimer: (habitId: string) => void;
+  syncActiveTimers: () => void;
 }
 
 // Helper to convert habit array to map
@@ -43,6 +61,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   selectedDate: new Date().toISOString().split('T')[0],
   isLoading: true,
   error: null,
+  activeTimers: {}, // Initialize empty active timers map
   
   addHabit: async (habitData) => {
     try {
@@ -285,5 +304,54 @@ export const useHabitStore = create<HabitState>((set, get) => ({
       set({ error: 'Failed to import habits' });
       throw error;
     }
+  },
+  
+  // New functions for active timer management
+  registerActiveTimer: (habitId, startTimestamp, baseTime, date) => {
+    console.log(`Registering active timer for habit ${habitId}`);
+    set(state => ({
+      activeTimers: {
+        ...state.activeTimers,
+        [habitId]: { startTimestamp, baseTime, date }
+      }
+    }));
+  },
+  
+  unregisterActiveTimer: (habitId) => {
+    console.log(`Unregistering active timer for habit ${habitId}`);
+    set(state => {
+      const newActiveTimers = { ...state.activeTimers };
+      delete newActiveTimers[habitId];
+      return { activeTimers: newActiveTimers };
+    });
+  },
+  
+  syncActiveTimers: () => {
+    const { activeTimers, completeHabit } = get();
+    const now = Date.now();
+    console.log(`Syncing ${Object.keys(activeTimers).length} active timers`);
+    
+    Object.entries(activeTimers).forEach(([habitId, { startTimestamp, baseTime, date }]) => {
+      // Calculate elapsed time since timer started
+      const elapsedSeconds = Math.floor((now - startTimestamp) / 1000);
+      const totalTime = baseTime + elapsedSeconds;
+      
+      console.log(`Habit ${habitId}: updating time to ${totalTime}s (+${elapsedSeconds}s while backgrounded)`);
+      
+      // Update the habit completion data with the accumulated time
+      completeHabit(habitId, totalTime, false);
+      
+      // Update the active timer with a new start timestamp and the accumulated time
+      set(state => ({
+        activeTimers: {
+          ...state.activeTimers,
+          [habitId]: {
+            startTimestamp: now,
+            baseTime: totalTime,
+            date
+          }
+        }
+      }));
+    });
   },
 }));
