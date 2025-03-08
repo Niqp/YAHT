@@ -14,7 +14,7 @@ import DateSlider from '../../components/DateSlider';
 import HabitItem from '../../components/HabitItem';
 import HabitBottomSheet from '../../components/HabitBottomSheet';
 import { useHabitStore } from '../../store/habitStore';
-import { shouldCompleteHabitOnDate, clearCompletionCache } from '../../utils/date';
+import { shouldCompleteHabitOnDate } from '../../utils/date';
 import { Habit } from '../../types/habit';
 import { Plus, CheckCircle, Circle } from 'lucide-react-native';
 import { useTheme } from '../../hooks/useTheme';
@@ -55,41 +55,28 @@ export default function TodayScreen() {
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
 
-  // Clear completion cache when habits or date change
-  useEffect(() => {
-    clearCompletionCache();
-  }, [habits, selectedDate]);
-
   // Get all valid habits for the selected date
+  // This is now memoized with dependencies only on the essential data
   const filteredHabits = useMemo(() => {
     return habits.filter(habit => 
       shouldCompleteHabitOnDate(habit, selectedDate)
     );
   }, [habits, selectedDate]);
 
-  // Group habits by completion status
+  // Group habits by completion status - swapped To Do and Completed order
   const groupedHabits = useMemo(() => {
-    // Get completed habits
-    const completedHabits = filteredHabits.filter(habit => 
-      habit.completionHistory[selectedDate]?.completed
-    );
-
     // Get incomplete habits
     const incompleteHabits = filteredHabits.filter(habit => 
       !habit.completionHistory[selectedDate]?.completed
     );
 
-    // Create sections for SectionList
-    const sections = [];
+    // Get completed habits
+    const completedHabits = filteredHabits.filter(habit => 
+      habit.completionHistory[selectedDate]?.completed
+    );
 
-    // Add completed section if there are completed habits
-    if (completedHabits.length > 0) {
-      sections.push({
-        title: 'Completed',
-        data: completedHabits,
-        completed: true,
-      });
-    }
+    // Create sections for SectionList - To Do first, then Completed
+    const sections = [];
 
     // Add incomplete section if there are incomplete habits
     if (incompleteHabits.length > 0) {
@@ -97,6 +84,15 @@ export default function TodayScreen() {
         title: 'To Do',
         data: incompleteHabits,
         completed: false,
+      });
+    }
+
+    // Add completed section if there are completed habits
+    if (completedHabits.length > 0) {
+      sections.push({
+        title: 'Completed',
+        data: completedHabits,
+        completed: true,
       });
     }
 
@@ -188,6 +184,9 @@ export default function TodayScreen() {
             ListHeaderComponent={() => <View style={{ height: 10 }} />}
             ListFooterComponent={() => <View style={{ height: 80 }} />}
             showsVerticalScrollIndicator={false}
+            initialNumToRender={20}
+            maxToRenderPerBatch={10}
+            windowSize={10}
           />
         </View>
       )}

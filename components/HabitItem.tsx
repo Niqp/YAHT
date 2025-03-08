@@ -19,8 +19,21 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
+  // Check completion status
   const isCompleted = habit.completionHistory[selectedDate]?.completed || false;
   const completionValue = habit.completionHistory[selectedDate]?.value || 0;
+  const completionGoal = habit.completionGoal || 0;
+
+  // Progress calculation for visual indicator
+  const progress = useMemo(() => {
+    if (habit.completionType === 'simple') {
+      return isCompleted ? 1 : 0;
+    } else {
+      const value = completionValue || 0;
+      const goal = completionGoal || 1; // Prevent division by zero
+      return Math.min(1, value / goal);
+    }
+  }, [habit.completionType, isCompleted, completionValue, completionGoal]);
 
   // Set initial timer value from history if exists
   useEffect(() => {
@@ -29,7 +42,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
     } else {
       setTimerValue(0);
     }
-  }, [selectedDate, habit.id]);
+  }, [selectedDate, habit.id, habit.completionHistory, habit.completionType]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -40,12 +53,12 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
     };
   }, []);
 
-  // Modified to handle toggling completion status
+  // Handle main press action with animation
   const handlePress = () => {
     // Animate the press
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: 0.95,
+        toValue: 0.97,
         duration: 100,
         useNativeDriver: true,
       }),
@@ -85,18 +98,19 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
         setTimerActive(false);
         
         // Update completion if the timer value reaches or exceeds the goal
-        if (timerValue >= (habit.completionGoal || 0)) {
-          completeHabit(habit.id, timerValue);
+        if (timerValue >= completionGoal) {
+          completeHabit(habit.id, timerValue, true);
+        } else {
+          completeHabit(habit.id, timerValue, false);
         }
       }
     }
-    // Repetition habits now use separate + and - buttons
   };
 
   // Handle increment for repetition habits
   const handleIncrement = () => {
     const newValue = (completionValue || 0) + 1;
-    const shouldComplete = newValue >= (habit.completionGoal || 0);
+    const shouldComplete = newValue >= completionGoal;
     completeHabit(habit.id, newValue, shouldComplete);
   };
 
@@ -105,118 +119,132 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
     if (completionValue <= 0) return;
     
     const newValue = Math.max(0, (completionValue || 0) - 1);
-    const shouldComplete = newValue >= (habit.completionGoal || 0);
+    const shouldComplete = newValue >= completionGoal;
     completeHabit(habit.id, newValue, shouldComplete);
   };
 
-  // Apply theme colors to styles
-  const containerStyle = useMemo(() => [
-    styles.container,
-    { 
-      backgroundColor: colors.habitBackground,
-      shadowColor: colors.shadow,
-      borderColor: colors.border,
-    },
-    isCompleted && { 
-      backgroundColor: colors.habitCompleted 
-    },
-    { transform: [{ scale: scaleAnim }] }
-  ], [colors, isCompleted, scaleAnim]);
+  // Calculate the width of the progress bar
+  const progressBarWidth = `${Math.round(progress * 100)}%`;
 
-  const iconContainerStyle = useMemo(() => [
-    styles.iconContainer,
-    { backgroundColor: colors.input }
-  ], [colors]);
-
-  const titleStyle = useMemo(() => [
-    styles.title,
-    { color: colors.text }
-  ], [colors]);
-
-  // Render the completion indicator
-  const renderCompletionIndicator = () => {
-    // Always show the circle indicator
-    const circleIndicator = isCompleted ? (
-      <CheckCircle size={24} color={colors.success} />
-    ) : (
-      <Circle size={24} color={colors.textSecondary} />
-    );
-
-    // Additional info based on habit type
-    let additionalInfo = null;
-    
-    if (habit.completionType === 'repetitions') {
-      const isReachedGoal = completionValue >= (habit.completionGoal || 0) && completionValue > 0;
-      
-      additionalInfo = (
-        <View style={styles.repetitionContainer}>
-          <TouchableOpacity 
-            style={[styles.repButton, { backgroundColor: colors.input }]} 
-            onPress={handleDecrement}
-          >
-            <Minus size={16} color={colors.textSecondary} />
-          </TouchableOpacity>
-          
-          <View style={styles.repCountContainer}>
-            <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-              {completionValue}/{habit.completionGoal}
-            </Text>
-            <RotateCcw size={14} color={isReachedGoal ? colors.success : colors.textSecondary} style={styles.repIcon} />
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.repButton, { backgroundColor: colors.input }]} 
-            onPress={handleIncrement}
-          >
-            <Plus size={16} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
-      );
-    } else if (habit.completionType === 'timed') {
-      const isReachedGoal = timerValue >= (habit.completionGoal || 0) && timerValue > 0;
-      
-      additionalInfo = (
-        <View style={styles.detailContainer}>
-          <Timer size={16} color={timerActive ? colors.accent : isReachedGoal ? colors.success : colors.textSecondary} />
-          <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-            {formatTime(timerValue)}/{formatTime(habit.completionGoal || 0)}
-          </Text>
-        </View>
-      );
+  // Generate subtitle text based on habit type
+  const getSubtitleText = () => {
+    switch (habit.completionType) {
+      case 'simple':
+        return isCompleted ? 'Completed' : '';
+      case 'repetitions':
+        return `${completionValue} / ${completionGoal} repetitions`;
+      case 'timed':
+        return `${formatTime(timerValue)} / ${formatTime(completionGoal)}`;
+      default:
+        return '';
     }
+  };
 
-    return (
-      <View style={styles.statusContainer}>
-        {additionalInfo && (
-          <View style={styles.detailWrapper}>
-            {additionalInfo}
-          </View>
-        )}
-        {habit.completionType !== 'repetitions' && circleIndicator}
-      </View>
-    );
+  // Generate subtitle icon based on habit type
+  const getSubtitleIcon = () => {
+    switch (habit.completionType) {
+      case 'simple':
+        return isCompleted 
+          ? <CheckCircle size={16} color={colors.success} /> 
+          : <Circle size={16} color={colors.textSecondary} />;
+      case 'repetitions':
+        return <RotateCcw size={16} color={isCompleted ? colors.success : colors.textSecondary} />;
+      case 'timed':
+        return <Timer size={16} color={timerActive ? colors.accent : (isCompleted ? colors.success : colors.textSecondary)} />;
+      default:
+        return null;
+    }
   };
 
   return (
-    <Animated.View style={containerStyle}>
+    <Animated.View 
+      style={[
+        styles.container, 
+        { 
+          backgroundColor: colors.habitBackground,
+          borderColor: colors.border,
+          transform: [{ scale: scaleAnim }] 
+        },
+        isCompleted && { backgroundColor: colors.habitCompleted }
+      ]}
+    >
+      {/* Progress indicator */}
+      <View 
+        style={[
+          styles.progressBar, 
+          { 
+            width: progressBarWidth,
+            backgroundColor: isCompleted ? colors.success : colors.primary,
+            opacity: 0.15
+          }
+        ]} 
+      />
+
       <TouchableOpacity
-        style={styles.contentTouchable}
-        onPress={handlePress}
+        style={styles.mainContent}
+        onPress={habit.completionType !== 'repetitions' ? handlePress : undefined}
         onLongPress={() => onLongPress(habit)}
         activeOpacity={0.7}
-        disabled={habit.completionType === 'repetitions'} // Disable press for repetition habits
       >
-        <View style={iconContainerStyle}>
+        {/* Left section - Icon */}
+        <View style={[styles.iconContainer, { backgroundColor: colors.input }]}>
           <Text style={styles.iconText}>{habit.icon}</Text>
         </View>
-        <View style={styles.contentContainer}>
-          <Text style={titleStyle}>{habit.title}</Text>
+        
+        {/* Middle section - Title and Subtitle */}
+        <View style={styles.infoContainer}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+            {habit.title}
+          </Text>
+          {habit.completionType !== 'simple' && (
+            <View style={styles.subtitleContainer}>
+              {getSubtitleIcon()}
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                {getSubtitleText()}
+              </Text>
+            </View>
+          )}
         </View>
-        {renderCompletionIndicator()}
+        
+        {/* Right section - Action buttons or completion indicator */}
+        <View style={styles.actionsContainer}>
+          {habit.completionType === 'repetitions' ? (
+            <View style={styles.repetitionControls}>
+              <TouchableOpacity 
+                style={[styles.repButton, { backgroundColor: colors.input }]} 
+                onPress={handleDecrement}
+              >
+                <Minus size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+              
+              <Text style={[styles.repCount, { color: colors.text }]}>
+                {completionValue}
+              </Text>
+              
+              <TouchableOpacity 
+                style={[styles.repButton, { backgroundColor: colors.input }]} 
+                onPress={handleIncrement}
+              >
+                <Plus size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            isCompleted ? (
+              <CheckCircle size={22} color={colors.success} />
+            ) : (
+              habit.completionType === 'timed' && timerActive ? (
+                <Timer size={22} color={colors.accent} />
+              ) : (
+                <Circle size={22} color={colors.textSecondary} />
+              )
+            )
+          )}
+        </View>
       </TouchableOpacity>
       
+      {/* More options button */}
       <TouchableOpacity 
-        style={styles.menuButton}
+        style={styles.moreButton}
         onPress={() => onLongPress(habit)}
       >
         <MoreVertical size={20} color={colors.textSecondary} />
@@ -225,34 +253,35 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   );
 }
 
-// Larger habit items with adjusted styling
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 12,
     marginHorizontal: 16,
-    marginVertical: 0, 
-    marginTop: 0,
-    marginBottom: 0,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    // Increased height for larger items
-    height: 68, 
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    height: 70,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  contentTouchable: {
+  progressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    height: '100%',
+  },
+  mainContent: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 0,
+    paddingLeft: 14,
+    paddingRight: 0,
     height: '100%',
   },
   iconContainer: {
-    width: 42, // Larger icon container
+    width: 42,
     height: 42,
     borderRadius: 21,
     alignItems: 'center',
@@ -260,39 +289,35 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   iconText: {
-    fontSize: 20, // Larger icon
+    fontSize: 22,
   },
-  contentContainer: {
+  infoContainer: {
     flex: 1,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 16, // Larger title
+    fontSize: 16,
     fontWeight: '600',
+    marginBottom: 4,
   },
-  statusContainer: {
+  subtitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  detailWrapper: {
-    marginRight: 10,
-  },
-  detailContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  repetitionContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    width: 110, // Fixed width to ensure alignment
-  },
-  repCountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  repIcon: {
+  subtitle: {
+    fontSize: 13,
     marginLeft: 4,
+  },
+  actionsContainer: {
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 40,
+  },
+  repetitionControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   repButton: {
     width: 28,
@@ -301,14 +326,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  detailText: {
-    fontSize: 14, // Larger text
-    marginLeft: 4,
+  repCount: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginHorizontal: 8,
+    minWidth: 24,
+    textAlign: 'center',
   },
-  menuButton: {
+  moreButton: {
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
 });

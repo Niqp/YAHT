@@ -36,9 +36,32 @@ export const formatTime = (seconds: number): string => {
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-// Cache results for improved performance
+// OPTIMIZATION: Cache results with a Map for improved performance
+// This significantly speeds up repeated calls with the same habit+date
 const completionCache = new Map<string, boolean>();
 
+// Timer to occasionally clean the cache to prevent memory leaks
+let cacheCleanupTimer: NodeJS.Timeout | null = null;
+const CACHE_CLEANUP_INTERVAL = 60000; // 1 minute
+
+/**
+ * Set up cache cleanup to run periodically
+ * This prevents memory leaks from accumulating cached values
+ */
+const setupCacheCleanup = () => {
+  if (cacheCleanupTimer) return;
+  
+  cacheCleanupTimer = setInterval(() => {
+    if (completionCache.size > 500) { // Only clean if cache is large
+      clearCompletionCache();
+    }
+  }, CACHE_CLEANUP_INTERVAL);
+};
+
+/**
+ * Determine if a habit should be completed on a specific date
+ * Optimized with caching for performance
+ */
 export const shouldCompleteHabitOnDate = (
   habit: Habit,
   date: string
@@ -89,10 +112,41 @@ export const shouldCompleteHabitOnDate = (
   // Cache the result
   completionCache.set(cacheKey, result);
   
+  // Setup cache cleanup if not already running
+  setupCacheCleanup();
+  
   return result;
 };
 
-// Function to clear cache when needed (e.g., when habit definitions change)
+/**
+ * Clear completion cache when needed
+ * This is now more selective - we have automatic cleanup,
+ * so this should only be called when habit definitions change
+ */
 export const clearCompletionCache = (): void => {
+  completionCache.clear();
+};
+
+/**
+ * Clear cache for a specific habit
+ * More efficient than clearing the entire cache
+ */
+export const clearHabitCache = (habitId: string): void => {
+  // Remove all cache entries for this habit
+  for (const key of completionCache.keys()) {
+    if (key.startsWith(`${habitId}:`)) {
+      completionCache.delete(key);
+    }
+  }
+};
+
+/**
+ * Clean up resources when the app is unmounted
+ */
+export const cleanupDateUtils = (): void => {
+  if (cacheCleanupTimer) {
+    clearInterval(cacheCleanupTimer);
+    cacheCleanupTimer = null;
+  }
   completionCache.clear();
 };
