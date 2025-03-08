@@ -15,9 +15,10 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   const { colors } = useTheme();
   const { completeHabit, selectedDate } = useHabitStore();
   const [timerActive, setTimerActive] = useState(false);
-  const [timerValue, setTimerValue] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [baseTime, setBaseTime] = useState(0); // Time accumulated from previous sessions
+  const [startTimestamp, setStartTimestamp] = useState<number | null>(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const displayTimeRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check completion status with safety checks
   const isCompleted = habit?.completionHistory?.[selectedDate]?.completed || false;
@@ -41,17 +42,41 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   useEffect(() => {
     if (habit?.completionType === 'timed' && 
         habit?.completionHistory?.[selectedDate]?.value !== undefined) {
-      setTimerValue(habit.completionHistory[selectedDate].value as number);
+      setBaseTime(habit.completionHistory[selectedDate].value as number);
     } else {
-      setTimerValue(0);
+      setBaseTime(0);
     }
+    setTimerActive(false);
+    setStartTimestamp(null);
   }, [selectedDate, habit?.id, habit?.completionHistory, habit?.completionType]);
+
+  // Timer effect: setup display refresh when timer is active
+  useEffect(() => {
+    if (timerActive && startTimestamp) {
+      // Setup regular UI refresh (every 1 second)
+      displayTimeRef.current = setInterval(() => {
+        // This just forces a re-render to update the displayed time
+        // The actual time calculation happens in getDisplayTime()
+        forceUpdate(n => n + 1);
+      }, 1000);
+      
+      return () => {
+        if (displayTimeRef.current) {
+          clearInterval(displayTimeRef.current);
+          displayTimeRef.current = null;
+        }
+      };
+    }
+  }, [timerActive, startTimestamp]);
+  
+  // Force re-render for timer display updates
+  const [, forceUpdate] = useState(0);
 
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (displayTimeRef.current) {
+        clearInterval(displayTimeRef.current);
       }
     };
   }, []);
@@ -81,34 +106,34 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
     } else if (habit.completionType === 'timed') {
       if (isCompleted) {
         // Reset timer when clicking on a completed timed habit
-        setTimerValue(0);
+        setBaseTime(0);
         setTimerActive(false);
+        setStartTimestamp(null);
         completeHabit(habit.id, 0, false);
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
+        
+        if (displayTimeRef.current) {
+          clearInterval(displayTimeRef.current);
+          displayTimeRef.current = null;
         }
       } else if (!timerActive) {
         // Start timer
-        const interval = setInterval(() => {
-          setTimerValue(prev => prev + 1);
-        }, 1000);
-        intervalRef.current = interval;
+        setStartTimestamp(Date.now());
         setTimerActive(true);
       } else {
-        // Pause timer
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
+        // Pause timer - calculate and store the accumulated time
+        const totalElapsedTime = getTotalElapsedTime();
+        setBaseTime(totalElapsedTime);
         setTimerActive(false);
+        setStartTimestamp(null);
         
-        // Update completion if the timer value reaches or exceeds the goal
-        if (timerValue >= completionGoal) {
-          completeHabit(habit.id, timerValue, true);
-        } else {
-          completeHabit(habit.id, timerValue, false);
+        if (displayTimeRef.current) {
+          clearInterval(displayTimeRef.current);
+          displayTimeRef.current = null;
         }
+        
+        // Update completion status based on elapsed time
+        const isGoalAchieved = totalElapsedTime >= completionGoal;
+        completeHabit(habit.id, totalElapsedTime, isGoalAchieved);
       }
     }
   };
@@ -141,6 +166,22 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   // Calculate the width of the progress bar
   const progressBarWidth = `${Math.round(progress * 100)}%`;
 
+  // Get total elapsed time (base time + current session time)
+  const getTotalElapsedTime = (): number => {
+    // Base time plus any active session time
+    if (timerActive && startTimestamp) {
+      const now = Date.now();
+      const currentSessionSeconds = Math.floor((now - startTimestamp) / 1000);
+      return baseTime + currentSessionSeconds;
+    }
+    return baseTime;
+  };
+  
+  // Format the time for display
+  const getDisplayTime = () => {
+    return formatTime(getTotalElapsedTime());
+  };
+
   // Generate subtitle text based on habit type
   const getSubtitleText = () => {
     switch (habit.completionType) {
@@ -149,7 +190,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
       case 'repetitions':
         return `${completionValue} / ${completionGoal}`;
       case 'timed':
-        return `${formatTime(timerValue)} / ${formatTime(completionGoal)}`;
+        return `${getDisplayTime()} / ${formatTime(completionGoal)}`;
       default:
         return '';
     }
