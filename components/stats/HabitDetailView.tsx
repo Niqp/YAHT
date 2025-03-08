@@ -15,6 +15,7 @@ interface HabitDetailViewProps {
     datasets: { data: number[] }[];
   };
   progressData: {
+    labels?: string[];
     data: number[];
   };
   habitStats: any; // Using any here as the stats object has many properties

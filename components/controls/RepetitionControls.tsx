@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Minus, Plus } from 'lucide-react-native';
 import { useTheme } from '../../hooks/useTheme';
@@ -22,6 +22,14 @@ export default function RepetitionControls({
 }: RepetitionControlsProps) {
   const { colors } = useTheme();
   
+  // Allow empty input for better editing experience
+  const [inputValue, setInputValue] = useState(value.toString());
+  
+  // Update internal input value when the external value changes
+  useEffect(() => {
+    setInputValue(value.toString());
+  }, [value]);
+  
   const handleIncrement = () => {
     if (value + step <= max) {
       onChange(value + step);
@@ -33,14 +41,6 @@ export default function RepetitionControls({
       onChange(value - step);
     }
   };
-  
-  // Allow empty input for better editing experience
-  const [inputValue, setInputValue] = useState(value.toString());
-  
-  // Update internal input value when the external value changes
-  useEffect(() => {
-    setInputValue(value.toString());
-  }, [value]);
   
   const handleInputChange = (text: string) => {
     // Allow empty or partial input while typing

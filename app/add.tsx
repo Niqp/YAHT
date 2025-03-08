@@ -19,9 +19,10 @@ import { Clock, RotateCcw, CheckSquare } from 'lucide-react-native';
 import { useTheme } from '../hooks/useTheme';
 import RepetitionControls from '../components/controls/RepetitionControls';
 import TimedControls from '../components/controls/TimedControls';
+import { getOrderedWeekdays, getDefaultSelectedDays } from '../utils/weekDayUtils';
 
 export default function AddEditHabitScreen() {
-  const { colors } = useTheme();
+  const { colors, weekStartDay } = useTheme();
   const params = useLocalSearchParams();
   const habitId = params.habitId as string | undefined;
   const { addHabit, updateHabit, deleteHabit, getHabitById } = useHabitStore();
@@ -29,21 +30,14 @@ export default function AddEditHabitScreen() {
   const [title, setTitle] = useState('');
   const [icon, setIcon] = useState('🌟');
   const [repetitionType, setRepetitionType] = useState<RepetitionType>('daily');
-  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [selectedDays, setSelectedDays] = useState<number[]>(getDefaultSelectedDays(weekStartDay));
   const [customDays, setCustomDays] = useState<number>(1);
   const [completionType, setCompletionType] = useState<CompletionType>('simple');
   const [completionGoal, setCompletionGoal] = useState<number>(5);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const WEEKDAYS = [
-    { value: 0, label: 'Sunday' },
-    { value: 1, label: 'Monday' },
-    { value: 2, label: 'Tuesday' },
-    { value: 3, label: 'Wednesday' },
-    { value: 4, label: 'Thursday' },
-    { value: 5, label: 'Friday' },
-    { value: 6, label: 'Saturday' },
-  ];
+  // Get weekdays ordered according to the weekStartDay preference
+  const WEEKDAYS = getOrderedWeekdays(weekStartDay);
 
   useEffect(() => {
     if (habitId) {
@@ -68,6 +62,13 @@ export default function AddEditHabitScreen() {
       }
     }
   }, [habitId]);
+
+  // When weekStartDay changes and we're not in edit mode, update default selected days
+  useEffect(() => {
+    if (!isEditMode && repetitionType === 'weekly') {
+      setSelectedDays(getDefaultSelectedDays(weekStartDay));
+    }
+  }, [weekStartDay, isEditMode, repetitionType]);
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -139,6 +140,18 @@ export default function AddEditHabitScreen() {
     }
   };
 
+  // Helper to map displayed index to actual day value
+  const getDayValue = (displayIndex: number) => {
+    // Get the day's actual value (0-6, where 0 is Sunday)
+    return WEEKDAYS[displayIndex].value;
+  };
+  
+  // Helper to check if a day is selected by its displayed index
+  const isDaySelected = (displayIndex: number) => {
+    const dayValue = WEEKDAYS[displayIndex].value;
+    return selectedDays.includes(dayValue);
+  };
+
   const renderRepetitionOptions = () => {
     switch (repetitionType) {
       case 'daily':
@@ -150,7 +163,7 @@ export default function AddEditHabitScreen() {
       case 'weekly':
         return (
           <View style={styles.daysContainer}>
-            {WEEKDAYS.map((day) => (
+            {WEEKDAYS.map((day, index) => (
               <TouchableOpacity
                 key={day.value}
                 style={[
@@ -159,7 +172,7 @@ export default function AddEditHabitScreen() {
                     borderColor: colors.border,
                     backgroundColor: colors.input
                   },
-                  selectedDays.includes(day.value) && { 
+                  isDaySelected(index) && { 
                     backgroundColor: colors.primary,
                     borderColor: colors.primary
                   },
@@ -170,7 +183,7 @@ export default function AddEditHabitScreen() {
                   style={[
                     styles.dayButtonText,
                     { color: colors.textSecondary },
-                    selectedDays.includes(day.value) && { color: colors.textInverse },
+                    isDaySelected(index) && { color: colors.textInverse },
                   ]}
                 >
                   {day.label.substring(0, 3)}

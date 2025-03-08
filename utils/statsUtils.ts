@@ -105,6 +105,7 @@ export const calculateHabitStats = (habit: Habit) => {
       totalTimeSpent: 0,
       averageTimePerSession: 0,
       longestSession: 0,
+      completionSinceCreation: 0,
     };
   }
   
@@ -151,6 +152,18 @@ export const calculateHabitStats = (habit: Habit) => {
     (totalCompletions / completionDates.length) * 100
   );
   
+  // Calculate completion since creation
+  const creationDate = new Date(habit.createdAt);
+  const today = new Date();
+  // Calculate total days since creation (including today)
+  const totalDays = Math.max(1, Math.floor((today.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  // Count completed days
+  const completedDays = Object.values(completionHistory)
+    .filter(entry => entry.completed)
+    .length;
+  // Calculate percentage - ensure value is between 0-100
+  const completionSinceCreation = Math.min(100, Math.max(0, Math.round((completedDays / totalDays) * 100)));
+  
   const result = {
     // Simple habit stats (defaults)
     completionRate,
@@ -158,6 +171,7 @@ export const calculateHabitStats = (habit: Habit) => {
     bestStreak,
     totalCompletions,
     lastCompletionDate,
+    completionSinceCreation,
     
     // Repetition habit stats (defaults)
     averageRepetitions: 0,

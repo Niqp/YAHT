@@ -6,6 +6,7 @@ import { CompletionType } from '../../../types/habit';
 
 interface ProgressCircleProps {
   progressData: {
+    labels?: string[];
     data: number[];
   };
   completionType: CompletionType;
@@ -14,6 +15,7 @@ interface ProgressCircleProps {
     goalAchievementRate: number;
     totalCompletions: number;
     currentStreak: number;
+    completionSinceCreation: number;
   };
 }
 
@@ -30,22 +32,21 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
     backgroundColor: colors.cardBackground,
     backgroundGradientFrom: colors.cardBackground,
     backgroundGradientTo: colors.cardBackground,
-    color: (opacity = 1) => colors.primary,
+    color: (opacity = 1) => `rgba(${isDarkMode ? '106, 142, 174' : '74, 101, 114'}, ${opacity})`,
     backgroundGradientFromOpacity: 0,
     backgroundGradientToOpacity: 0,
     labelColor: (opacity = 1) => colors.text,
-  }), [colors]);
+    strokeWidth: 2, // Ensure stroke width is set correctly
+    propsForLabels: { display: 'none' }, // Hide labels as we use hideLegend
+  }), [colors, isDarkMode]);
 
-  const progressValue = completionType === 'simple' 
-    ? stats.completionRate 
-    : stats.goalAchievementRate;
+  // Always use completionSinceCreation regardless of habit type
+  const progressValue = stats.completionSinceCreation;
 
   return (
     <View style={styles.progressSection}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        {completionType === 'simple' 
-          ? 'Completion Rate' 
-          : 'Goal Achievement'}
+        Completion Since Creation
       </Text>
       
       <View style={styles.progressRow}>
@@ -54,16 +55,14 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
             data={progressData}
             width={screenWidth * 0.32}
             height={100}
-            strokeWidth={8}
-            radius={30}
+            strokeWidth={10}
+            radius={32}
             chartConfig={chartConfig}
-            hideLegend
+            hideLegend={true}
             style={styles.progressChart}
           />
           <Text style={[styles.progressText, { color: colors.primary }]}>
-            {completionType === 'simple' 
-              ? `${stats.completionRate}%` 
-              : `${stats.goalAchievementRate}%`}
+            {`${progressValue}%`}
           </Text>
         </View>
         

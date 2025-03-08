@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Github, Star, Info, Download, Upload, ChevronRight } from 'lucide-react-native';
+import { Github, Star, Info, Download, Upload, ChevronRight, Calendar } from 'lucide-react-native';
 import ThemeToggle from '../../components/ThemeToggle';
 import { useTheme } from '../../hooks/useTheme';
 import { exportData, importData } from '../../utils/fileOperations';
+import { WeekStartDay } from '../../store/themeStore';
 
 export default function SettingsScreen() {
-  const { colors } = useTheme();
+  const { colors, weekStartDay, setWeekStartDay } = useTheme();
 
   const handleExport = async () => {
     try {
@@ -60,6 +61,59 @@ export default function SettingsScreen() {
         <Text style={[styles.headerText, { color: colors.text }]}>Settings</Text>
         
         <ThemeToggle />
+
+        {/* Week Settings Section */}
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Week Settings</Text>
+          <View style={styles.weekSettingContainer}>
+            <View style={styles.weekSettingHeader}>
+              <Calendar size={22} color={colors.primary} />
+              <Text style={[styles.weekSettingLabel, { color: colors.text }]}>
+                First day of week
+              </Text>
+            </View>
+            
+            <View style={styles.weekDayOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.weekDayButton,
+                  { backgroundColor: colors.input },
+                  weekStartDay === 'sunday' && { backgroundColor: colors.primary }
+                ]}
+                onPress={() => setWeekStartDay('sunday')}
+              >
+                <Text
+                  style={[
+                    styles.weekDayButtonText,
+                    { color: colors.textSecondary },
+                    weekStartDay === 'sunday' && { color: colors.textInverse }
+                  ]}
+                >
+                  Sunday
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.weekDayButton,
+                  { backgroundColor: colors.input },
+                  weekStartDay === 'monday' && { backgroundColor: colors.primary }
+                ]}
+                onPress={() => setWeekStartDay('monday')}
+              >
+                <Text
+                  style={[
+                    styles.weekDayButtonText,
+                    { color: colors.textSecondary },
+                    weekStartDay === 'monday' && { color: colors.textInverse }
+                  ]}
+                >
+                  Monday
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>App</Text>
@@ -154,5 +208,35 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     marginBottom: 6,
+  },
+  weekSettingContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  weekSettingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  weekSettingLabel: {
+    fontSize: 16,
+    marginLeft: 12,
+  },
+  weekDayOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  weekDayButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  weekDayButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

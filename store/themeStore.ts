@@ -4,14 +4,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
+export type WeekStartDay = 'sunday' | 'monday';
 
 interface ThemeState {
   mode: ThemeMode;
   systemColorScheme: ColorSchemeName;
   isDarkMode: boolean;
+  weekStartDay: WeekStartDay;
   setMode: (mode: ThemeMode) => void;
   setSystemColorScheme: (colorScheme: ColorSchemeName) => void;
   initializeWithSystemTheme: (systemTheme: ColorSchemeName) => void;
+  setWeekStartDay: (day: WeekStartDay) => void;
 }
 
 // Create a stable version of the functions outside the store
@@ -59,10 +62,16 @@ const createActions = (set: any, get: any) => {
     });
   };
 
+  const setWeekStartDay = (day: WeekStartDay) => {
+    console.log(`Setting week start day to ${day}`);
+    set({ weekStartDay: day });
+  };
+
   return {
     setMode,
     setSystemColorScheme,
-    initializeWithSystemTheme
+    initializeWithSystemTheme,
+    setWeekStartDay
   };
 };
 
@@ -75,13 +84,17 @@ export const useThemeStore = create<ThemeState>()(
         mode: 'system', // Default to system
         systemColorScheme: null, // Start with null to ensure we pick up the real value
         isDarkMode: false, // Initial value will be updated
+        weekStartDay: 'monday', // Default to Monday as first day of week
         ...actions
       };
     },
     {
       name: 'theme-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ mode: state.mode }),
+      partialize: (state) => ({ 
+        mode: state.mode,
+        weekStartDay: state.weekStartDay 
+      }),
       onRehydrateStorage: () => (state) => {
         // When storage is rehydrated, we'll initialize
         console.log('Theme storage rehydrated with mode:', state?.mode);

@@ -9,7 +9,9 @@ export const useTheme = () => {
     mode, 
     isDarkMode, 
     setMode,
-    systemColorScheme
+    systemColorScheme,
+    weekStartDay,
+    setWeekStartDay
   } = useThemeStore();
 
   // Get the current theme colors based on isDarkMode state
@@ -20,6 +22,8 @@ export const useTheme = () => {
     isDarkMode,
     mode,
     setMode,
-    systemColorScheme
+    systemColorScheme,
+    weekStartDay,
+    setWeekStartDay
   };
 };

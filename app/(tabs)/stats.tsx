@@ -54,6 +54,7 @@ export default function StatsScreen() {
     totalTimeSpent: 0,
     averageTimePerSession: 0,
     longestSession: 0,
+    completionSinceCreation: 0,
   });
 
   // Initialize habits and calculate overall stats
@@ -85,13 +86,12 @@ export default function StatsScreen() {
       const stats = calculateHabitStats(selectedHabit);
       setHabitStats(stats);
       
-      // Set progress data for the progress chart
-      const progressValue = 
-        selectedHabit.completionType === 'simple' 
-          ? stats.completionRate / 100
-          : stats.goalAchievementRate / 100;
+      // Set progress data for the progress chart - always use completionSinceCreation
+      // Ensure value is properly formatted for the ProgressChart component
+      const progressValue = stats.completionSinceCreation / 100;
       
       setProgressData({
+        labels: ["Completion"], // ProgressChart requires labels even when hideLegend is true
         data: [Math.min(1, Math.max(0, progressValue))]
       });
     }
