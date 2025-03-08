@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "Yet Another Habit Tracker",
+    "name": "YAHT - Yet Another Habit Tracker",
     "slug": "yaht",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "icon": "./assets/images/icon.png",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
@@ -16,10 +17,7 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.anonymous.yaht"
+      "package": "com.niqp.yaht"
     },
     "web": {
       "bundler": "metro",
