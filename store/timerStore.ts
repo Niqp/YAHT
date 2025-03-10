@@ -148,8 +148,9 @@ export async function scheduleTimerNotification(
         sound: true,
       },
       trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
         date: new Date(triggerTime),
-      },
+      }
     });
     
     return notificationId;
