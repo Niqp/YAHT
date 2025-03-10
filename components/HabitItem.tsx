@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { CheckCircle, Circle, MoreVertical, Timer, RotateCcw, Plus, Minus } from 'lucide-react-native';
 import { useHabitStore } from '../store/habitStore';
@@ -34,6 +34,25 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 
   // Get active timer for this habit
   const activeTimer = habit ? activeTimers[habit.id] : undefined;
+  
+  // Force re-render for timer display updates
+  const [, forceUpdate] = useState(0);
+  
+  // Get total elapsed time (base time + current session time)
+  const getTotalElapsedTime = useCallback((): number => {
+    // Base time plus any active session time
+    if (timerActive && startTimestamp) {
+      const now = Date.now();
+      const currentSessionSeconds = Math.floor((now - startTimestamp) / 1000);
+      return baseTime + currentSessionSeconds;
+    }
+    return baseTime;
+  }, [timerActive, startTimestamp, baseTime]);
+
+  // Format the time for display
+  const getDisplayTime = useCallback(() => {
+    return formatTime(getTotalElapsedTime());
+  }, [getTotalElapsedTime]);
 
   // Progress calculation for visual indicator
   const progress = useMemo(() => {
@@ -41,12 +60,26 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
     
     if (habit.completionType === 'simple') {
       return isCompleted ? 1 : 0;
+    } else if (habit.completionType === 'timed' && timerActive) {
+      // For active timers, use the real-time elapsed time
+      const currentValue = getTotalElapsedTime();
+      const goal = completionGoal || 1; // Prevent division by zero
+      return Math.min(1, currentValue / goal);
     } else {
+      // For paused timers or repetition habits, use the stored value
       const value = completionValue || 0;
       const goal = completionGoal || 1; // Prevent division by zero
       return Math.min(1, value / goal);
     }
-  }, [habit, isCompleted, completionValue, completionGoal]);
+  }, [habit, isCompleted, completionValue, completionGoal, timerActive, getTotalElapsedTime]);
+
+  // Calculate the width of the progress bar
+  // For timed habits that are active, recalculate on each render
+  const currentProgress = habit?.completionType === 'timed' && timerActive
+    ? Math.min(1, getTotalElapsedTime() / (completionGoal || 1))
+    : progress;
+  
+  const progressBarWidth = `${Math.round(currentProgress * 100)}%`;
 
   // Set initial timer value from history if exists or from active timer
   useEffect(() => {
@@ -76,9 +109,29 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
     if (timerActive && startTimestamp) {
       // Setup regular UI refresh (every 1 second)
       displayTimeRef.current = setInterval(() => {
-        // This just forces a re-render to update the displayed time
-        // The actual time calculation happens in getDisplayTime()
+        // This forces a re-render to update the displayed time and progress bar
         forceUpdate(n => n + 1);
+        
+        // Check if goal is reached during this tick
+        if (habit?.completionType === 'timed') {
+          const currentTime = getTotalElapsedTime();
+          if (currentTime >= completionGoal && completionGoal > 0) {
+            // Goal reached, mark as complete
+            console.log(`Timer reached goal during tick: ${currentTime}s >= ${completionGoal}s`);
+            completeHabit(habit.id, currentTime, true);
+            
+            // Stop the timer
+            unregisterActiveTimer(habit.id);
+            setTimerActive(false);
+            setStartTimestamp(null);
+            
+            // Clear the interval
+            if (displayTimeRef.current) {
+              clearInterval(displayTimeRef.current);
+              displayTimeRef.current = null;
+            }
+          }
+        }
       }, 1000);
       
       return () => {
@@ -88,10 +141,15 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
         }
       };
     }
-  }, [timerActive, startTimestamp]);
+  }, [timerActive, startTimestamp, habit, completionGoal, getTotalElapsedTime, completeHabit, unregisterActiveTimer]);
   
-  // Force re-render for timer display updates
-  const [, forceUpdate] = useState(0);
+  // Update progress bar with each timer tick
+  useEffect(() => {
+    if (habit?.completionType === 'timed' && timerActive) {
+      // This will trigger re-evaluation of our useMemo for progress
+      forceUpdate(prev => prev + 1);
+    }
+  }, [habit?.completionType, timerActive]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -101,6 +159,40 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
       }
     };
   }, []);
+
+  // Generate subtitle text based on habit type
+  const getSubtitleText = useCallback(() => {
+    if (!habit) return '';
+    
+    switch (habit.completionType) {
+      case 'simple':
+        return isCompleted ? 'Completed' : '';
+      case 'repetitions':
+        return `${completionValue} / ${completionGoal}`;
+      case 'timed':
+        return `${getDisplayTime()} / ${formatTime(completionGoal)}`;
+      default:
+        return '';
+    }
+  }, [habit, isCompleted, completionValue, completionGoal, getDisplayTime]);
+
+  // Generate subtitle icon based on habit type
+  const getSubtitleIcon = useCallback(() => {
+    if (!habit) return null;
+    
+    switch (habit.completionType) {
+      case 'simple':
+        return isCompleted 
+          ? <CheckCircle size={16} color={colors.success} /> 
+          : <Circle size={16} color={colors.textSecondary} />;
+      case 'repetitions':
+        return <RotateCcw size={16} color={isCompleted ? colors.success : colors.textSecondary} />;
+      case 'timed':
+        return <Timer size={16} color={timerActive ? colors.accent : (isCompleted ? colors.success : colors.textSecondary)} />;
+      default:
+        return null;
+    }
+  }, [habit, isCompleted, timerActive, colors]);
 
   // Handle main press action with animation
   const handlePress = () => {
@@ -189,55 +281,6 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
   // Fail early if habit is undefined
   if (!habit) return null;
 
-  // Calculate the width of the progress bar
-  const progressBarWidth = `${Math.round(progress * 100)}%`;
-
-  // Get total elapsed time (base time + current session time)
-  const getTotalElapsedTime = (): number => {
-    // Base time plus any active session time
-    if (timerActive && startTimestamp) {
-      const now = Date.now();
-      const currentSessionSeconds = Math.floor((now - startTimestamp) / 1000);
-      return baseTime + currentSessionSeconds;
-    }
-    return baseTime;
-  };
-  
-  // Format the time for display
-  const getDisplayTime = () => {
-    return formatTime(getTotalElapsedTime());
-  };
-
-  // Generate subtitle text based on habit type
-  const getSubtitleText = () => {
-    switch (habit.completionType) {
-      case 'simple':
-        return isCompleted ? 'Completed' : '';
-      case 'repetitions':
-        return `${completionValue} / ${completionGoal}`;
-      case 'timed':
-        return `${getDisplayTime()} / ${formatTime(completionGoal)}`;
-      default:
-        return '';
-    }
-  };
-
-  // Generate subtitle icon based on habit type
-  const getSubtitleIcon = () => {
-    switch (habit.completionType) {
-      case 'simple':
-        return isCompleted 
-          ? <CheckCircle size={16} color={colors.success} /> 
-          : <Circle size={16} color={colors.textSecondary} />;
-      case 'repetitions':
-        return <RotateCcw size={16} color={isCompleted ? colors.success : colors.textSecondary} />;
-      case 'timed':
-        return <Timer size={16} color={timerActive ? colors.accent : (isCompleted ? colors.success : colors.textSecondary)} />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <Animated.View 
       style={[
@@ -259,7 +302,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
             backgroundColor: isCompleted ? colors.success : colors.primary,
             opacity: 0.15
           }
-        ]} 
+        ]}
       />
 
       <TouchableOpacity

@@ -2,23 +2,15 @@ import { create } from 'zustand';
 import type { Habit } from '../types/habit';
 import { saveHabits, loadHabits, updateSingleHabit } from '../utils/storage';
 import { clearHabitCache } from '../utils/date';
+import * as timerService from '../store/timerStore';
 
 // Type to hold a map of habits for faster lookups
 interface HabitsMap {
   [id: string]: Habit;
 }
 
-// Type to hold active timer information
-interface ActiveTimer {
-  startTimestamp: number;
-  baseTime: number;
-  date: string;
-}
-
-// Type to hold active timers map
-interface ActiveTimersMap {
-  [habitId: string]: ActiveTimer;
-}
+// Use the ActiveTimer type from timer service
+import { ActiveTimer, ActiveTimersMap } from '../store/timerStore';
 
 interface HabitState {
   habits: Habit[];
@@ -26,7 +18,7 @@ interface HabitState {
   selectedDate: string;
   isLoading: boolean;
   error: string | null;
-  activeTimers: ActiveTimersMap; // Added to track active timers
+  activeTimers: ActiveTimersMap; // Using the type from timer service
   
   addHabit: (habit: Omit<Habit, 'id' | 'createdAt' | 'completionHistory'>) => Promise<void>;
   updateHabit: (id: string, habit: Partial<Habit>) => Promise<void>;
@@ -37,10 +29,11 @@ interface HabitState {
   getHabitById: (id: string) => Habit | undefined;
   importHabits: (importedHabits: Habit[]) => Promise<number>;
   
-  // New functions for active timer management
-  registerActiveTimer: (habitId: string, startTimestamp: number, baseTime: number, date: string) => void;
-  unregisterActiveTimer: (habitId: string) => void;
-  syncActiveTimers: () => void;
+  // Timer management functions
+  registerActiveTimer: (habitId: string, startTimestamp: number, baseTime: number, date: string) => Promise<void>;
+  unregisterActiveTimer: (habitId: string) => Promise<void>;
+  syncActiveTimers: () => Promise<void>;
+  restoreActiveTimers: () => Promise<void>;
 }
 
 // Helper to convert habit array to map
@@ -131,6 +124,9 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   
   deleteHabit: async (id) => {
     try {
+      // First stop any timer associated with this habit
+      await get().unregisterActiveTimer(id);
+      
       set((state) => {
         // Remove from in-memory data
         const updatedHabits = state.habits.filter(h => h.id !== id);
@@ -308,52 +304,151 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     }
   },
   
-  // New functions for active timer management
-  registerActiveTimer: (habitId, startTimestamp, baseTime, date) => {
-    console.log(`Registering active timer for habit ${habitId}`);
-    set(state => ({
-      activeTimers: {
-        ...state.activeTimers,
-        [habitId]: { startTimestamp, baseTime, date }
+  // Updated timer functions to use the timer service
+  registerActiveTimer: async (habitId, startTimestamp, baseTime, date) => {
+    try {
+      const { habitsMap, selectedDate } = get();
+      const habit = habitsMap[habitId];
+      
+      if (!habit) {
+        console.error(`Cannot register timer: Habit ${habitId} not found`);
+        return;
       }
-    }));
-  },
-  
-  unregisterActiveTimer: (habitId) => {
-    console.log(`Unregistering active timer for habit ${habitId}`);
-    set(state => {
-      const newActiveTimers = { ...state.activeTimers };
-      delete newActiveTimers[habitId];
-      return { activeTimers: newActiveTimers };
-    });
-  },
-  
-  syncActiveTimers: () => {
-    const { activeTimers, completeHabit } = get();
-    const now = Date.now();
-    console.log(`Syncing ${Object.keys(activeTimers).length} active timers`);
-    
-    for (const [habitId, { startTimestamp, baseTime, date }] of Object.entries(activeTimers)) {
-      // Calculate elapsed time since timer started
-      const elapsedSeconds = Math.floor((now - startTimestamp) / 1000);
-      const totalTime = baseTime + elapsedSeconds;
       
-      console.log(`Habit ${habitId}: updating time to ${totalTime}s (+${elapsedSeconds}s while backgrounded)`);
+      console.log(`Registering active timer for habit ${habitId}`);
       
-      // Update the habit completion data with the accumulated time
-      completeHabit(habitId, totalTime, false);
+      // Calculate the goal time
+      const goalSeconds = habit.completionGoal || 0;
       
-      // Update the active timer with a new start timestamp and the accumulated time
+      // Check if there's enough time to reach the goal
+      if (baseTime >= goalSeconds) {
+        console.log(`Timer already reached goal (${baseTime}s >= ${goalSeconds}s), marking as completed`);
+        // Mark habit as completed immediately
+        get().completeHabit(habitId, baseTime, true);
+        return;
+      }
+      
+      // Start the timer and schedule notification
+      const timer = await timerService.startTimer(
+        habitId,
+        habit.title,
+        goalSeconds,
+        baseTime,
+        date || selectedDate
+      );
+      
+      // Update state with the active timer
       set(state => ({
         activeTimers: {
           ...state.activeTimers,
-          [habitId]: {
-            startTimestamp: now,
-            baseTime: totalTime,
-            date
-          }
+          [habitId]: timer
         }
       }));
+    } catch (error) {
+      console.error('Error registering active timer:', error);
+    }
+  },
+  
+  unregisterActiveTimer: async (habitId) => {
+    try {
+      console.log(`Unregistering active timer for habit ${habitId}`);
+      
+      // Stop the timer and cancel notification
+      await timerService.stopTimer(habitId);
+      
+      // Update state by removing the timer
+      set(state => {
+        const newActiveTimers = { ...state.activeTimers };
+        delete newActiveTimers[habitId];
+        return { activeTimers: newActiveTimers };
+      });
+    } catch (error) {
+      console.error('Error unregistering timer:', error);
+    }
+  },
+  
+  syncActiveTimers: async () => {
+    try {
+      console.log('Syncing active timers');
+      
+      // Sync timers that were running in the background
+      const updatedTimers = timerService.syncBackgroundTimers();
+      const now = Date.now();
+      
+      // Update each habit with the accumulated time
+      for (const [habitId, timer] of Object.entries(updatedTimers)) {
+        const { completeHabit, habitsMap } = get();
+        const habit = habitsMap[habitId];
+        
+        if (!habit) continue;
+        
+        // Calculate total elapsed time
+        const elapsedSeconds = Math.floor((now - timer.startTimestamp) / 1000);
+        const totalTime = timer.baseTime + elapsedSeconds;
+        
+        console.log(`Habit ${habitId}: updating time to ${totalTime}s`);
+        
+        // Update the habit completion data
+        await completeHabit(habitId, totalTime, totalTime >= (habit.completionGoal || 0));
+      }
+      
+      // Update state with the synced timers
+      set({ activeTimers: updatedTimers });
+    } catch (error) {
+      console.error('Error syncing active timers:', error);
+    }
+  },
+  
+  // New function to restore active timers on app start
+  restoreActiveTimers: async () => {
+    try {
+      // Load active timers from storage
+      const storedTimers = timerService.loadActiveTimers();
+      const now = Date.now();
+      
+      // Process each timer
+      for (const [habitId, timer] of Object.entries(storedTimers)) {
+        const { completeHabit, habitsMap } = get();
+        const habit = habitsMap[habitId];
+        
+        if (!habit) continue;
+        
+        // Calculate elapsed time since last start
+        const elapsedSeconds = Math.floor((now - timer.startTimestamp) / 1000);
+        const totalTime = timer.baseTime + elapsedSeconds;
+        
+        console.log(`Restoring timer for habit ${habitId} with ${totalTime}s elapsed`);
+        
+        // Update the habit completion status
+        await completeHabit(habitId, totalTime, totalTime >= (habit.completionGoal || 0));
+        
+        // Update the timer with the current timestamp
+        timer.startTimestamp = now;
+        timer.baseTime = totalTime;
+        
+        // Reschedule notification if needed
+        if (totalTime < timer.goalSeconds) {
+          const notificationId = await timerService.scheduleTimerNotification(
+            habitId,
+            habit.title,
+            timer.goalSeconds,
+            totalTime,
+            now
+          );
+          
+          if (notificationId) {
+            timer.notificationId = notificationId;
+          }
+        }
+      }
+      
+      // Save updated timers
+      timerService.saveActiveTimers(storedTimers);
+      
+      // Update state with restored timers
+      set({ activeTimers: storedTimers });
+    } catch (error) {
+      console.error('Error restoring active timers:', error);
     }
   },
 }));
