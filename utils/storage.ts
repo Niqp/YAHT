@@ -1,5 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Habit } from '../types/habit';
+import { MMKV } from 'react-native-mmkv';
+import type { Habit } from '../types/habit';
+
+// Initialize MMKV instance
+export const storage = new MMKV();
 
 const HABITS_STORAGE_KEY = 'habits_data';
 
@@ -8,7 +11,7 @@ let saveTimeout: NodeJS.Timeout | null = null;
 const DEBOUNCE_TIME = 300; // ms
 
 /**
- * Saves habits to AsyncStorage with debouncing
+ * Saves habits to MMKV with debouncing
  * This prevents rapid consecutive saves when multiple habits are updated at once
  */
 export const saveHabits = async (habits: Habit[]): Promise<void> => {
@@ -23,10 +26,10 @@ export const saveHabits = async (habits: Habit[]): Promise<void> => {
   }
   
   return new Promise((resolve, reject) => {
-    saveTimeout = setTimeout(async () => {
+    saveTimeout = setTimeout(() => {
       try {
         const data = JSON.stringify(habits);
-        await AsyncStorage.setItem(HABITS_STORAGE_KEY, data);
+        storage.set(HABITS_STORAGE_KEY, data);
         resolve();
       } catch (error) {
         console.error('Error saving habits:', error);
@@ -37,12 +40,12 @@ export const saveHabits = async (habits: Habit[]): Promise<void> => {
 };
 
 /**
- * Loads habits from AsyncStorage
+ * Loads habits from MMKV
  * Optimized with proper error handling and typing
  */
 export const loadHabits = async (): Promise<Habit[]> => {
   try {
-    const data = await AsyncStorage.getItem(HABITS_STORAGE_KEY);
+    const data = storage.getString(HABITS_STORAGE_KEY);
     if (!data) return [];
     
     try {
@@ -82,11 +85,11 @@ export const updateHabitBatch = async (updatedHabits: Habit[]): Promise<void> =>
     const habitsMap = new Map(existingData.map(habit => [habit.id, habit]));
     
     // Update only the habits that have changed
-    updatedHabits.forEach(habit => {
-      if (habit && habit.id) {
+    for (const habit of updatedHabits) {
+      if (habit?.id) {
         habitsMap.set(habit.id, habit);
       }
-    });
+    };
     
     // Convert back to array
     const mergedHabits = Array.from(habitsMap.values());
