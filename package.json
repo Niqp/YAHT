@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "cleanPrebuild": "expo prebuild --clean",
+    "cleanRun": "expo prebuild --clean && expo run:android"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.1.2",
@@ -32,7 +34,9 @@
     "react-native-screens": "~4.4.0",
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.6",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "expo-system-ui": "~4.0.8",
+    "expo-dev-client": "~5.0.12"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

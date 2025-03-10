@@ -1,29 +1,9 @@
-import { useThemeStore } from '../store/themeStore';
-import { Colors, ColorTheme } from '../constants/Colors';
+import { type ColorTheme, Colors } from "../constants/Colors";
+import { useTheme as useThemeFromContext } from "../context/ThemeContext";
 
 /**
  * Hook to access the current theme colors and control theme settings
+ *
+ * @returns {object} Theme object containing colors and theme control functions
  */
-export const useTheme = () => {
-  const { 
-    mode, 
-    isDarkMode, 
-    setMode,
-    systemColorScheme,
-    weekStartDay,
-    setWeekStartDay
-  } = useThemeStore();
-
-  // Get the current theme colors based on isDarkMode state
-  const colors: ColorTheme = isDarkMode ? Colors.dark : Colors.light;
-
-  return {
-    colors,
-    isDarkMode,
-    mode,
-    setMode,
-    systemColorScheme,
-    weekStartDay,
-    setWeekStartDay
-  };
-};
+export const useTheme = () => useThemeFromContext();

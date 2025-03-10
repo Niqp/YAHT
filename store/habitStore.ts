@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Habit } from '../types/habit';
+import type { Habit } from '../types/habit';
 import { saveHabits, loadHabits, updateSingleHabit } from '../utils/storage';
 import { clearHabitCache } from '../utils/date';
 
@@ -48,7 +48,7 @@ const habitsArrayToMap = (habits: Habit[]): HabitsMap => {
   if (!Array.isArray(habits)) return {};
   
   return habits.reduce((map, habit) => {
-    if (habit && habit.id) {
+    if (habit?.id) {
       map[habit.id] = habit;
     }
     return map;
@@ -296,7 +296,9 @@ export const useHabitStore = create<HabitState>((set, get) => ({
       });
       
       // Clear cache for all imported habits
-      validHabits.forEach(habit => clearHabitCache(habit.id));
+      for (const habit of validHabits) {
+        clearHabitCache(habit.id);
+      }
       
       return validHabits.length;
     } catch (error) {
@@ -331,7 +333,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
     const now = Date.now();
     console.log(`Syncing ${Object.keys(activeTimers).length} active timers`);
     
-    Object.entries(activeTimers).forEach(([habitId, { startTimestamp, baseTime, date }]) => {
+    for (const [habitId, { startTimestamp, baseTime, date }] of Object.entries(activeTimers)) {
       // Calculate elapsed time since timer started
       const elapsedSeconds = Math.floor((now - startTimestamp) / 1000);
       const totalTime = baseTime + elapsedSeconds;
@@ -352,6 +354,6 @@ export const useHabitStore = create<HabitState>((set, get) => ({
           }
         }
       }));
-    });
+    }
   },
 }));
