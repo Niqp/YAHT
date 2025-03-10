@@ -9,7 +9,6 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/webpack-config": "^19.0.0",
     "@gorhom/bottom-sheet": "^4.4.8",
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "^52.0.37",
@@ -17,7 +16,7 @@
     "expo-linking": "~7.0.5",
     "expo-router": "^4.0.17",
     "expo-status-bar": "~2.0.1",
-    "lucide-react-native": "^0.294.0",
+    "lucide-react-native": "^0.479.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.7",
