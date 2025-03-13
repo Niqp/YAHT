@@ -7,6 +7,8 @@ import { ThemeProvider } from "../context/ThemeContext";
 import { useTheme } from "../hooks/useTheme";
 import { useHabitStore } from "../store/habitStore";
 import * as timerService from "../store/timerStore";
+// Import BottomSheetModalProvider from @gorhom/bottom-sheet
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function RootLayout() {
 	const { loadHabitsFromStorage, syncActiveTimers, restoreActiveTimers } =
@@ -52,7 +54,7 @@ export default function RootLayout() {
 				appState.current.match(/inactive|background/) &&
 				nextAppState === "active"
 			) {
-				// App is coming to foreground
+				// App coming to foreground
 				console.log("App coming to foreground, syncing timers");
 				syncActiveTimers();
 			}
@@ -75,34 +77,37 @@ export default function RootLayout() {
 		<GestureHandlerRootView
 			style={{ flex: 1, backgroundColor: colors.background }}
 		>
-			<ThemeProvider>
-				<SafeAreaProvider>
-					<Stack
-						screenOptions={{
-							headerStyle: {
-								backgroundColor: colors.cardBackground,
-							},
-							headerTintColor: colors.text,
-							headerTitleStyle: {
-								color: colors.text,
-							},
-							contentStyle: {
-								backgroundColor: colors.background,
-							},
-						}}
-					>
-						<Stack.Screen name="index" redirect={true} />
-						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-						<Stack.Screen
-							name="add"
-							options={{
-								presentation: "modal",
-								headerShown: false,
+			{/* Add BottomSheetModalProvider to ensure proper rendering of bottom sheets */}
+			<BottomSheetModalProvider>
+				<ThemeProvider>
+					<SafeAreaProvider>
+						<Stack
+							screenOptions={{
+								headerStyle: {
+									backgroundColor: colors.cardBackground,
+								},
+								headerTintColor: colors.text,
+								headerTitleStyle: {
+									color: colors.text,
+								},
+								contentStyle: {
+									backgroundColor: colors.background,
+								},
 							}}
-						/>
-					</Stack>
-				</SafeAreaProvider>
-			</ThemeProvider>
+						>
+							<Stack.Screen name="index" redirect={true} />
+							<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+							<Stack.Screen
+								name="add"
+								options={{
+									presentation: "modal",
+									headerShown: false,
+								}}
+							/>
+						</Stack>
+					</SafeAreaProvider>
+				</ThemeProvider>
+			</BottomSheetModalProvider>
 		</GestureHandlerRootView>
 	);
 }
