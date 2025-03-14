@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react-native";
 import React, {
 	useState,
 	useRef,
@@ -7,24 +8,23 @@ import React, {
 	memo,
 } from "react";
 import {
-	View,
-	Text,
-	StyleSheet,
-	FlatList,
-	TouchableOpacity,
 	Dimensions,
+	FlatList,
 	type NativeScrollEvent,
 	type NativeSyntheticEvent,
+	StyleSheet,
+	Text,
+	TouchableOpacity,
+	View,
 } from "react-native";
+import { useTheme } from "../hooks/useTheme";
 import { useHabitStore } from "../store/habitStore";
 import {
-	formatDate,
-	getShortDayName,
 	addDays,
+	formatDate,
 	getMonthName,
+	getShortDayName,
 } from "../utils/date";
-import { useTheme } from "../hooks/useTheme";
-import { ChevronLeft } from "lucide-react-native";
 
 interface DateInfo {
 	date: string;

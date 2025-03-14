@@ -12,7 +12,7 @@ import { useTheme } from "../hooks/useTheme";
 import type { ThemeMode } from "../store/themeStore";
 
 export default function ThemeToggle() {
-	const { colors, mode, setMode, isDarkMode } = useTheme();
+	const { colors, mode, colorScheme, setMode } = useTheme();
 	const systemColorScheme = useColorScheme();
 
 	const themeOptions: { value: ThemeMode; label: string; icon: JSX.Element }[] =
@@ -53,14 +53,10 @@ export default function ThemeToggle() {
 		<View
 			style={[styles.container, { backgroundColor: colors.cardBackground }]}
 		>
-			<Text style={[styles.title, { color: colors.text }]}>
-				Appearance{" "}
-				{mode === "system" && `(System: ${systemColorScheme || "unknown"})`}
-			</Text>
+			<Text style={[styles.title, { color: colors.text }]}>Appearance</Text>
 			<Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-				Current theme: {isDarkMode ? "Dark" : "Light"}
+				Current theme: {colorScheme === "dark" ? "Dark" : "Light"}
 			</Text>
-
 			<View style={styles.optionsContainer}>
 				{themeOptions.map((option) => (
 					<TouchableOpacity
@@ -73,7 +69,6 @@ export default function ThemeToggle() {
 							},
 						]}
 						onPress={() => {
-							console.log(`Setting mode to ${option.value}`);
 							setMode(option.value);
 						}}
 					>

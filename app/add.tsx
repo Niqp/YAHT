@@ -1,3 +1,11 @@
+import {
+	BasicInfoSection,
+	CompletionTypeSection,
+	RepetitionPatternSection,
+} from "@/components/habitForm";
+import { useTheme } from "@/hooks/useTheme";
+import { useHabitStore } from "@/store/habitStore";
+import type { CompletionType, RepetitionType } from "@/types/habit";
 import { Button } from "@rneui/themed";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
@@ -10,14 +18,6 @@ import {
 	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-	BasicInfoSection,
-	CompletionTypeSection,
-	RepetitionPatternSection,
-} from "@/components/habitForm";
-import { useTheme } from "@/hooks/useTheme";
-import { useHabitStore } from "@/store/habitStore";
-import type { CompletionType, RepetitionType } from "@/types/habit";
 
 export default function AddEditHabitScreen() {
 	const { colors, weekStartDay } = useTheme();
@@ -95,10 +95,8 @@ export default function AddEditHabitScreen() {
 
 		if (isEditMode && habitId) {
 			updateHabit(habitId, habitData);
-			Alert.alert("Success", "Habit updated successfully!");
 		} else {
 			addHabit(habitData);
-			Alert.alert("Success", "Habit added successfully!");
 		}
 
 		router.push("/today");
