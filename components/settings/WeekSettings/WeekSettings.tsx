@@ -33,15 +33,15 @@ export const WeekSettings: React.FC<WeekSettingsProps> = ({
 						style={[
 							styles.weekDayButton,
 							{ backgroundColor: colors.input },
-							weekStartDay === "sunday" && { backgroundColor: colors.primary },
+							weekStartDay === 0 && { backgroundColor: colors.primary },
 						]}
-						onPress={() => setWeekStartDay("sunday")}
+						onPress={() => setWeekStartDay(0)}
 					>
 						<Text
 							style={[
 								styles.weekDayButtonText,
 								{ color: colors.textSecondary },
-								weekStartDay === "sunday" && { color: colors.textInverse },
+								weekStartDay === 0 && { color: colors.textInverse },
 							]}
 						>
 							Sunday
@@ -52,15 +52,15 @@ export const WeekSettings: React.FC<WeekSettingsProps> = ({
 						style={[
 							styles.weekDayButton,
 							{ backgroundColor: colors.input },
-							weekStartDay === "monday" && { backgroundColor: colors.primary },
+							weekStartDay === 1 && { backgroundColor: colors.primary },
 						]}
-						onPress={() => setWeekStartDay("monday")}
+						onPress={() => setWeekStartDay(1)}
 					>
 						<Text
 							style={[
 								styles.weekDayButtonText,
 								{ color: colors.textSecondary },
-								weekStartDay === "monday" && { color: colors.textInverse },
+								weekStartDay === 1 && { color: colors.textInverse },
 							]}
 						>
 							Monday

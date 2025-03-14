@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { storage } from "../utils/storage";
 
 export type ThemeMode = "light" | "dark" | "system";
-export type WeekStartDay = "sunday" | "monday";
+export type WeekStartDay = 0 | 1;
 
 interface ThemeState {
 	mode: ThemeMode;
@@ -47,7 +47,7 @@ export const useThemeStore = create<ThemeState>()(
 			mode: "system",
 			systemColorScheme: null,
 			isDarkMode: false,
-			weekStartDay: "monday",
+			weekStartDay: 1,
 
 			// Actions
 			setMode: (mode: ThemeMode) => {

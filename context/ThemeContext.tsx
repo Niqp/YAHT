@@ -8,13 +8,16 @@ import {
 import { type ColorTheme, Colors } from "../constants/Colors";
 import { useThemeStore } from "../store/themeStore";
 
+// Import or define the WeekStartDay type to match what's used in useThemeStore
+import type { WeekStartDay } from "../store/themeStore"; // Add this import if WeekStartDay is exported from themeStore
+
 type ThemeContextType = {
 	colors: ColorTheme;
 	isDarkMode: boolean;
 	mode: "light" | "dark" | "system";
 	setMode: (mode: "light" | "dark" | "system") => void;
-	weekStartDay: "sunday" | "monday";
-	setWeekStartDay: (day: "sunday" | "monday") => void;
+	weekStartDay: WeekStartDay; // Use the WeekStartDay type from the store
+	setWeekStartDay: (day: WeekStartDay) => void;
 };
 
 // Create the context with a default value
@@ -23,7 +26,7 @@ const ThemeContext = createContext<ThemeContextType>({
 	isDarkMode: false,
 	mode: "system",
 	setMode: () => {},
-	weekStartDay: "monday",
+	weekStartDay: 1,
 	setWeekStartDay: () => {},
 });
 
