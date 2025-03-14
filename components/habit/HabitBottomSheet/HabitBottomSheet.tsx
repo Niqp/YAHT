@@ -99,6 +99,7 @@ export default function HabitBottomSheet({
 					<>
 						<HabitBottomSheetHeader habit={habit} onClose={onClose} />
 						<HabitBottomSheetStatus
+							habit={habit}
 							isCompleted={isCompleted}
 							selectedDate={selectedDate}
 						/>

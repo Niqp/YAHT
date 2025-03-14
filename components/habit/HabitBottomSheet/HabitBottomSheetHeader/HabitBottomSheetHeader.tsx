@@ -20,7 +20,7 @@ export default function HabitBottomSheetHeader({
 				</Text>
 				<Text style={[styles.habitSubtitle, { color: colors.textSecondary }]}>
 					{habit.completionType === "simple"
-						? "Mark as done each day"
+						? "Goal: complete once"
 						: habit.completionType === "repetitions"
 							? `Goal: ${habit.completionGoal} repetitions`
 							: `Goal: ${Math.floor((habit.completionGoal || 0) / 60)} minutes`}

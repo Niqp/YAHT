@@ -1,17 +1,17 @@
-import { StyleSheet, Platform } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
 	actionsContainer: {
 		flexDirection: "row",
-		justifyContent: "space-around",
+		justifyContent: "space-between",
 		flexWrap: "wrap",
 	},
 	actionButton: {
 		alignItems: "center",
 		justifyContent: "center",
-		padding: 20,
+		flexBasis: "31%", // Slightly increased from 30% to provide more space
+		padding: 15, // Slightly reduced padding to fit more text
 		borderRadius: 16,
-		width: "30%",
 		...Platform.select({
 			ios: {
 				shadowColor: "#000",
@@ -27,9 +27,10 @@ const styles = StyleSheet.create({
 	},
 	actionText: {
 		marginTop: 8,
-		fontSize: 14,
+		fontSize: 13, // Slightly smaller to fit better
 		fontWeight: "500",
 		textAlign: "center",
+		flexShrink: 1,
 	},
 });
 
