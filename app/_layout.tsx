@@ -24,15 +24,7 @@ export default function RootLayout() {
 	}, [setupSystemThemeListener, updateSystemTheme]);
 
 	// Configure notifications when app starts
-	useEffect(() => {
-		timerService.configureNotifications().then((success) => {
-			if (success) {
-				console.log("Notifications configured successfully");
-			} else {
-				console.log("Notification permissions not granted");
-			}
-		});
-	}, []);
+
 
 	// Load habits and restore active timers when app starts
 	useEffect(() => {

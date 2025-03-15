@@ -1,19 +1,11 @@
 import React from "react";
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	useColorScheme,
-	Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Sun, Moon, Smartphone } from "lucide-react-native";
 import { useTheme } from "../hooks/useTheme";
 import type { ThemeMode } from "../store/themeStore";
 
 export default function ThemeToggle() {
 	const { colors, mode, colorScheme, setMode } = useTheme();
-	const systemColorScheme = useColorScheme();
 
 	const themeOptions: { value: ThemeMode; label: string; icon: JSX.Element }[] =
 		[

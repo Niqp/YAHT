@@ -9,9 +9,9 @@ import {
 import { useTheme } from "../../hooks/useTheme";
 import type { Habit } from "../../types/habit";
 import { shouldCompleteHabitOnDate } from "../../utils/date";
+import HabitItem from "../habit/HabitItem";
 import styles from "./HabitList.styles";
 import TaskGroupSeparator from "./TaskGroupSeparator/TaskGroupSeparator";
-import HabitItem from "../HabitItem";
 
 interface HabitListProps {
 	habits: Habit[];
