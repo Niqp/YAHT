@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { Habit } from "../types/habit";
-import type { ActiveTimersMap } from "./timerStore";
 
 import { createCompletionSlice } from "./habit/completionSlice";
 import { createCRUDSlice } from "./habit/crudSlice";
@@ -17,7 +16,6 @@ export interface HabitState {
 	selectedDate: string;
 	isLoading: boolean;
 	error: string | null;
-	activeTimers: ActiveTimersMap;
 
 	// Methods will be implemented in slices
 	addHabit: (
@@ -34,6 +32,7 @@ export interface HabitState {
 	loadHabitsFromStorage: () => Promise<void>;
 	getHabitById: (id: string) => Habit | undefined;
 	importHabits: (importedHabits: Habit[]) => Promise<number>;
+	resetStore: () => void;
 }
 
 // Combine all slices into one store

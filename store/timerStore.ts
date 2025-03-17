@@ -1,219 +1,200 @@
 import { create } from 'zustand';
-import { storage } from '../utils/storage';
-import { useEffect } from 'react';
+import { storage } from '@/utils/storage';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
-// Timer storage key
-const TIMERS_STORAGE_KEY = 'timers_state';
-
-// Single timer interface
-interface Timer {
-  startTime: number;
-  currentTime: number;
-  goalTime: number;
-  isActive: boolean;
+// Timer interface
+export interface Timer {
+  currentProgressTimeMs: number; // Current elapsed time in milliseconds
+  goalTimeMs: number;            // Target time in milliseconds
+  isActive: boolean;             // Whether timer is currently running
+  lastResumedAt: string | null;    // Timestamp when timer was last resumed (ISO string format)
 }
 
-// Timers state interface
-interface TimersState {
-  timers: Record<string, Timer>; // Map of habitId to timer
+// Timer state interface
+interface TimerState {
+  timers: Record<string, Timer>;
   
-  // Actions
-  startTimer: (habitId: string, goalTimeMs?: number) => void;
+  // Core timer functions
+  createTimer: (habitId: string, goalTimeMs: number) => void;
+  startTimer: (habitId: string) => void;
   pauseTimer: (habitId: string) => void;
   resetTimer: (habitId: string) => void;
-  updateTimer: (habitId: string) => void;
-  setGoalTime: (habitId: string, goalTimeMs: number) => void;
+  getTimer: (habitId: string) => Timer | undefined;
+  getAllActiveTimers: () => Record<string, Timer>;
   removeTimer: (habitId: string) => void;
-  
-  // Utilities
-  getElapsedTime: (habitId: string) => number;
-  getRemainingTime: (habitId: string) => number;
-  isGoalReached: (habitId: string) => boolean;
-  getActiveTimers: () => string[];
-  hasTimer: (habitId: string) => boolean;
+  updateCurrentProgressTime: (habitId: string, timeMs: number) => void;
+  incrementActiveTimers: (addTimeMs: number) => void; 
 }
 
-// Create Zustand store with persistence
-export const useTimerStore = create<TimersState>((set, get) => {
-  // Try to load initial state from storage
-  const savedTimers = loadTimersFromStorage();
-  
-  return {
-    // Initial state with fallback to empty timer collection
-    timers: savedTimers ?? {},
-    
-    // Start a timer for a specific habit
-    startTimer: (habitId: string, goalTimeMs?: number) => set(state => {
-      const now = Date.now();
-      const existingTimer = state.timers[habitId];
-      
-      const newTimers = {
-        ...state.timers,
-        [habitId]: {
-          startTime: existingTimer?.startTime || now,
-          currentTime: now,
-          goalTime: goalTimeMs !== undefined ? goalTimeMs : (existingTimer?.goalTime || 25 * 60 * 1000),
-          isActive: true
-        }
-      };
-      
-      saveTimersToStorage(newTimers);
-      return { timers: newTimers };
-    }),
-    
-    // Pause a specific timer
-    pauseTimer: (habitId: string) => set(state => {
-      if (!state.timers[habitId]) return state;
-      
-      const newTimers = {
-        ...state.timers,
-        [habitId]: {
-          ...state.timers[habitId],
-          isActive: false,
-          currentTime: Date.now()
-        }
-      };
-      
-      saveTimersToStorage(newTimers);
-      return { timers: newTimers };
-    }),
-    
-    // Reset a specific timer
-    resetTimer: (habitId: string) => set(state => {
-      if (!state.timers[habitId]) return state;
-      
-      const { goalTime } = state.timers[habitId];
-      const now = Date.now();
-      
-      const newTimers = {
-        ...state.timers,
-        [habitId]: {
-          startTime: now,
-          currentTime: now,
-          goalTime,
-          isActive: false
-        }
-      };
-      
-      saveTimersToStorage(newTimers);
-      return { timers: newTimers };
-    }),
-    
-    // Remove a timer completely
-    removeTimer: (habitId: string) => set(state => {
-      if (!state.timers[habitId]) return state;
-      
-      const newTimers = { ...state.timers };
-      delete newTimers[habitId];
-      
-      saveTimersToStorage(newTimers);
-      return { timers: newTimers };
-    }),
-    
-    // Update current time for an active timer
-    updateTimer: (habitId: string) => set(state => {
-      const timer = state.timers[habitId];
-      if (!timer || !timer.isActive) return state;
-      
-      const newTimers = {
-        ...state.timers,
-        [habitId]: {
-          ...timer,
-          currentTime: Date.now()
-        }
-      };
-      
-      saveTimersToStorage(newTimers);
-      return { timers: newTimers };
-    }),
-    
-    // Set a new goal time for a specific timer
-    setGoalTime: (habitId: string, goalTimeMs: number) => set(state => {
-      if (!state.timers[habitId]) return state;
-      
-      const newTimers = {
-        ...state.timers,
-        [habitId]: {
-          ...state.timers[habitId],
-          goalTime: goalTimeMs
-        }
-      };
-      
-      saveTimersToStorage(newTimers);
-      return { timers: newTimers };
-    }),
-    
-    // Get elapsed time for a specific timer
-    getElapsedTime: (habitId: string) => {
-      const timer = get().timers[habitId];
-      if (!timer) return 0;
-      return timer.currentTime - timer.startTime;
-    },
-    
-    // Get remaining time for a specific timer
-    getRemainingTime: (habitId: string) => {
-      const timer = get().timers[habitId];
-      if (!timer) return 0;
-      const elapsed = timer.currentTime - timer.startTime;
-      return Math.max(0, timer.goalTime - elapsed);
-    },
-    
-    // Check if goal is reached for a specific timer
-    isGoalReached: (habitId: string) => {
-      const timer = get().timers[habitId];
-      if (!timer) return false;
-      return (timer.currentTime - timer.startTime) >= timer.goalTime;
-    },
-    
-    // Get list of active timer habit IDs
-    getActiveTimers: () => {
-      const { timers } = get();
-      return Object.keys(timers).filter(habitId => timers[habitId].isActive);
-    },
-    
-    // Check if a timer exists for a habit
-    hasTimer: (habitId: string) => {
-      return !!get().timers[habitId];
-    }
-  };
-});
-
-// Hook to automatically update all active timers
-export const useTimersTick = (intervalMs = 1000) => {
-  const { getActiveTimers, updateTimer } = useTimerStore();
-  
-  useEffect(() => {
-    const activeTimers = getActiveTimers();
-    if (activeTimers.length === 0) return;
-    
-    const interval = setInterval(() => {
-      const currentActiveTimers = getActiveTimers();
-      currentActiveTimers.forEach(habitId => {
-        updateTimer(habitId);
-      });
-    }, intervalMs);
-    
-    return () => clearInterval(interval);
-  }, [getActiveTimers, updateTimer, intervalMs]);
+// MMKV storage implementation for Zustand
+const zustandStorage = {
+  getItem: (name: string) => {
+    const value = storage.getString(name);
+    return value ? value : null;
+  },
+  setItem: (name: string, value: string) => {
+    storage.set(name, value);
+  },
+  removeItem: (name: string) => {
+    storage.delete(name);
+  },
 };
 
-// Helper functions for loading and saving timer states
-function saveTimersToStorage(timers: Record<string, Timer>) {
-  try {
-    storage.set(TIMERS_STORAGE_KEY, JSON.stringify(timers));
-  } catch (error) {
-    console.error('Error saving timers state:', error);
-  }
-}
+// Create the store with persistence
+export const useTimerStore = create<TimerState>()(
+  persist(
+    (set, get) => ({
+      timers: {},
 
-function loadTimersFromStorage(): Record<string, Timer> | null {
-  try {
-    const data = storage.getString(TIMERS_STORAGE_KEY);
-    if (!data) return null;
-    
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error loading timers state:', error);
-    return null;
-  }
-}
+      // Create a new timer for a habit
+      createTimer: (habitId: string, goalTimeMs: number) => {
+        set((state) => ({
+          timers: {
+            ...state.timers,
+            [habitId]: {
+              currentProgressTimeMs: 0,
+              goalTimeMs,
+              isActive: false,
+              lastResumedAt: null,
+            },
+          },
+        }));
+      },
+
+      // Start or resume a timer
+      startTimer: (habitId: string) => {
+        set((state) => {
+          const timer = state.timers[habitId];
+          if (!timer) return state;
+
+          const now = new Date().toISOString();
+          return {
+            timers: {
+              ...state.timers,
+              [habitId]: {
+                ...timer,
+                isActive: true,
+                lastResumedAt: now,
+              },
+            },
+          };
+        });
+      },
+
+      // Pause a timer
+      pauseTimer: (habitId: string) => {
+        set((state) => {
+          const timer = state.timers[habitId];
+          if (!timer || !timer.isActive) {
+            console.warn(`Timer for habit ${habitId} is not active or does not exist.`);
+            return state;
+          }
+
+          return {
+            timers: {
+              ...state.timers,
+              [habitId]: {
+                ...timer,
+                isActive: false,
+              },
+            },
+          };
+        });
+      },
+
+      // Reset a timer to initial state
+      resetTimer: (habitId: string) => {
+        set((state) => {
+          const timer = state.timers[habitId];
+          if (!timer) return state;
+
+          return {
+            timers: {
+              ...state.timers,
+              [habitId]: {
+                ...timer,
+                currentProgressTimeMs: 0,
+                isActive: false,
+                lastResumedAt: null,
+              },
+            },
+          };
+        });
+      },
+
+      // Get a specific timer
+      getTimer: (habitId: string) => {
+        return get().timers[habitId];
+      },
+
+      // Get all currently active timers
+      getAllActiveTimers: () => {
+        const { timers } = get();
+        const activeTimers: Record<string, Timer> = {};
+        
+        Object.entries(timers).forEach(([habitId, timer]) => {
+          if (timer.isActive) {
+            activeTimers[habitId] = timer;
+          }
+        });
+        
+        return activeTimers;
+      },
+
+      // Remove a timer (for deleted habits)
+      removeTimer: (habitId: string) => {
+        set((state) => {
+          const newTimers = { ...state.timers };
+          delete newTimers[habitId];
+          return { timers: newTimers };
+        });
+      },
+
+      updateCurrentProgressTime: (habitId: string, timeMs: number) => {
+        set((state) => {
+          const timer = state.timers[habitId];
+          if (!timer) return state;
+
+          return {
+            timers: {
+              ...state.timers,
+              [habitId]: {
+                ...timer,
+                currentProgressTimeMs: timeMs,
+              },
+            },
+          };
+        });
+      },
+
+      // Update all active timers at once (called from outside)
+      incrementActiveTimers: (addTimeMs) => {
+        set((state) => {
+          const now = new Date().toISOString();
+          const updatedTimers = { ...state.timers };
+          let hasChanges = false;
+
+          Object.entries(updatedTimers).forEach(([habitId, timer]) => {
+            if (timer.isActive && timer.lastResumedAt) {
+              updatedTimers[habitId] = {
+                ...timer,
+                currentProgressTimeMs: timer.currentProgressTimeMs + addTimeMs,
+                lastResumedAt: now,
+              };
+              hasChanges = true;
+            }
+          });
+
+          return hasChanges ? { timers: updatedTimers } : state;
+        });
+      },
+
+    }),
+    {
+      name: 'habit-timers',
+      storage: createJSONStorage(() => zustandStorage),
+      partialize: (state) => ({ timers: state.timers }),
+    }
+  )
+);
+

@@ -9,9 +9,13 @@ import { WeekSettings } from "@/components/settings/WeekSettings";
 
 import { useTheme } from "@/hooks/useTheme";
 import { exportData, importData } from "@/utils/fileOperations";
+import { useHabitStore } from "@/store/habitStore";
+import { clearCompletionCache } from "@/utils/date";
 
 export default function SettingsScreen() {
 	const { colors, weekStartDay, setWeekStartDay } = useTheme();
+	// Fix: Use a simple selector instead of an inline object selector
+	const resetStore = useHabitStore(state => state.resetStore);
 
 	const handleExport = async () => {
 		try {
@@ -29,6 +33,27 @@ export default function SettingsScreen() {
 			console.error("Error importing data:", error);
 			// Alert is already shown in importData function
 		}
+	};
+
+	const handleReset = () => {
+		Alert.alert(
+			"Reset Data",
+			"This will delete all your data. Are you sure?",
+			[
+				{
+					text: "Cancel",
+					style: "cancel",
+				},
+				{
+					text: "OK",
+					onPress: () => {
+						clearCompletionCache();
+						resetStore();
+					},
+				},
+			],
+			{ cancelable: false }
+		);
 	};
 
 	const menuItems = [
@@ -57,6 +82,11 @@ export default function SettingsScreen() {
 			icon: <Icon name="upload" size={24} color={colors.primary} />,
 			onPress: handleImport,
 		},
+		{
+			title: "Reset Data",
+			icon: <Icon name="trash" size={24} color={colors.primary} />,
+			onPress: handleReset,
+		}
 	];
 
 	return (

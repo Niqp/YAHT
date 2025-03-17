@@ -2,7 +2,7 @@ import { CheckSquare, Clock, RotateCcw } from "lucide-react-native";
 import type React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
-import type { CompletionType } from "../../../types/habit";
+import { CompletionType } from "../../../types/habit";
 import RepetitionControls from "../../controls/RepetitionControls";
 import TimedControls from "../../controls/TimedControls";
 import { styles } from "./CompletionTypeSection.styles";
@@ -112,7 +112,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
 						},
 						isEditMode && { opacity: 0.6 },
 					]}
-					onPress={() => !isEditMode && setCompletionType("simple")}
+					onPress={() => !isEditMode && setCompletionType(CompletionType.SIMPLE)}
 					disabled={isEditMode}
 				>
 					<Text
@@ -144,7 +144,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
 						},
 						isEditMode && { opacity: 0.6 },
 					]}
-					onPress={() => !isEditMode && setCompletionType("repetitions")}
+					onPress={() => !isEditMode && setCompletionType(CompletionType.REPETITIONS)}
 					disabled={isEditMode}
 				>
 					<Text
@@ -176,7 +176,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
 						},
 						isEditMode && { opacity: 0.6 },
 					]}
-					onPress={() => !isEditMode && setCompletionType("timed")}
+					onPress={() => !isEditMode && setCompletionType(CompletionType.TIMED)}
 					disabled={isEditMode}
 				>
 					<Text

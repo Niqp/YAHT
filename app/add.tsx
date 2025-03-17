@@ -5,7 +5,7 @@ import {
 } from "@/components/habitForm";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
-import type { CompletionType, RepetitionType } from "@/types/habit";
+import { CompletionType, RepetitionType } from "@/types/habit";
 import { Button } from "@rneui/themed";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
@@ -27,11 +27,11 @@ export default function AddEditHabitScreen() {
 
 	const [title, setTitle] = useState("");
 	const [icon, setIcon] = useState("🌟");
-	const [repetitionType, setRepetitionType] = useState<RepetitionType>("daily");
+	const [repetitionType, setRepetitionType] = useState<RepetitionType>(RepetitionType.DAILY);
 	const [selectedDays, setSelectedDays] = useState<number[]>([]);
 	const [customDays, setCustomDays] = useState<number>(1);
 	const [completionType, setCompletionType] =
-		useState<CompletionType>("simple");
+		useState<CompletionType>(CompletionType.SIMPLE);
 	const [completionGoal, setCompletionGoal] = useState<number>(5);
 	const [isEditMode, setIsEditMode] = useState(false);
 
@@ -41,23 +41,23 @@ export default function AddEditHabitScreen() {
 			if (habit) {
 				setTitle(habit.title);
 				setIcon(habit.icon);
-				setRepetitionType(habit.repetitionType);
+				setRepetitionType(habit.repetition.type);
 
 				if (
-					habit.repetitionType === "weekly" &&
-					Array.isArray(habit.repetitionValue)
+					habit.repetition.type === RepetitionType.WEEKDAYS &&
+					Array.isArray(habit.repetition.days)
 				) {
-					setSelectedDays(habit.repetitionValue);
+					setSelectedDays(habit.repetition.days);
 				} else if (
-					habit.repetitionType === "custom" &&
-					typeof habit.repetitionValue === "number"
+					habit.repetition.type === RepetitionType.INTERVAL &&
+					typeof habit.repetition.days === "number"
 				) {
-					setCustomDays(habit.repetitionValue);
+					setCustomDays(habit.repetition.days);
 				}
 
-				setCompletionType(habit.completionType);
-				if (habit.completionGoal) {
-					setCompletionGoal(habit.completionGoal);
+				setCompletionType(habit.completion.type);
+				if (habit.completion.type !== CompletionType.SIMPLE && habit.completion.goal) {
+					setCompletionGoal(habit.completion.goal);
 				}
 
 				setIsEditMode(true);
@@ -70,28 +70,39 @@ export default function AddEditHabitScreen() {
 			Alert.alert("Error", "Please enter a title for your habit");
 			return;
 		}
+		if (!completionType) {
+			Alert.alert("Error", "Please select a completion type");
+			return;
+		}
 
-		let repetitionValue: number[] | number | null;
-		if (repetitionType === "weekly") {
+		let habitData: any = {
+			title,
+			icon,
+			completion: {
+				type: completionType,
+				goal: completionType !== CompletionType.SIMPLE ? completionGoal : undefined,
+			},
+		};
+
+		// Create the correct repetition object based on the type
+		if (repetitionType === RepetitionType.DAILY) {
+			habitData.repetition = { type: RepetitionType.DAILY };
+		} else if (repetitionType === RepetitionType.WEEKDAYS) {
 			if (selectedDays.length === 0) {
 				Alert.alert("Error", "Please select at least one day of the week");
 				return;
 			}
-			repetitionValue = selectedDays;
-		} else if (repetitionType === "custom") {
-			repetitionValue = customDays;
-		} else {
-			repetitionValue = null;
+			habitData.repetition = {
+				type: RepetitionType.WEEKDAYS,
+				days: selectedDays,
+			};
+		} else if (repetitionType === RepetitionType.INTERVAL) {
+			habitData.repetition = {
+				type: RepetitionType.INTERVAL,
+				days: customDays,
+				nextDueDate: new Date().toISOString(),
+			};
 		}
-
-		const habitData = {
-			title,
-			icon,
-			repetitionType,
-			repetitionValue,
-			completionType,
-			completionGoal: completionType !== "simple" ? completionGoal : undefined,
-		};
 
 		if (isEditMode && habitId) {
 			updateHabit(habitId, habitData);

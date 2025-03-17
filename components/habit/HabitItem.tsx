@@ -32,18 +32,27 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 	const isCompleted =
 		habit?.completionHistory?.[selectedDate]?.completed || false;
 	const completionValue = habit?.completionHistory?.[selectedDate]?.value || 0;
-	const completionGoal = habit?.completionGoal || 0;
+	const completionGoal = habit?.completion?.goal || 0;
 
-	// Use extracted hooks
+	// // Use extracted hooks
+	// const {
+	// 	timerActive,
+	// 	getTotalElapsedTime,
+	// 	startTimer,
+	// 	pauseTimer,
+	// 	resetTimer,
+	// } = habit?.completion?.type === "timed"
+	// 	? useHabitTimer(habit.id, completionGoal, selectedDate)
+	// 	: {}
 	const {
 		timerActive,
 		getTotalElapsedTime,
 		startTimer,
 		pauseTimer,
 		resetTimer,
-	} = useHabitTimer(habit.id, completionGoal, selectedDate);
+	} = useHabitTimer(habit.id, completionGoal, selectedDate)
 
-	const { progress, progressBarWidth } = useHabitProgress({
+	const progress = useHabitProgress({
 		habit,
 		isCompleted,
 		completionValue,
@@ -51,6 +60,8 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 		timerActive,
 		getTotalElapsedTime,
 	});
+
+	const progressBarWidth = `${progress}%`;
 
 	const { getSubtitleText } = useHabitDisplay({
 		habit,
@@ -77,10 +88,10 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 			}),
 		]).start();
 
-		if (habit.completionType === "simple") {
+		if (habit?.completion?.type === "simple") {
 			// For simple habits, toggle completion
 			completeHabit(habit.id, undefined, !isCompleted);
-		} else if (habit.completionType === "timed") {
+		} else if (habit?.completion?.type === "timed") {
 			if (isCompleted) {
 				resetTimer();
 			} else if (!timerActive) {
@@ -88,6 +99,8 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 			} else {
 				pauseTimer();
 			}
+		} else if (habit?.completion?.type === "repetitions") {
+			handleIncrement();
 		}
 	};
 
@@ -133,11 +146,11 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 			<TouchableOpacity
 				style={styles.mainContent}
 				onPress={
-					habit.completionType !== "repetitions" ? handlePress : undefined
+					habit?.completion?.type !== "repetitions" ? handlePress : undefined
 				}
 				onLongPress={() => onLongPress(habit)}
 				activeOpacity={0.7}
-				disabled={habit.completionType === "repetitions"}
+				disabled={habit?.completion?.type === "repetitions"}
 			>
 				{/* Left section - Icon */}
 				<View style={[styles.iconContainer, { backgroundColor: colors.input }]}>
@@ -153,7 +166,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 					>
 						{habit.title}
 					</Text>
-					{habit.completionType !== "simple" && (
+					{habit?.completion?.type !== "simple" && (
 						<HabitSubtitle
 							habit={habit}
 							isCompleted={isCompleted}
@@ -166,7 +179,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 
 				{/* Right section - Action buttons or completion indicator */}
 				<View style={styles.actionButtons}>
-					{habit.completionType === "repetitions" ? (
+					{habit?.completion?.type === "repetitions" ? (
 						<RepetitionControls
 							completionValue={completionValue}
 							handleIncrement={handleIncrement}
@@ -177,7 +190,7 @@ export default function HabitItem({ habit, onLongPress }: HabitItemProps) {
 						<HabitStatusIndicator
 							isCompleted={isCompleted}
 							timerActive={timerActive}
-							completionType={habit.completionType}
+							completionType={habit?.completion?.type}
 							colors={colors}
 						/>
 					)}

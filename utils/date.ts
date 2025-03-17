@@ -112,37 +112,32 @@ export const shouldCompleteHabitOnDate = (
 		const dayOfWeek = habitDate.getDay(); // 0 = Sunday, 6 = Saturday
 		let result = false;
 
-		switch (habit.repetitionType) {
+		switch (habit.repetition.type) {
 			case "daily":
 				result = true;
 				break;
-			case "weekly":
+			case "weekdays":
 				// Type safety check - ensure repetitionValue is an array before using includes
 				result =
-					Array.isArray(habit.repetitionValue) &&
-					habit.repetitionValue.includes(dayOfWeek);
+					Array.isArray(habit.repetition.days) &&
+					habit.repetition.days.includes(dayOfWeek);
 				break;
-			case "custom":
+			case "interval":
 				// For custom "Every X days" pattern
 				if (
-					typeof habit.repetitionValue === "number" &&
-					habit.repetitionValue > 0
+					typeof habit.repetition.days === "number" &&
+					habit.repetition.days > 0
 				) {
-					const createdAt = new Date(habit.createdAt);
-					const daysDiff = Math.floor(
-						(habitDate.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24),
-					);
-					result = daysDiff % habit.repetitionValue === 0;
-				}
-				// For "X times per Y" pattern
-				else if (
-					habit.repetitionValue &&
-					typeof habit.repetitionValue === "object" &&
-					typeof habit.repetitionValue.times === "number" &&
-					typeof habit.repetitionValue.period === "string"
-				) {
-					// A simple implementation would be to allow it on all days for the period
-					result = true;
+					const nextDueDate = new Date(habit.repetition.nextDueDate);
+					const currentDate = new Date()
+					// For interval based habits, check if the supplied date is on or after the next due date
+					const habitDateMs = habitDate.getTime();
+					const nextDueDateMs = nextDueDate.getTime();
+
+					// Habit is due if today is the next due date or past it
+					if (habitDateMs >= nextDueDateMs) {
+						result = true;
+					}
 				}
 				break;
 			default:
@@ -203,10 +198,22 @@ export const cleanupDateUtils = (): void => {
 	completionCache.clear();
 };
 
-export const getOrderedWeekDays = (startDay: number): string[] => {
-	const orderedWeekDays = [
-		...DAY_NAMES.slice(startDay),
-		...DAY_NAMES.slice(0, startDay),
+export const getOrderedWeekDays = (startDay: number): {
+    dayIndex: number;
+    name: string;
+}[] => {
+	const weekDaysMap = [
+		{ dayIndex: 0, name: "Sunday" },
+		{ dayIndex: 1, name: "Monday" },
+		{ dayIndex: 2, name: "Tuesday" },
+		{ dayIndex: 3, name: "Wednesday" },
+		{ dayIndex: 4, name: "Thursday" },
+		{ dayIndex: 5, name: "Friday" },
+		{ dayIndex: 6, name: "Saturday" },
 	];
-	return orderedWeekDays;
+	
+	const orderedWeekDays = weekDaysMap.slice(startDay).concat(
+		weekDaysMap.slice(0, startDay),
+	);
+	return orderedWeekDays
 };

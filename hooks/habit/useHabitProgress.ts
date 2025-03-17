@@ -34,13 +34,6 @@ export function useHabitProgress({
 		getTotalElapsedTime,
 	]);
 
-	// Calculate the width of the progress bar
-	const currentProgress =
-		habit?.completionType === "timed" && timerActive
-			? Math.min(1, getTotalElapsedTime() / (completionGoal || 1))
-			: progress;
-
-	const progressBarWidth = `${Math.round(currentProgress * 100)}%`;
-
-	return { progress, progressBarWidth };
+	// Convert decimal progress to percentage (0-100)
+	return progress * 100;
 }

@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import * as Crypto from "expo-crypto";
 import type { StateCreator } from "zustand";
 import type { Habit } from "../../types/habit";
 import { clearHabitCache } from "../../utils/date";
@@ -28,6 +28,7 @@ export interface CRUDSlice {
 	deleteHabit: (id: string) => Promise<void>;
 	getHabitById: (id: string) => Habit | undefined;
 	loadHabitsFromStorage: () => Promise<void>;
+	resetStore: () => void;
 }
 
 export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (
@@ -41,12 +42,15 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (
 		try {
 			const newHabit: Habit = {
 				...habitData,
-				id: uuidv4(),
+				id: Crypto.randomUUID(),
 				createdAt: new Date().toISOString(),
 				completionHistory: {},
 			};
 
 			set((state) => {
+				const existingHabit = state.habitsMap[newHabit.id];
+				if (existingHabit) return state;
+
 				const updatedHabits = [...state.habits, newHabit];
 				const updatedMap = { ...state.habitsMap, [newHabit.id]: newHabit };
 
@@ -150,4 +154,15 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (
 			});
 		}
 	},
+
+	resetStore: async () => {
+		await saveHabits([]);
+		set({
+			habits: [],
+			habitsMap: {},
+			selectedDate: new Date().toISOString(),
+			isLoading: false,
+			error: null,
+		});
+	}
 });

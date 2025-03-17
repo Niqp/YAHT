@@ -1,5 +1,5 @@
 import { useTheme } from "@/hooks/useTheme";
-import type { RepetitionType } from "@/types/habit";
+import { RepetitionType } from "@/types/habit";
 import { getOrderedWeekDays } from "@/utils/date";
 import type React from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -44,7 +44,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 
 	const renderRepetitionOptions = () => {
 		switch (repetitionType) {
-			case "daily":
+			case RepetitionType.DAILY:
 				return (
 					<Text
 						style={[
@@ -55,39 +55,39 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 						Repeat every day
 					</Text>
 				);
-			case "weekly":
+			case RepetitionType.WEEKDAYS:
 				return (
 					<View style={styles.daysContainer}>
-						{WEEKDAYS.map((day: string, index: number) => (
+						{WEEKDAYS.map((day: { dayIndex: number; name: string }) => (
 							<TouchableOpacity
-								key={day}
+								key={day.dayIndex}
 								style={[
 									styles.dayButton,
 									{
 										borderColor: colors.border,
 										backgroundColor: colors.input,
 									},
-									isDaySelected(index) && {
+									isDaySelected(day.dayIndex) && {
 										backgroundColor: colors.primary,
 										borderColor: colors.primary,
 									},
 								]}
-								onPress={() => handleDayToggle(index)}
+								onPress={() => handleDayToggle(day.dayIndex)}
 							>
 								<Text
 									style={[
 										styles.dayButtonText,
 										{ color: colors.textSecondary },
-										isDaySelected(index) && { color: colors.textInverse },
+										isDaySelected(day.dayIndex) && { color: colors.textInverse },
 									]}
 								>
-									{day.substring(0, 3)}
+									{day.name.substring(0, 3)}
 								</Text>
 							</TouchableOpacity>
 						))}
 					</View>
 				);
-			case "custom":
+			case RepetitionType.INTERVAL:
 				return (
 					<View style={styles.customDaysContainer}>
 						<Text
@@ -150,13 +150,13 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 							borderColor: colors.primary,
 						},
 					]}
-					onPress={() => setRepetitionType("daily")}
+					onPress={() => setRepetitionType(RepetitionType.DAILY)}
 				>
 					<Text
 						style={[
 							styles.optionText,
 							{ color: colors.textSecondary },
-							repetitionType === "daily" && { color: colors.textInverse },
+							repetitionType === RepetitionType.DAILY && { color: colors.textInverse },
 						]}
 					>
 						Daily
@@ -169,18 +169,18 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 							borderColor: colors.border,
 							backgroundColor: colors.input,
 						},
-						repetitionType === "weekly" && {
+						repetitionType === RepetitionType.WEEKDAYS && {
 							backgroundColor: colors.primary,
 							borderColor: colors.primary,
 						},
 					]}
-					onPress={() => setRepetitionType("weekly")}
+					onPress={() => setRepetitionType(RepetitionType.WEEKDAYS)}
 				>
 					<Text
 						style={[
 							styles.optionText,
 							{ color: colors.textSecondary },
-							repetitionType === "weekly" && {
+							repetitionType === RepetitionType.WEEKDAYS && {
 								color: colors.textInverse,
 							},
 						]}
@@ -195,23 +195,23 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 							borderColor: colors.border,
 							backgroundColor: colors.input,
 						},
-						repetitionType === "custom" && {
+						repetitionType === RepetitionType.INTERVAL && {
 							backgroundColor: colors.primary,
 							borderColor: colors.primary,
 						},
 					]}
-					onPress={() => setRepetitionType("custom")}
+					onPress={() => setRepetitionType(RepetitionType.INTERVAL)}
 				>
 					<Text
 						style={[
 							styles.optionText,
 							{ color: colors.textSecondary },
-							repetitionType === "custom" && {
+							repetitionType === RepetitionType.INTERVAL && {
 								color: colors.textInverse,
 							},
 						]}
 					>
-						Custom
+						Every X Days
 					</Text>
 				</TouchableOpacity>
 			</View>
