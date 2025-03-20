@@ -1,5 +1,5 @@
 import { useTheme } from "@/hooks/useTheme";
-import { Edit, Trash2, Check, X } from "lucide-react-native";
+import { Edit, Trash2, Check, RotateCcw } from "lucide-react-native";
 import { View, TouchableOpacity, Text } from "react-native";
 import styles from "./HabitBottomSheetActions.styles";
 
@@ -8,7 +8,7 @@ interface HabitBottomSheetActionsProps {
 	handleEdit: () => void;
 	handleDelete: () => void;
 	handleComplete: () => void;
-	handleSkip: () => void;
+	handleReset: () => void;
 }
 
 export default function HabitBottomSheetActions({
@@ -16,7 +16,7 @@ export default function HabitBottomSheetActions({
 	handleEdit,
 	handleDelete,
 	handleComplete,
-	handleSkip,
+	handleReset,
 }: HabitBottomSheetActionsProps) {
 	const { colors } = useTheme();
 	return (
@@ -53,12 +53,12 @@ export default function HabitBottomSheetActions({
 			) : (
 				<TouchableOpacity
 					style={[styles.actionButton, { backgroundColor: colors.input }]}
-					onPress={handleSkip}
+					onPress={handleReset}
 					activeOpacity={0.7}
 				>
-					<X size={24} color={colors.textSecondary} />
+					<RotateCcw size={24} color={colors.textSecondary} />
 					<Text style={[styles.actionText, { color: colors.text }]}>
-						Mark Incomplete
+						Reset
 					</Text>
 				</TouchableOpacity>
 			)}

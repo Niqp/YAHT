@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { Home, BarChart2, Settings } from 'lucide-react-native';
 import { SafeAreaView, Platform } from 'react-native';
 import { StyleSheet } from 'react-native';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function TabsLayout() {
   const { colors } = useTheme();

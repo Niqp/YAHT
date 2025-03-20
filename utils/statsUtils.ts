@@ -1,60 +1,53 @@
-import { Habit } from '../types/habit';
-import { formatDate } from './date';
+import { Habit, HabitMap } from "../types/habit";
+import { formatDate, shouldShowHabitOnDate } from "./date";
 
 /**
  * Calculate overall statistics across all habits
  */
-export const calculateOverallStats = (habits: Habit[]) => {
+export const calculateOverallStats = (habitsMap: HabitMap) => {
+  const habits = Object.values(habitsMap);
   const today = formatDate(new Date());
-  
+
   // Count habits completed today
-  const completedToday = habits.filter(habit => 
-    habit.completionHistory[today]?.completed
-  ).length;
-  
+  const completedToday = habits.filter((habit) => habit.completionHistory.get(today)?.isCompleted).length;
+
   // Calculate completion rate for the last 7 days
-  const last7Days = [];
+  const last7Days: string[] = [];
   for (let i = 0; i < 7; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     last7Days.push(formatDate(date));
   }
-  
+
   let totalPossible = 0;
   let totalCompleted = 0;
-  
-  habits.forEach(habit => {
-    last7Days.forEach(date => {
-      if (habit.completionHistory[date] !== undefined) {
+
+  habits.forEach((habit) => {
+    last7Days.forEach((date) => {
+      if (shouldShowHabitOnDate(habit, date)) {
         totalPossible++;
-        if (habit.completionHistory[date]?.completed) {
+        if (habit.completionHistory.get(date)?.isCompleted) {
           totalCompleted++;
         }
       }
     });
   });
-  
-  const completionRate = totalPossible > 0 
-    ? Math.round((totalCompleted / totalPossible) * 100) 
-    : 0;
-  
+
+  const completionRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+
   // Calculate current streak and best streak
   let currentStreak = 0;
   let bestStreak = 0;
   let streakCount = 0;
-  
+
   if (habits.length > 0) {
     // Sort dates in descending order (newest first)
-    const allDates = Object.keys(habits[0]?.completionHistory || {}).sort((a, b) => 
-      new Date(b).getTime() - new Date(a).getTime()
-    );
-    
+    const allDates = Array.from(habits[0]?.completionHistory.keys()).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
     for (const date of allDates) {
       // Check if any habit was completed on this date
-      const anyCompleted = habits.some(habit => 
-        habit.completionHistory[date]?.completed
-      );
-      
+      const anyCompleted = habits.some((habit) => habit.completionHistory.get(date)?.isCompleted);
+
       if (anyCompleted) {
         streakCount++;
         if (streakCount > bestStreak) {
@@ -67,13 +60,13 @@ export const calculateOverallStats = (habits: Habit[]) => {
         streakCount = 0;
       }
     }
-    
+
     // If we never broke the streak, set current streak
     if (currentStreak === 0 && streakCount > 0) {
       currentStreak = streakCount;
     }
   }
-  
+
   return {
     totalHabits: habits.length,
     completedToday,
@@ -88,8 +81,8 @@ export const calculateOverallStats = (habits: Habit[]) => {
  */
 export const calculateHabitStats = (habit: Habit) => {
   const completionHistory = habit.completionHistory;
-  const completionDates = Object.keys(completionHistory);
-  
+  const completionDates = Array.from(completionHistory.keys());
+
   if (completionDates.length === 0) {
     // Default stats when no data is available
     return {
@@ -97,7 +90,7 @@ export const calculateHabitStats = (habit: Habit) => {
       currentStreak: 0,
       bestStreak: 0,
       totalCompletions: 0,
-      lastCompletionDate: '',
+      lastCompletionDate: "",
       averageRepetitions: 0,
       bestRepetitions: 0,
       goalAchievementRate: 0,
@@ -108,28 +101,23 @@ export const calculateHabitStats = (habit: Habit) => {
       completionSinceCreation: 0,
     };
   }
-  
+
   // Sort dates from newest to oldest
-  const sortedDates = completionDates.sort((a, b) => 
-    new Date(b).getTime() - new Date(a).getTime()
-  );
-  
+  const sortedDates = completionDates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
   // Stats for all habit types
-  const totalCompletions = completionDates.filter(
-    date => completionHistory[date].completed
-  ).length;
-  
-  const lastCompletionDate = completionDates
-    .filter(date => completionHistory[date].completed)
-    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] || '';
-    
+  const totalCompletions = completionDates.filter((date) => completionHistory.get(date)?.isCompleted).length;
+
+  const lastCompletionDate =
+    completionDates.filter((date) => completionHistory.get(date)?.isCompleted).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] || "";
+
   // Calculate streaks for this specific habit
   let currentStreak = 0;
   let bestStreak = 0;
   let streakCount = 0;
-  
+
   for (const date of sortedDates) {
-    if (completionHistory[date]?.completed) {
+    if (completionHistory.get(date)?.isCompleted) {
       streakCount++;
       if (streakCount > bestStreak) {
         bestStreak = streakCount;
@@ -141,29 +129,25 @@ export const calculateHabitStats = (habit: Habit) => {
       streakCount = 0;
     }
   }
-  
+
   // If streak is ongoing, set current streak
   if (currentStreak === 0 && streakCount > 0) {
     currentStreak = streakCount;
   }
-  
+
   // Completion rate for all dates with history
-  const completionRate = Math.round(
-    (totalCompletions / completionDates.length) * 100
-  );
-  
+  const completionRate = Math.round((totalCompletions / completionDates.length) * 100);
+
   // Calculate completion since creation
   const creationDate = new Date(habit.createdAt);
   const today = new Date();
   // Calculate total days since creation (including today)
   const totalDays = Math.max(1, Math.floor((today.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
   // Count completed days
-  const completedDays = Object.values(completionHistory)
-    .filter(entry => entry.completed)
-    .length;
+  const completedDays = Array.from(completionHistory.values()).filter((entry) => entry.isCompleted).length;
   // Calculate percentage - ensure value is between 0-100
   const completionSinceCreation = Math.min(100, Math.max(0, Math.round((completedDays / totalDays) * 100)));
-  
+
   const result = {
     // Simple habit stats (defaults)
     completionRate,
@@ -172,39 +156,35 @@ export const calculateHabitStats = (habit: Habit) => {
     totalCompletions,
     lastCompletionDate,
     completionSinceCreation,
-    
+
     // Repetition habit stats (defaults)
     averageRepetitions: 0,
     bestRepetitions: 0,
     goalAchievementRate: 0,
     totalRepetitions: 0,
-    
+
     // Timed habit stats (defaults)
     totalTimeSpent: 0,
     averageTimePerSession: 0,
     longestSession: 0,
   };
-  
+
   // Additional stats for repetition habits
-  if (habit.completionType === 'repetitions') {
+  if (habit.completion.type === "repetitions") {
     const values = completionDates
-      .filter(date => completionHistory[date].value !== undefined)
-      .map(date => completionHistory[date].value as number);
-    
+      .filter((date) => completionHistory.get(date)?.value !== undefined)
+      .map((date) => completionHistory.get(date)?.value as number);
+
     if (values.length > 0) {
       const totalRepetitions = values.reduce((sum, val) => sum + val, 0);
       const averageRepetitions = Math.round((totalRepetitions / values.length) * 10) / 10;
       const bestRepetitions = Math.max(...values);
-      
+
       // Calculate how often the goal was reached
-      const goalReachedCount = completionDates.filter(
-        date => (completionHistory[date].value as number) >= (habit.completionGoal || 0)
-      ).length;
-      
-      const goalAchievementRate = Math.round(
-        (goalReachedCount / completionDates.length) * 100
-      );
-      
+      const goalReachedCount = completionDates.filter((date) => (completionHistory.get(date)?.value || 0) >= (habit.completion.goal || 0)).length;
+
+      const goalAchievementRate = Math.round((goalReachedCount / completionDates.length) * 100);
+
       Object.assign(result, {
         averageRepetitions,
         bestRepetitions,
@@ -213,27 +193,23 @@ export const calculateHabitStats = (habit: Habit) => {
       });
     }
   }
-  
+
   // Additional stats for timed habits
-  if (habit.completionType === 'timed') {
+  if (habit.completion.type === "timed") {
     const values = completionDates
-      .filter(date => completionHistory[date].value !== undefined)
-      .map(date => completionHistory[date].value as number);
-    
+      .filter((date) => completionHistory.get(date)?.value !== undefined)
+      .map((date) => completionHistory.get(date)?.value as number);
+
     if (values.length > 0) {
       const totalTimeSpent = values.reduce((sum, val) => sum + val, 0);
       const averageTimePerSession = Math.round(totalTimeSpent / values.length);
       const longestSession = Math.max(...values);
-      
+
       // Calculate how often the goal was reached
-      const goalReachedCount = completionDates.filter(
-        date => (completionHistory[date].value as number) >= (habit.completionGoal || 0)
-      ).length;
-      
-      const goalAchievementRate = Math.round(
-        (goalReachedCount / completionDates.length) * 100
-      );
-      
+      const goalReachedCount = completionDates.filter((date) => (completionHistory.get(date)?.value || 0) >= (habit.completion.goal || 0)).length;
+
+      const goalAchievementRate = Math.round((goalReachedCount / completionDates.length) * 100);
+
       Object.assign(result, {
         totalTimeSpent,
         averageTimePerSession,
@@ -242,7 +218,7 @@ export const calculateHabitStats = (habit: Habit) => {
       });
     }
   }
-  
+
   return result;
 };
 
@@ -252,36 +228,36 @@ export const calculateHabitStats = (habit: Habit) => {
 export const generateChartData = (habit: Habit) => {
   // Get the last 7 days for all habit types
   const last7Days = [];
-  
+
   for (let i = 6; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     last7Days.push(formatDate(date));
   }
-  
-  const last7DaysLabels = last7Days.map(date => {
-    const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+
+  const last7DaysLabels = last7Days.map((date) => {
+    const dayName = new Date(date).toLocaleDateString("en-US", { weekday: "short" });
     return dayName;
   });
-  
-  if (habit.completionType === 'simple') {
+
+  if (habit.completion.type === "simple") {
     // For simple habits, we'll create a binary completion data
-    const completionData = last7Days.map(date => {
-      const historyEntry = habit.completionHistory[date];
-      return historyEntry?.completed ? 1 : 0;
+    const completionData = last7Days.map((date) => {
+      const historyEntry = habit.completionHistory.get(date);
+      return historyEntry?.isCompleted ? 1 : 0;
     });
-    
+
     return {
       labels: last7DaysLabels,
       datasets: [{ data: completionData }],
     };
   } else {
     // For repetition and timed habits, prepare data for the line chart
-    const values = last7Days.map(date => {
-      const historyEntry = habit.completionHistory[date];
-      return historyEntry ? (historyEntry.value || 0) : 0;
+    const values = last7Days.map((date) => {
+      const historyEntry = habit.completionHistory.get(date);
+      return historyEntry ? historyEntry.value || 0 : 0;
     });
-    
+
     return {
       labels: last7DaysLabels,
       datasets: [{ data: values }],

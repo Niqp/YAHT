@@ -2,10 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   ScrollView,
-  Platform,
   Pressable,
   NativeSyntheticEvent,
   NativeScrollEvent
@@ -13,11 +11,13 @@ import {
 import { Clock } from 'lucide-react-native';
 import { useTheme } from '../../hooks/useTheme';
 
+import styles from './TimedControls.styles'
+
 interface IOSTimerPickerProps {
-  value: number; // in seconds
+  value: number; // in milliseconds
   onChange: (value: number) => void;
-  min?: number; // in seconds
-  max?: number; // in seconds
+  min?: number; // in milliseconds
+  max?: number; // in milliseconds
   label?: string;
 }
 
@@ -34,14 +34,16 @@ const generateTimeValues = (count: number, padZero = true) => {
 export default function IOSTimerPicker({
   value,
   onChange,
-  min = 60, // 1 minute minimum
-  max = 86400, // 24 hours maximum
+  min = 60000, // 1 minute minimum (in ms)
+  max = 86400000, // 24 hours maximum (in ms)
   label = 'Target time:'
 }: IOSTimerPickerProps) {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, colorScheme } = useTheme();
+  const isDarkMode = colorScheme === 'dark';
   
-  // Calculate hours, minutes from seconds
-  const totalMinutes = Math.floor(value / 60);
+  // Calculate hours, minutes from milliseconds
+  const totalSeconds = Math.floor(value / 1000);
+  const totalMinutes = Math.floor(totalSeconds / 60);
   const [hours, setHours] = useState(Math.floor(totalMinutes / 60));
   const [minutes, setMinutes] = useState(totalMinutes % 60);
   
@@ -56,21 +58,22 @@ export default function IOSTimerPicker({
   const hourScrollRef = useRef<ScrollView>(null);
   const minuteScrollRef = useRef<ScrollView>(null);
   
-  // Common time presets in minutes for quick selection
+  // Common time presets in milliseconds for quick selection
   const presets = [
-    { label: '5m', value: 5 * 60 },
-    { label: '10m', value: 10 * 60 },
-    { label: '15m', value: 15 * 60 },
-    { label: '30m', value: 30 * 60 },
-    { label: '1h', value: 60 * 60 },
-    { label: '2h', value: 120 * 60 },
-    { label: '3h', value: 180 * 60 },
-    { label: '4h', value: 240 * 60 },
+    { label: '5m', value: 5 * 60 * 1000 },
+    { label: '10m', value: 10 * 60 * 1000 },
+    { label: '15m', value: 15 * 60 * 1000 },
+    { label: '30m', value: 30 * 60 * 1000 },
+    { label: '1h', value: 60 * 60 * 1000 },
+    { label: '2h', value: 120 * 60 * 1000 },
+    { label: '3h', value: 180 * 60 * 1000 },
+    { label: '4h', value: 240 * 60 * 1000 },
   ];
   
   // Update hours and minutes when value changes
   useEffect(() => {
-    const totalMinutes = Math.floor(value / 60);
+    const totalSeconds = Math.floor(value / 1000);
+    const totalMinutes = Math.floor(totalSeconds / 60);
     setHours(Math.floor(totalMinutes / 60));
     setMinutes(totalMinutes % 60);
   }, [value]);
@@ -99,7 +102,7 @@ export default function IOSTimerPicker({
       if (index !== hours) {
         setHours(index);
         // Keep minutes the same
-        const newValue = (index * 60 * 60) + (minutes * 60);
+        const newValue = (index * 60 * 60 * 1000) + (minutes * 60 * 1000);
         onChange(newValue);
       }
     }
@@ -121,7 +124,7 @@ export default function IOSTimerPicker({
       if (index !== minutes) {
         setMinutes(index);
         // Keep hours the same
-        const newValue = (hours * 60 * 60) + (index * 60);
+        const newValue = (hours * 60 * 60 * 1000) + (index * 60 * 1000);
         onChange(newValue);
       }
     }
@@ -138,7 +141,7 @@ export default function IOSTimerPicker({
       if (index !== hours) {
         setHours(index);
         // Only update hours, keep current minutes
-        const newValue = (index * 60 * 60) + (minutes * 60);
+        const newValue = (index * 60 * 60 * 1000) + (minutes * 60 * 1000);
         onChange(newValue);
       }
     } else {
@@ -150,7 +153,7 @@ export default function IOSTimerPicker({
       if (index !== minutes) {
         setMinutes(index);
         // Only update minutes, keep current hours
-        const newValue = (hours * 60 * 60) + (index * 60);
+        const newValue = (hours * 60 * 60 * 1000) + (index * 60 * 1000);
         onChange(newValue);
       }
     }
@@ -363,131 +366,3 @@ export default function IOSTimerPicker({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 10,
-  },
-  headingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 14,
-  },
-  timeDisplay: {
-    alignSelf: 'center',
-    width: '90%',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  timeDisplayText: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  timeHintText: {
-    fontSize: 12,
-  },
-  pickerContainer: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  pickerControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-  },
-  pickerColumn: {
-    alignItems: 'center',
-  },
-  pickerLabel: {
-    fontSize: 12,
-    marginBottom: 10,
-    fontWeight: '500',
-  },
-  pickerHighlightContainer: {
-    height: 150,
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  pickerHighlight: {
-    position: 'absolute',
-    height: ITEM_HEIGHT,
-    left: 0,
-    right: 0,
-    borderRadius: 8,
-    zIndex: 0, // Behind the text
-  },
-  pickerScrollView: {
-    height: 150,
-    width: 80,
-  },
-  pickerScrollContent: {
-    paddingVertical: 50,
-  },
-  pickerItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 80,
-    zIndex: 1, // Text above highlight
-  },
-  pickerItemText: {
-    fontSize: 22,
-    fontWeight: '500',
-  },
-  pickerSeparator: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginHorizontal: 10,
-  },
-  doneButton: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doneButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  presetsContainer: {
-    marginTop: 4,
-  },
-  presetsLabel: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  presetButtonsScroll: {
-    paddingBottom: 8,
-  },
-  presetButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    marginRight: 8,
-    borderWidth: 1,
-  },
-  presetButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});

@@ -1,200 +1,93 @@
-import { create } from 'zustand';
-import { storage } from '@/utils/storage';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import type { HabitState } from "./habitStore";
+import type { Habit } from "@/types/habit";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { mmkvStorage } from "../utils/storage";
+
+export type TimerDate = string; // Type alias for timer date (ISO string format)
 
 // Timer interface
 export interface Timer {
-  currentProgressTimeMs: number; // Current elapsed time in milliseconds
-  goalTimeMs: number;            // Target time in milliseconds
-  isActive: boolean;             // Whether timer is currently running
-  lastResumedAt: string | null;    // Timestamp when timer was last resumed (ISO string format)
+  lastResumedAt: string | null; // Timestamp when timer was last resumed (ISO string format)
+  elapsedTime?: number; // elapsed time in milliseconds
 }
 
-// Timer state interface
-interface TimerState {
-  timers: Record<string, Timer>;
-  
-  // Core timer functions
-  createTimer: (habitId: string, goalTimeMs: number) => void;
-  startTimer: (habitId: string) => void;
-  pauseTimer: (habitId: string) => void;
-  resetTimer: (habitId: string) => void;
-  getTimer: (habitId: string) => Timer | undefined;
-  getAllActiveTimers: () => Record<string, Timer>;
-  removeTimer: (habitId: string) => void;
-  updateCurrentProgressTime: (habitId: string, timeMs: number) => void;
-  incrementActiveTimers: (addTimeMs: number) => void; 
+export type TimerMap = Record<Habit["id"], Record<TimerDate, Timer>>;
+
+export interface TimerState {
+  activeTimers: TimerMap;
+  incrementAllTimers: (elapsedTime: number) => void;
+  activateTimer: (habitId: string, date: TimerDate) => void;
+  removeTimer: (habitId: string, date: TimerDate) => void;
+  mergeTimerUpdates: (updatedTimers: Record<Habit["id"], Record<TimerDate, Timer>>) => void;
 }
 
-// MMKV storage implementation for Zustand
-const zustandStorage = {
-  getItem: (name: string) => {
-    const value = storage.getString(name);
-    return value ? value : null;
-  },
-  setItem: (name: string, value: string) => {
-    storage.set(name, value);
-  },
-  removeItem: (name: string) => {
-    storage.delete(name);
-  },
-};
-
-// Create the store with persistence
-export const useTimerStore = create<TimerState>()(
+export const timerStore = create<TimerState>()(
   persist(
-    (set, get) => ({
-      timers: {},
+    (set) => ({
+      activeTimers: {},
 
-      // Create a new timer for a habit
-      createTimer: (habitId: string, goalTimeMs: number) => {
+      incrementAllTimers: (elapsedTime) => {
+        set((state) => {
+          const allTimers = state.activeTimers;
+          for (const habitId in allTimers) {
+            const dateTimers = allTimers[habitId];
+            for (const date in dateTimers) {
+              const timer = dateTimers[date];
+              if (timer.lastResumedAt) {
+                // Update the elapsed time for the timer
+                timer.elapsedTime = (timer.elapsedTime || 0) + elapsedTime;
+              }
+            }
+          }
+
+          return { activeTimers: { ...allTimers } };
+        });
+      },
+
+      mergeTimerUpdates: (updatedTimers) => {
+        set((state) => {
+          return {
+            activeTimers: {
+              ...state.activeTimers,
+              ...updatedTimers,
+            },
+          };
+        });
+      },
+
+      activateTimer: (habitId, date) => {
+        const newLastResumedAt = new Date().toISOString();
         set((state) => ({
-          timers: {
-            ...state.timers,
+          activeTimers: {
+            ...state.activeTimers,
             [habitId]: {
-              currentProgressTimeMs: 0,
-              goalTimeMs,
-              isActive: false,
-              lastResumedAt: null,
+              ...state.activeTimers[habitId],
+              [date]: {
+                lastResumedAt: newLastResumedAt,
+                elapsedTime: 0,
+              },
             },
           },
         }));
+        return newLastResumedAt;
       },
 
-      // Start or resume a timer
-      startTimer: (habitId: string) => {
+      removeTimer: (habitId, date) => {
         set((state) => {
-          const timer = state.timers[habitId];
-          if (!timer) return state;
-
-          const now = new Date().toISOString();
+          const { [date]: removed, ...rest } = state.activeTimers[habitId] || {};
           return {
-            timers: {
-              ...state.timers,
-              [habitId]: {
-                ...timer,
-                isActive: true,
-                lastResumedAt: now,
-              },
+            activeTimers: {
+              ...state.activeTimers,
+              [habitId]: rest,
             },
           };
         });
       },
-
-      // Pause a timer
-      pauseTimer: (habitId: string) => {
-        set((state) => {
-          const timer = state.timers[habitId];
-          if (!timer || !timer.isActive) {
-            console.warn(`Timer for habit ${habitId} is not active or does not exist.`);
-            return state;
-          }
-
-          return {
-            timers: {
-              ...state.timers,
-              [habitId]: {
-                ...timer,
-                isActive: false,
-              },
-            },
-          };
-        });
-      },
-
-      // Reset a timer to initial state
-      resetTimer: (habitId: string) => {
-        set((state) => {
-          const timer = state.timers[habitId];
-          if (!timer) return state;
-
-          return {
-            timers: {
-              ...state.timers,
-              [habitId]: {
-                ...timer,
-                currentProgressTimeMs: 0,
-                isActive: false,
-                lastResumedAt: null,
-              },
-            },
-          };
-        });
-      },
-
-      // Get a specific timer
-      getTimer: (habitId: string) => {
-        return get().timers[habitId];
-      },
-
-      // Get all currently active timers
-      getAllActiveTimers: () => {
-        const { timers } = get();
-        const activeTimers: Record<string, Timer> = {};
-        
-        Object.entries(timers).forEach(([habitId, timer]) => {
-          if (timer.isActive) {
-            activeTimers[habitId] = timer;
-          }
-        });
-        
-        return activeTimers;
-      },
-
-      // Remove a timer (for deleted habits)
-      removeTimer: (habitId: string) => {
-        set((state) => {
-          const newTimers = { ...state.timers };
-          delete newTimers[habitId];
-          return { timers: newTimers };
-        });
-      },
-
-      updateCurrentProgressTime: (habitId: string, timeMs: number) => {
-        set((state) => {
-          const timer = state.timers[habitId];
-          if (!timer) return state;
-
-          return {
-            timers: {
-              ...state.timers,
-              [habitId]: {
-                ...timer,
-                currentProgressTimeMs: timeMs,
-              },
-            },
-          };
-        });
-      },
-
-      // Update all active timers at once (called from outside)
-      incrementActiveTimers: (addTimeMs) => {
-        set((state) => {
-          const now = new Date().toISOString();
-          const updatedTimers = { ...state.timers };
-          let hasChanges = false;
-
-          Object.entries(updatedTimers).forEach(([habitId, timer]) => {
-            if (timer.isActive && timer.lastResumedAt) {
-              updatedTimers[habitId] = {
-                ...timer,
-                currentProgressTimeMs: timer.currentProgressTimeMs + addTimeMs,
-                lastResumedAt: now,
-              };
-              hasChanges = true;
-            }
-          });
-
-          return hasChanges ? { timers: updatedTimers } : state;
-        });
-      },
-
     }),
     {
-      name: 'habit-timers',
-      storage: createJSONStorage(() => zustandStorage),
-      partialize: (state) => ({ timers: state.timers }),
+      name: "timer-storage", // Unique name for the storage key
+      storage: mmkvStorage, // Use MMKV storage for persistence
     }
   )
 );
-

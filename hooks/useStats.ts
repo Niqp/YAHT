@@ -8,7 +8,11 @@ import {
 } from "../utils/statsUtils";
 
 export function useStats() {
-	const { habits, isLoading } = useHabitStore();
+	const habits = useHabitStore((state) => state.habits) || {};
+	const isHydrated = useHabitStore((state) => state._hasHydrated);
+
+	const habitArray = Object.values(habits) || [];
+
 	const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
 	const [overallStats, setOverallStats] = useState({
 		totalHabits: 0,
@@ -63,7 +67,7 @@ export function useStats() {
 
 	// Initialize habits and calculate overall stats
 	useEffect(() => {
-		if (habits.length === 0) {
+		if (Object.keys(habits).length === 0) {
 			return;
 		}
 
@@ -71,10 +75,10 @@ export function useStats() {
 		setOverallStats(stats);
 
 		// Ensure selectedHabit is always valid
-		setSelectedHabit((prevSelectedHabit) => {
+		setSelectedHabit((selectedHabit) => {
 			const validHabit =
-				prevSelectedHabit && habits.find((h) => h.id === prevSelectedHabit.id);
-			return validHabit || habits[0]; // Select first habit if previous is invalid
+			selectedHabit && habits[selectedHabit.id];
+			return validHabit || Object.values(habits)[0]; // Select first habit if previous is invalid
 		});
 	}, [habits]);
 
@@ -126,7 +130,8 @@ export function useStats() {
 
 	return {
 		habits,
-		isLoading,
+		habitArray,
+		isHydrated,
 		selectedHabit,
 		overallStats,
 		lineChartData,

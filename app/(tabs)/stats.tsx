@@ -16,7 +16,8 @@ export default function StatsScreen() {
 	const { colors } = useTheme();
 	const {
 		habits,
-		isLoading,
+		habitArray,
+		isHydrated,
 		selectedHabit,
 		overallStats,
 		lineChartData,
@@ -25,7 +26,7 @@ export default function StatsScreen() {
 		handleSelectHabit,
 	} = useStats();
 
-	if (isLoading) {
+	if (!isHydrated) {
 		return (
 			<View
 				style={[
@@ -38,7 +39,7 @@ export default function StatsScreen() {
 		);
 	}
 
-	if (habits.length === 0) {
+	if (habitArray.length === 0) {
 		return (
 			<View style={[styles.container, { backgroundColor: colors.background }]}>
 				<View style={styles.emptyContainer}>
@@ -66,7 +67,7 @@ export default function StatsScreen() {
 
 					{/* Habit Selector */}
 					<HabitSelector
-						habits={habits}
+						habits={habitArray}
 						selectedHabit={selectedHabit}
 						onSelectHabit={handleSelectHabit}
 					/>

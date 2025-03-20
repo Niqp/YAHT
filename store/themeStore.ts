@@ -2,9 +2,9 @@ import type { ColorSchemeName } from "react-native";
 import { AppState, type AppStateStatus } from "react-native";
 import { Appearance } from "react-native";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import { type ColorTheme, Colors } from "../constants/Colors";
-import { storage } from "../utils/storage";
+import { mmkvStorage } from "../utils/storage";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type WeekStartDay = 0 | 1;
@@ -19,22 +19,6 @@ interface ThemeState {
 	setWeekStartDay: (day: WeekStartDay) => void;
 	updateSystemTheme: () => void;
 }
-
-// Create MMKV storage adapter for Zustand
-const mmkvStorage = {
-	getItem: (name: string) => {
-		const value = storage.getString(name);
-		return Promise.resolve(value || null);
-	},
-	setItem: (name: string, value: string) => {
-		storage.set(name, value);
-		return Promise.resolve(true);
-	},
-	removeItem: (name: string) => {
-		storage.delete(name);
-		return Promise.resolve();
-	},
-};
 
 // Helper function to determine dark mode state
 const isDarkModeActive = (
@@ -104,7 +88,7 @@ export const useThemeStore = create<ThemeState>()(
 		}),
 		{
 			name: "theme-storage",
-			storage: createJSONStorage(() => mmkvStorage),
+			storage: mmkvStorage,
 			partialize: (state) => ({
 				mode: state.mode,
 				weekStartDay: state.weekStartDay,

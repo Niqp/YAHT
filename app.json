@@ -7,46 +7,28 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "icon": "./assets/images/icon.png",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": [
-          "fetch",
-          "processing"
-        ]
+        "UIBackgroundModes": ["fetch", "processing"]
       }
     },
     "android": {
       "package": "com.niqp.yaht",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "android.permission.SCHEDULE_EXACT_ALARM",
-        "android.permission.VIBRATE"
-      ]
+      "permissions": ["android.permission.SCHEDULE_EXACT_ALARM", "android.permission.VIBRATE"]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "build": {
         "babel": {
-          "include": [
-            "@gorhom/bottom-sheet",
-            "react-native-reanimated"
-          ]
+          "include": ["@gorhom/bottom-sheet", "react-native-reanimated"]
         }
       }
     },
     "plugins": [
+      "./plugins/notifee-mod.js",
       "expo-router",
       [
         "expo-notifications",

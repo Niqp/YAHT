@@ -1,82 +1,86 @@
 import type { StateCreator } from "zustand";
-import { updateSingleHabit } from "../../utils/storage";
 import type { HabitState } from "../habitStore";
+import { calculateNewDueDate } from "@/utils/date";
+import { insertSortedIntoMap } from "@/utils/map";
+
+export type CompletionData = {
+  id: string;
+  date?: string;
+  value?: number;
+};
 
 export interface CompletionSlice {
-	completeHabit: (
-		id: string,
-		value?: number,
-		forcedState?: boolean,
-	) => Promise<void>;
+  updateCompletion: (update: CompletionData) => Promise<void>;
+  updateCompletionMultiple: (updates: CompletionData[]) => Promise<void>;
 }
 
-export const createCompletionSlice: StateCreator<
-	HabitState,
-	[],
-	[],
-	CompletionSlice
-> = (set, get) => ({
-	completeHabit: async (id, value, forcedState) => {
-		try {
-			const { selectedDate, habitsMap } = get();
-			const habit = habitsMap[id];
-			if (!habit) return;
+export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionSlice> = (set, get) => ({
+  updateCompletion: async ({ id, date, value }) => {
+    try {
+      const { habits, selectedDate } = get();
+      date = date || selectedDate;
+      const habit = habits[id];
+      if (!habit) return;
 
-			const currentCompletion = habit.completionHistory[selectedDate] || {
-				completed: false,
-			};
-			let newCompleted = currentCompletion.completed;
+      const currentCompletion = habit.completionHistory.get(date) || { isCompleted: false, value: 0 };
+      let newCompleted = currentCompletion.isCompleted;
 
-			// Determine new completion state
-			if (forcedState !== undefined) {
-				newCompleted = forcedState;
-			} else if (habit.completionType === "simple") {
-				newCompleted = !currentCompletion.completed;
-			} else if (["repetitions", "timed"].includes(habit.completionType)) {
-				newCompleted =
-					value !== undefined && value >= (habit.completionGoal || 0);
-			}
+      // Determine new completion state
+      if (habit.completion.type === "simple") {
+        newCompleted = !newCompleted;
+      }
+      if (["repetitions", "timed"].includes(habit.completion.type)) {
+        newCompleted = value !== undefined && value >= (habit.completion.goal || 0);
+      }
 
-			// Determine new value
-			let newValue = value;
-			if (habit.completionType === "timed" && newValue === undefined) {
-				newValue = currentCompletion.value;
-			}
+      // Determine new value
+      let newValue = value || 0;
+      if (habit.completion.type === "timed" && newValue === undefined) {
+        newValue = currentCompletion?.value || 0;
+      }
 
-			const updatedHabit = {
-				...habit,
-				completionHistory: {
-					...habit.completionHistory,
-					[selectedDate]: {
-						completed: newCompleted,
-						value: newValue,
-					},
-				},
-			};
+      const completionHistoryDates = Array.from(habit.completionHistory.keys());
+      console.log("Completion history dates:", completionHistoryDates);
 
-			set((state) => {
-				const updatedHabits = state.habits.map((h) =>
-					h.id === id ? updatedHabit : h,
-				);
+      const prevCompletionDate =
+        completionHistoryDates.length > 1 ? completionHistoryDates[completionHistoryDates.length - 1] : completionHistoryDates[0] || habit.createdAt;
+      console.log("Previous completion date:", prevCompletionDate);
 
-				const updatedMap = {
-					...state.habitsMap,
-					[id]: updatedHabit,
-				};
+      let newCompletionHistory = new Map(habit.completionHistory);
+      if (newCompleted) {
+        newCompletionHistory = insertSortedIntoMap(newCompletionHistory, date, {
+          isCompleted: newCompleted,
+          value: newValue || 0,
+        });
+      } else {
+        newCompletionHistory.delete(date);
+      }
 
-				updateSingleHabit(updatedHabit).catch((error) => {
-					console.error("Error updating single habit:", error);
-				});
+      const updatedHabit = {
+        ...habit,
+        completionHistory: newCompletionHistory,
+      };
 
-				return {
-					habits: updatedHabits,
-					habitsMap: updatedMap,
-					error: null,
-				};
-			});
-		} catch (error) {
-			console.error("Error completing habit:", error);
-			set({ error: "Failed to complete habit" });
-		}
-	},
+      set((state) => {
+        const updatedMap = {
+          ...state.habits,
+          [id]: updatedHabit,
+        };
+
+        return {
+          habits: updatedMap,
+          error: null,
+        };
+      });
+    } catch (error) {
+      console.error("Error completing habit:", error);
+      set({ error: "Failed to complete habit" });
+    }
+  },
+
+  updateCompletionMultiple: async (updates) => {
+    for (const update of updates) {
+      await get().updateCompletion(update);
+    }
+  },
 });

@@ -1,46 +1,77 @@
 import { create } from "zustand";
-import type { Habit } from "../types/habit";
+import { persist } from "zustand/middleware";
+import { mmkvStorage } from "@/utils/storage";
+import type { TimerMap, TimerDate, TimerElapsedTimeMap } from "../types/timer";
+import type { Habit, HabitMap } from "../types/habit";
 
-import { createCompletionSlice } from "./habit/completionSlice";
+import { createCompletionSlice, type CompletionData } from "./habit/completionSlice";
 import { createCRUDSlice } from "./habit/crudSlice";
 import { createImportSlice } from "./habit/importSlice";
-import { createUiSlice } from "./habit/uiSlice";
-
-export interface HabitsMap {
-	[id: string]: Habit;
-}
+import { createTimerSlice } from "./habit/timerSlice";
+import { getCurrentDate } from "@/utils/date";
 
 export interface HabitState {
-	habits: Habit[];
-	habitsMap: HabitsMap;
-	selectedDate: string;
-	isLoading: boolean;
-	error: string | null;
+  _hasHydrated: boolean;
+  habits: HabitMap;
+  selectedDate: string;
+  activeTimers: TimerMap;
+  timerElapsedTimeMap: TimerElapsedTimeMap;
+  error: string | null;
 
-	// Methods will be implemented in slices
-	addHabit: (
-		habit: Omit<Habit, "id" | "createdAt" | "completionHistory">,
-	) => Promise<void>;
-	updateHabit: (id: string, habit: Partial<Habit>) => Promise<void>;
-	deleteHabit: (id: string) => Promise<void>;
-	completeHabit: (
-		id: string,
-		value?: number,
-		forcedState?: boolean,
-	) => Promise<void>;
-	setSelectedDate: (date: string) => void;
-	loadHabitsFromStorage: () => Promise<void>;
-	getHabitById: (id: string) => Habit | undefined;
-	importHabits: (importedHabits: Habit[]) => Promise<number>;
-	resetStore: () => void;
+  // Methods will be implemented in slices
+  setHydrationState: (state: boolean) => void;
+  addHabit: (habit: Omit<Habit, "id">) => Promise<void>;
+  updateHabit: (id: string, habit: Partial<Habit>) => Promise<void>;
+  deleteHabit: (id: string) => Promise<void>;
+  updateCompletion: (update: CompletionData) => Promise<void>;
+  updateCompletionMultiple: (updates: CompletionData[]) => Promise<void>;
+  setSelectedDate: (date: string) => void;
+  getHabitById: (id: string) => Habit | undefined;
+  importHabits: (importedHabits: HabitMap) => Promise<number>;
+  resetStore: () => void;
+  incrementAllTimers: (elapsedTime: number) => void;
+  activateTimer: (habitId: string, date: TimerDate) => void;
+  removeTimer: (habitId: string, date: TimerDate) => void;
+  mergeTimerUpdates: (updatedTimers: TimerMap) => void;
+  mergeTimerElapsedTimeUpdates: (updatedTimers: TimerElapsedTimeMap) => void;
+  resetAllElapsedTime: () => void;
 }
 
-// Combine all slices into one store
-export const useHabitStore = create<HabitState>((...args) => ({
-	activeTimers: {}, // Initialize empty active timers map
+// Create custom storage adapter using our MMKV instance
 
-	...createCRUDSlice(...args),
-	...createCompletionSlice(...args),
-	...createUiSlice(...args),
-	...createImportSlice(...args),
-}));
+// Apply persist middleware to the store
+export const useHabitStore = create<HabitState>()(
+  persist(
+    (...args) => ({
+      selectedDate: getCurrentDate(),
+      error: null,
+      _hasHydrated: false,
+
+      setHydrationState: (state) => {
+        const set = args[0];
+        set({ _hasHydrated: state });
+      },
+
+      setSelectedDate: (date) => {
+        const set = args[0];
+        set({ selectedDate: date });
+      },
+
+      ...createCRUDSlice(...args),
+      ...createCompletionSlice(...args),
+      ...createImportSlice(...args),
+      ...createTimerSlice(...args),
+    }),
+    {
+      name: "habits-storage",
+      storage: mmkvStorage,
+      partialize: (state) => ({
+        habits: state.habits,
+        activeTimers: state.activeTimers,
+      }),
+      onRehydrateStorage: (state) => {
+        return () => state.setHydrationState(true);
+      },
+    }
+  )
+);

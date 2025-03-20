@@ -1,168 +1,94 @@
 import * as Crypto from "expo-crypto";
 import type { StateCreator } from "zustand";
-import type { Habit } from "../../types/habit";
-import { clearHabitCache } from "../../utils/date";
-import { saveHabits, updateSingleHabit, loadHabits } from "../../utils/storage";
-import type { HabitState, HabitsMap } from "../habitStore";
-
-// Helper to convert habit array to map
-export const habitsArrayToMap = (habits: Habit[]): HabitsMap => {
-	if (!Array.isArray(habits)) return {};
-
-	return habits.reduce((map, habit) => {
-		if (habit?.id) {
-			map[habit.id] = habit;
-		}
-		return map;
-	}, {} as HabitsMap);
-};
+import type { Habit, HabitMap } from "../../types/habit";
+import type { HabitState } from "../habitStore";
 
 export interface CRUDSlice {
-	habits: Habit[];
-	habitsMap: HabitsMap;
+  habits: HabitMap;
 
-	addHabit: (
-		habit: Omit<Habit, "id" | "createdAt" | "completionHistory">,
-	) => Promise<void>;
-	updateHabit: (id: string, habit: Partial<Habit>) => Promise<void>;
-	deleteHabit: (id: string) => Promise<void>;
-	getHabitById: (id: string) => Habit | undefined;
-	loadHabitsFromStorage: () => Promise<void>;
-	resetStore: () => void;
+  addHabit: (habit: Omit<Habit, "id">) => Promise<void>;
+  updateHabit: (id: string, habit: Partial<Habit>) => Promise<void>;
+  deleteHabit: (id: string) => Promise<void>;
+  getHabitById: (id: string) => Habit | undefined;
+  resetStore: () => void;
 }
 
-export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (
-	set,
-	get,
-) => ({
-	habits: [],
-	habitsMap: {},
+export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set, get) => ({
+  habits: {},
 
-	addHabit: async (habitData) => {
-		try {
-			const newHabit: Habit = {
-				...habitData,
-				id: Crypto.randomUUID(),
-				createdAt: new Date().toISOString(),
-				completionHistory: {},
-			};
+  addHabit: async (habitData) => {
+    try {
+      const newHabit: Habit = {
+        ...habitData,
+        id: Crypto.randomUUID(),
+      };
 
-			set((state) => {
-				const existingHabit = state.habitsMap[newHabit.id];
-				if (existingHabit) return state;
+      set((state) => {
+        const existingHabit = state.habits[newHabit.id];
+        if (existingHabit) return state;
 
-				const updatedHabits = [...state.habits, newHabit];
-				const updatedMap = { ...state.habitsMap, [newHabit.id]: newHabit };
+        const updatedHabits = { ...state.habits, [newHabit.id]: newHabit };
 
-				saveHabits(updatedHabits).catch((error) => {
-					console.error("Error saving habits:", error);
-				});
+        return {
+          habits: updatedHabits,
+          error: null,
+        };
+      });
+    } catch (error) {
+      console.error("Error adding habit:", error);
+      set({ error: "Failed to add habit" });
+    }
+  },
 
-				return {
-					habits: updatedHabits,
-					habitsMap: updatedMap,
-					error: null,
-				};
-			});
-		} catch (error) {
-			console.error("Error adding habit:", error);
-			set({ error: "Failed to add habit" });
-		}
-	},
+  updateHabit: async (id, habitData) => {
+    try {
+      set((state) => {
+        const existingHabit = state.habits[id];
+        if (!existingHabit) return state;
 
-	updateHabit: async (id, habitData) => {
-		try {
-			set((state) => {
-				const existingHabit = state.habitsMap[id];
-				if (!existingHabit) return state;
+        const updatedHabit = { ...existingHabit, ...habitData };
 
-				const updatedHabit = { ...existingHabit, ...habitData };
-				clearHabitCache(id);
+        const updatedHabits = { ...state.habits, [id]: updatedHabit };
 
-				const updatedHabits = state.habits.map((h) =>
-					h.id === id ? updatedHabit : h,
-				);
-				const updatedMap = { ...state.habitsMap, [id]: updatedHabit };
+        return {
+          habits: updatedHabits,
+          error: null,
+        };
+      });
+    } catch (error) {
+      console.error("Error updating habit:", error);
+      set({ error: "Failed to update habit" });
+    }
+  },
 
-				saveHabits(updatedHabits).catch((error) => {
-					console.error("Error saving habits:", error);
-				});
+  deleteHabit: async (id) => {
+    try {
+      set((state) => {
+        const updatedMap = { ...state.habits };
+        delete updatedMap[id];
 
-				return {
-					habits: updatedHabits,
-					habitsMap: updatedMap,
-					error: null,
-				};
-			});
-		} catch (error) {
-			console.error("Error updating habit:", error);
-			set({ error: "Failed to update habit" });
-		}
-	},
+        return {
+          habits: updatedMap,
+          error: null,
+        };
+      });
+    } catch (error) {
+      console.error("Error deleting habit:", error);
+      set({ error: "Failed to delete habit" });
+    }
+  },
 
-	deleteHabit: async (id) => {
-		try {
-			set((state) => {
-				const updatedHabits = state.habits.filter((h) => h.id !== id);
-				const updatedMap = { ...state.habitsMap };
-				delete updatedMap[id];
+  getHabitById: (id) => {
+    return get().habits[id];
+  },
 
-				clearHabitCache(id);
-
-				saveHabits(updatedHabits).catch((error) => {
-					console.error("Error saving habits after delete:", error);
-				});
-
-				return {
-					habits: updatedHabits,
-					habitsMap: updatedMap,
-					error: null,
-				};
-			});
-		} catch (error) {
-			console.error("Error deleting habit:", error);
-			set({ error: "Failed to delete habit" });
-		}
-	},
-
-	getHabitById: (id) => {
-		return get().habitsMap[id];
-	},
-
-	loadHabitsFromStorage: async () => {
-		set({ isLoading: true, error: null });
-		try {
-			const habits = await loadHabits();
-			if (!Array.isArray(habits)) {
-				throw new Error("Loaded habits is not an array");
-			}
-
-			const validHabits = habits.filter(
-				(habit) =>
-					habit && typeof habit === "object" && habit.id && habit.title,
-			);
-
-			const habitsMap = habitsArrayToMap(validHabits);
-			set({ habits: validHabits, habitsMap, isLoading: false });
-		} catch (error) {
-			console.error("Error loading habits:", error);
-			set({
-				habits: [],
-				habitsMap: {},
-				isLoading: false,
-				error: "Failed to load habits",
-			});
-		}
-	},
-
-	resetStore: async () => {
-		await saveHabits([]);
-		set({
-			habits: [],
-			habitsMap: {},
-			selectedDate: new Date().toISOString(),
-			isLoading: false,
-			error: null,
-		});
-	}
+  resetStore: () => {
+    set({
+      habits: {},
+      activeTimers: {},
+      timerElapsedTimeMap: {},
+      selectedDate: new Date().toISOString().split("T")[0],
+      error: null,
+    });
+  },
 });

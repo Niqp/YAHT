@@ -1,37 +1,39 @@
 import React, { useCallback } from "react";
-import { useTheme } from "@/hooks/useTheme";
 import { formatTime } from "@/utils/date";
 
-export function useHabitDisplay({
-    habit,
-    isCompleted,
-    completionValue,
-    completionGoal,
-    timerActive,
-    getTotalElapsedTime,
-}) {
-    const { colors } = useTheme();
+import { Habit } from "@/types/habit";
 
-    // Format the time for display
-    const getDisplayTime = useCallback(() => {
-        return formatTime(getTotalElapsedTime());
-    }, [getTotalElapsedTime]);
+type HabitDisplayProps = {
+  habit: Habit | undefined;
+  isCompleted: boolean;
+  completionValue: number;
+  completionGoal: number;
+  isTimerActive: boolean;
+  elapsedTime: number;
+};
 
-    // Generate subtitle text based on habit type
-    const getSubtitleText = useCallback(() => {
-        if (!habit) return "";
+export function useHabitDisplay({ habit, isCompleted, completionValue, completionGoal, isTimerActive, elapsedTime }: HabitDisplayProps) {
+  // Format the time for display
+  const getDisplayTime = useCallback(() => {
+    const combinedTime = completionValue + elapsedTime;
+    return formatTime(combinedTime);
+  }, [elapsedTime, completionValue]);
 
-        switch (habit.completionType) {
-            case "simple":
-                return isCompleted ? "Completed" : "";
-            case "repetitions":
-                return `${completionValue} / ${completionGoal}`;
-            case "timed":
-                return `${getDisplayTime()} / ${formatTime(completionGoal)}`;
-            default:
-                return "";
-        }
-    }, [habit, isCompleted, completionValue, completionGoal, getDisplayTime]);
+  // Generate subtitle text based on habit type
+  const getSubtitleText = useCallback(() => {
+    if (!habit) return "";
 
-    return { getSubtitleText };
+    switch (habit.completion.type) {
+      case "simple":
+        return isCompleted ? "Completed" : "";
+      case "repetitions":
+        return `${completionValue} / ${completionGoal}`;
+      case "timed":
+        return `${getDisplayTime()} / ${formatTime(completionGoal)}`;
+      default:
+        return "";
+    }
+  }, [habit, isCompleted, completionValue, completionGoal, getDisplayTime]);
+
+  return { getSubtitleText };
 }

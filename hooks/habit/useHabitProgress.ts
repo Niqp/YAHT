@@ -1,23 +1,33 @@
+import { Habit } from "@/types/habit";
 import { useMemo } from "react";
+
+type HabitProgressProps = {
+	habit: Habit | undefined;
+	isCompleted: boolean;
+	completionValue: number;
+	completionGoal: number;
+	isTimerActive: boolean;
+	elapsedTime: number;
+};
 
 export function useHabitProgress({
 	habit,
 	isCompleted,
 	completionValue,
 	completionGoal,
-	timerActive,
-	getTotalElapsedTime,
-}) {
+	isTimerActive,
+	elapsedTime,
+}: HabitProgressProps) {
 	// Progress calculation for visual indicator
 	const progress = useMemo(() => {
 		if (!habit) return 0;
 
-		if (habit.completionType === "simple") {
+		if (habit.completion.type === "simple") {
 			return isCompleted ? 1 : 0;
 		}
-		if (habit.completionType === "timed" && timerActive) {
+		if (habit.completion.type === "timed" && isTimerActive) {
 			// For active timers, use the real-time elapsed time
-			const currentValue = getTotalElapsedTime();
+			const currentValue = elapsedTime || 0;
 			const goal = completionGoal || 1; // Prevent division by zero
 			return Math.min(1, currentValue / goal);
 		}
@@ -30,8 +40,8 @@ export function useHabitProgress({
 		isCompleted,
 		completionValue,
 		completionGoal,
-		timerActive,
-		getTotalElapsedTime,
+		isTimerActive,
+		elapsedTime,
 	]);
 
 	// Convert decimal progress to percentage (0-100)

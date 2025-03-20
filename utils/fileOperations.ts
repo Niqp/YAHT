@@ -79,14 +79,14 @@ export const importData = async (): Promise<void> => {
 			const importedHabits = JSON.parse(fileContent);
 
 			// Validate habits
-			if (!Array.isArray(importedHabits)) {
-				throw new Error("Invalid data format: not an array");
+			if (typeof importedHabits !== "object" || importedHabits === null) {
+				throw new Error("Invalid habits data: not an object");
 			}
 
 			// Confirm import with the user
 			Alert.alert(
 				"Import Data",
-				`Found ${importedHabits.length} habits in the file. This will replace your current data. Continue?`,
+				`Found ${Object.keys(importedHabits).length} habits in the file. This will replace your current data. Continue?`,
 				[
 					{
 						text: "Cancel",
@@ -96,7 +96,7 @@ export const importData = async (): Promise<void> => {
 						text: "Import",
 						onPress: async () => {
 							// Use the importHabits function from the store
-							const { importHabits } = useHabitStore.getState();
+							const importHabits = useHabitStore((state) => state.importHabits);
 
 							try {
 								const importedCount = await importHabits(importedHabits);
