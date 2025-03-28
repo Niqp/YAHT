@@ -1,45 +1,90 @@
-import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
+import { Tabs } from 'expo-router';
+import { Home, BarChart2, Settings } from 'lucide-react-native';
+import { SafeAreaView, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+export default function TabsLayout() {
+  const { colors } = useTheme();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  // Platform-specific shadow styles that ensure visibility
+  const tabBarShadow = Platform.select({
+    ios: {
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: -3 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      borderTopWidth: 0,
+    },
+    android: {
+      elevation: 8, // Higher elevation to ensure visibility
+      borderTopWidth: 1, // Subtle border for Android
+      borderColor: colors.border
+    },
+  });
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.tabIconDefault,
+          tabBarStyle: {
+            backgroundColor: colors.tabBackground,
+            ...tabBarShadow,
+            height: 60, // Slightly taller for better touch targets
           },
-          default: {},
-        }),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          headerStyle: {
+            backgroundColor: colors.cardBackground,
+            elevation: 5,
+            shadowOpacity: 0.1,
+            shadowColor: colors.shadow,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 3,
+            borderBottomWidth: 0,
+            height: 70,
+          },
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 18,
+            color: colors.text,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+            paddingBottom: 4,
+          },
         }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="today"
+          options={{
+            title: 'Today',
+            tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          }}
+        />
+        <Tabs.Screen
+          name="stats"
+          options={{
+            title: 'Stats',
+            tabBarIcon: ({ color, size }) => <BarChart2 color={color} size={size} />,
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Settings',
+            tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
+          }}
+        />
+      </Tabs>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

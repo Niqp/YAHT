@@ -1,8 +1,17 @@
-# Welcome to your Expo app 👋
+# YAHT - Yet Another Habit Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern, feature-rich habit tracking app built with React Native and Expo.
 
-## Get started
+## Features
+
+- Create and track both repetition-based and timer-based habits
+- Customizable week start day
+- Dark and light theme support
+- View detailed statistics of your habits
+- Import/export data functionality
+- Built with performance and usability in mind
+
+## Getting Started
 
 1. Install dependencies
 
@@ -10,41 +19,53 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Start the development server
 
    ```bash
-    npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+   Or run directly on a specific platform:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   # For Android
+   npm run android
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+   # For iOS
+   npm run ios
+   ```
 
-## Get a fresh project
+3. Run a clean build if needed:
 
-When you're ready, run:
+   ```bash
+   npm run cleanRun
+   ```
 
-```bash
-npm run reset-project
-```
+## Available Scripts
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- `npm start` - Start the Expo development server
+- `npm run android` - Run on Android
+- `npm run ios` - Run on iOS
+- `npm run web` - Run in web browser
+- `npm run cleanPrebuild` - Clean the prebuild files
+- `npm run cleanRun` - Clean and run on Android
+- `npm run prod` - Build a production release for Android
 
-## Learn more
+## Development
 
-To learn more about developing your project with Expo, look at the following resources:
+This project uses:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- [Expo](https://expo.dev) with [Expo Router](https://docs.expo.dev/router/introduction) for file-based routing
+- [Zustand](https://github.com/pmndrs/zustand) for state management
+- [Dayjs](https://day.js.org/) for date handling
+- [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/) for animations
+- [Bottom Sheet](https://github.com/gorhom/react-native-bottom-sheet) for interactive UI components
+- [React Native Chart Kit](https://github.com/indiespirit/react-native-chart-kit) for statistics visualization
 
-## Join the community
+## Contribute
 
-Join our community of developers creating universal apps.
+Feel free to open issues or submit pull requests on GitHub.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## License
+
+[GNU GPL License](COPYING)
