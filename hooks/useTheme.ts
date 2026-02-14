@@ -12,8 +12,11 @@ export const useTheme = () => {
 		updateSystemTheme,
 	} = useThemeStore();
 
+	const isDarkMode = colorScheme === "dark";
+
 	return {
 		colors,
+		isDarkMode,
 		mode,
 		colorScheme,
 		setMode,
