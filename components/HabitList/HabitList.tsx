@@ -44,10 +44,10 @@ export default function HabitList(props: HabitListProps) {
 
     try {
       // Get incomplete habits
-      const incompleteHabits = filteredHabits.filter((habit: Habit) => !habit.completionHistory?.get(selectedDate)?.isCompleted);
+      const incompleteHabits = filteredHabits.filter((habit: Habit) => !habit.completionHistory?.[selectedDate]?.isCompleted);
 
       // Get completed habits
-      const completedHabits = filteredHabits.filter((habit: Habit) => habit.completionHistory?.get(selectedDate)?.isCompleted);
+      const completedHabits = filteredHabits.filter((habit: Habit) => habit.completionHistory?.[selectedDate]?.isCompleted);
 
       // Create sections for SectionList - To Do first, then Completed
       const sections = [];

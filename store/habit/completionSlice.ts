@@ -1,6 +1,5 @@
 import type { StateCreator } from "zustand";
 import type { HabitState } from "../habitStore";
-import { insertSortedIntoMap } from "@/utils/map";
 
 export type CompletionData = {
   id: string;
@@ -21,7 +20,7 @@ export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionS
       const habit = habits[id];
       if (!habit) return;
 
-      const currentCompletion = habit.completionHistory.get(date) || { isCompleted: false, value: 0 };
+      const currentCompletion = habit.completionHistory[date] || { isCompleted: false, value: 0 };
       let newCompleted = currentCompletion.isCompleted;
 
       // Determine new completion state
@@ -38,17 +37,17 @@ export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionS
         newValue = currentCompletion?.value || 0;
       }
 
-      let newCompletionHistory = new Map(habit.completionHistory);
+      let newCompletionHistory = { ...habit.completionHistory };
       const isTimerRunning = !!activeTimers[id]?.[date];
       if (!currentCompletion.isCompleted || isTimerRunning) {
         // If the habit was not completed, update the completion history
-        newCompletionHistory = insertSortedIntoMap(newCompletionHistory, date, {
+        newCompletionHistory[date] = {
           isCompleted: newCompleted,
           value: newValue || 0,
-        });
+        };
       } else {
         // If the habit was completed, reset the completion in history
-        newCompletionHistory.delete(date);
+        delete newCompletionHistory[date];
       }
 
       const updatedHabit = {

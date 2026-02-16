@@ -41,8 +41,8 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
           updatedElapsedTimeMap[timer.id] = newElapsedTime;
 
           // Check if habit should be completed
-          const combinedTime = newElapsedTime + (habit.completionHistory.get(date)?.value || 0);
-          if (habit && habitGoal <= combinedTime && !habit.completionHistory.get(date)?.isCompleted) {
+          const combinedTime = newElapsedTime + (habit.completionHistory[date]?.value || 0);
+          if (habit && habitGoal <= combinedTime && !habit.completionHistory[date]?.isCompleted) {
             state.updateCompletion({ id: habitId, date, value: combinedTime });
             updatedElapsedTimeMap[timer.id] = 0; // Reset elapsed time after completion
           }
@@ -73,7 +73,7 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
 
           const habit = state.habits[habitId];
 
-          const storedTime = state.habits[habitId]?.completionHistory.get(dateStamp)?.value || 0;
+          const storedTime = state.habits[habitId]?.completionHistory[dateStamp]?.value || 0;
           const combinedTime = elapsedTime + storedTime;
 
           if (timer.lastResumedAt && combinedTime && habit) {
@@ -103,9 +103,9 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
       const habit = state.habits[habitId];
       const habitGoal = habit?.completion?.goal || 0;
       const habitTitle = habit?.title || "Habit";
-      const storeValue = habit?.completionHistory.get(date)?.value || 0;
+      const storeValue = habit?.completionHistory[date]?.value || 0;
       const completionDate = calculateGoalCompletionDate(habitGoal, storeValue);
-      if (!habit?.completionHistory.get(date)?.isCompleted) {
+      if (!habit?.completionHistory[date]?.isCompleted) {
         setNotification(timerId, habitTitle, completionDate);
       }
       return {
@@ -137,7 +137,7 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
         const timerToRemove = dateTimers[date];
         cancelNotification(timerToRemove.id); // Cancel the notification for this timer
         const elapsedTime = state.timerElapsedTimeMap[timerToRemove.id] || 0;
-        const storedTime = state.habits[habitId]?.completionHistory.get(date)?.value || 0;
+        const storedTime = state.habits[habitId]?.completionHistory[date]?.value || 0;
         const combinedTime = elapsedTime + storedTime;
 
         state.updateCompletion({ id: habitId, date, value: combinedTime });

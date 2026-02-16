@@ -81,7 +81,7 @@ export default function AddEditHabitScreen() {
     const habitData: Omit<Habit, "id"> = {
       title,
       icon,
-      completionHistory: new Map(),
+      completionHistory: {},
       completion: { type: completionType, goal: completionGoal },
       repetition,
       createdAt: currentDate,

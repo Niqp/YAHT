@@ -22,7 +22,7 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
   const { deleteHabit, updateCompletion, selectedDate } = useHabitStore();
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const isCompleted = !!habit?.completionHistory?.get(selectedDate)?.isCompleted;
+  const isCompleted = !!habit?.completionHistory?.[selectedDate]?.isCompleted;
 
   const handleEdit = useCallback(() => {
     if (habit) {

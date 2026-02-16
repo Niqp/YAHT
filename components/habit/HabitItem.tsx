@@ -30,7 +30,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   // Get completion status data
-  const completionToday = habit?.completionHistory.get(selectedDate);
+  const completionToday = habit?.completionHistory[selectedDate];
   const completionValue = completionToday?.value || 0;
   const isCompleted = completionToday?.isCompleted || false;
   const completionType = habit?.completion?.type;

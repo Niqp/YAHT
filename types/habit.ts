@@ -38,7 +38,7 @@ export interface Habit {
   icon: string;
   repetition: RepetitionConfig;
   completion: CompletionConfig;
-  completionHistory: Map<string, CompletionHistory>; // Map of dates to completion history
+  completionHistory: Record<string, CompletionHistory>; // Date-keyed completion history
   createdAt: string;
   color?: string;
 }

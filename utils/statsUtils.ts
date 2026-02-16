@@ -9,7 +9,7 @@ export const calculateOverallStats = (habitsMap: HabitMap) => {
   const today = getCurrentDateStamp();
 
   // Count habits completed today
-  const completedToday = habits.filter((habit) => habit.completionHistory.get(today)?.isCompleted).length;
+  const completedToday = habits.filter((habit) => habit.completionHistory[today]?.isCompleted).length;
 
   // Calculate completion rate for the last 7 days
   const last7Days: string[] = [];
@@ -25,7 +25,7 @@ export const calculateOverallStats = (habitsMap: HabitMap) => {
     last7Days.forEach((date) => {
       if (shouldShowHabitOnDate(habit, date)) {
         totalPossible++;
-        if (habit.completionHistory.get(date)?.isCompleted) {
+        if (habit.completionHistory[date]?.isCompleted) {
           totalCompleted++;
         }
       }
@@ -41,11 +41,11 @@ export const calculateOverallStats = (habitsMap: HabitMap) => {
 
   if (habits.length > 0) {
     // Sort dates in descending order (newest first)
-    const allDates = Array.from(habits[0]?.completionHistory.keys()).sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1));
+    const allDates = Object.keys(habits[0]?.completionHistory ?? {}).sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1));
 
     for (const date of allDates) {
       // Check if any habit was completed on this date
-      const anyCompleted = habits.some((habit) => habit.completionHistory.get(date)?.isCompleted);
+      const anyCompleted = habits.some((habit) => habit.completionHistory[date]?.isCompleted);
 
       if (anyCompleted) {
         streakCount++;
@@ -80,7 +80,7 @@ export const calculateOverallStats = (habitsMap: HabitMap) => {
  */
 export const calculateHabitStats = (habit: Habit) => {
   const completionHistory = habit.completionHistory;
-  const completionDates = Array.from(completionHistory.keys());
+  const completionDates = Object.keys(completionHistory);
 
   if (completionDates.length === 0) {
     // Default stats when no data is available
@@ -105,10 +105,10 @@ export const calculateHabitStats = (habit: Habit) => {
   const sortedDates = completionDates.sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1));
 
   // Stats for all habit types
-  const totalCompletions = completionDates.filter((date) => completionHistory.get(date)?.isCompleted).length;
+  const totalCompletions = completionDates.filter((date) => completionHistory[date]?.isCompleted).length;
 
   const lastCompletionDate =
-    completionDates.filter((date) => completionHistory.get(date)?.isCompleted).sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1))[0] || "";
+    completionDates.filter((date) => completionHistory[date]?.isCompleted).sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1))[0] || "";
 
   // Calculate streaks for this specific habit
   let currentStreak = 0;
@@ -116,7 +116,7 @@ export const calculateHabitStats = (habit: Habit) => {
   let streakCount = 0;
 
   for (const date of sortedDates) {
-    if (completionHistory.get(date)?.isCompleted) {
+    if (completionHistory[date]?.isCompleted) {
       streakCount++;
       if (streakCount > bestStreak) {
         bestStreak = streakCount;
@@ -143,7 +143,7 @@ export const calculateHabitStats = (habit: Habit) => {
   // Calculate total days since creation (including today)
   const totalDays = Math.max(1, Math.floor(today.diff(creationDate, "day")) + 1);
   // Count completed days
-  const completedDays = Array.from(completionHistory.values()).filter((entry) => entry.isCompleted).length;
+  const completedDays = Object.values(completionHistory).filter((entry) => entry.isCompleted).length;
   // Calculate percentage - ensure value is between 0-100
   const completionSinceCreation = Math.min(100, Math.max(0, Math.round((completedDays / totalDays) * 100)));
 
@@ -171,8 +171,8 @@ export const calculateHabitStats = (habit: Habit) => {
   // Additional stats for repetition habits
   if (habit.completion.type === "repetitions") {
     const values = completionDates
-      .filter((date) => completionHistory.get(date)?.value !== undefined)
-      .map((date) => completionHistory.get(date)?.value as number);
+      .filter((date) => completionHistory[date]?.value !== undefined)
+      .map((date) => completionHistory[date]?.value as number);
 
     if (values.length > 0) {
       const totalRepetitions = values.reduce((sum, val) => sum + val, 0);
@@ -180,7 +180,7 @@ export const calculateHabitStats = (habit: Habit) => {
       const bestRepetitions = Math.max(...values);
 
       // Calculate how often the goal was reached
-      const goalReachedCount = completionDates.filter((date) => (completionHistory.get(date)?.value || 0) >= (habit.completion.goal || 0)).length;
+      const goalReachedCount = completionDates.filter((date) => (completionHistory[date]?.value || 0) >= (habit.completion.goal || 0)).length;
 
       const goalAchievementRate = Math.round((goalReachedCount / completionDates.length) * 100);
 
@@ -196,8 +196,8 @@ export const calculateHabitStats = (habit: Habit) => {
   // Additional stats for timed habits
   if (habit.completion.type === "timed") {
     const values = completionDates
-      .filter((date) => completionHistory.get(date)?.value !== undefined)
-      .map((date) => completionHistory.get(date)?.value as number);
+      .filter((date) => completionHistory[date]?.value !== undefined)
+      .map((date) => completionHistory[date]?.value as number);
 
     if (values.length > 0) {
       const totalTimeSpent = values.reduce((sum, val) => sum + val, 0);
@@ -205,7 +205,7 @@ export const calculateHabitStats = (habit: Habit) => {
       const longestSession = Math.max(...values);
 
       // Calculate how often the goal was reached
-      const goalReachedCount = completionDates.filter((date) => (completionHistory.get(date)?.value || 0) >= (habit.completion.goal || 0)).length;
+      const goalReachedCount = completionDates.filter((date) => (completionHistory[date]?.value || 0) >= (habit.completion.goal || 0)).length;
 
       const goalAchievementRate = Math.round((goalReachedCount / completionDates.length) * 100);
 
@@ -240,7 +240,7 @@ export const generateChartData = (habit: Habit) => {
   if (habit.completion.type === "simple") {
     // For simple habits, we'll create a binary completion data
     const completionData = last7Days.map((date) => {
-      const historyEntry = habit.completionHistory.get(date);
+      const historyEntry = habit.completionHistory[date];
       return historyEntry?.isCompleted ? 1 : 0;
     });
 
@@ -251,7 +251,7 @@ export const generateChartData = (habit: Habit) => {
   } else {
     // For repetition and timed habits, prepare data for the line chart
     const values = last7Days.map((date) => {
-      const historyEntry = habit.completionHistory.get(date);
+      const historyEntry = habit.completionHistory[date];
       return historyEntry ? historyEntry.value || 0 : 0;
     });
 

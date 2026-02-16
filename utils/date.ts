@@ -42,7 +42,7 @@ export const shouldShowHabitOnDate = (habit: Habit, date: string): boolean => {
     const selectedDate = getMidnightDayjs(date);
     const createdAtDate = getMidnightDayjs(habit.createdAt);
 
-    if (habit.completionHistory.get(date)?.isCompleted) {
+    if (habit.completionHistory[date]?.isCompleted) {
       // If the habit is already completed on this date, show it
       return true;
     }
@@ -66,9 +66,9 @@ export const shouldShowHabitOnDate = (habit: Habit, date: string): boolean => {
         if (typeof habit.repetition.days === "number" && habit.repetition.days > 0) {
           // Fallback to createdAt date if no completion history
           let nextDueDate = createdAtDate;
-          const completionHistoryDates = Array.from(habit.completionHistory.keys());
+          const completionHistoryDates = Object.keys(habit.completionHistory).sort();
           if (completionHistoryDates.length > 0) {
-            // If there are completed dates, get the last one and add the interval
+            // Get the last completed date (sorted ascending, so last is newest)
             const prevCompletedDateString = completionHistoryDates[completionHistoryDates.length - 1];
             const prevDueDate = getMidnightDayjs(prevCompletedDateString);
             nextDueDate = prevDueDate.add(habit.repetition.days, "day");
