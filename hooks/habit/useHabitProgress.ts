@@ -26,8 +26,8 @@ export function useHabitProgress({
 			return isCompleted ? 1 : 0;
 		}
 		if (habit.completion.type === "timed" && isTimerActive) {
-			// For active timers, use the real-time elapsed time
-			const currentValue = elapsedTime || 0;
+			// For active timers, combine stored and real-time elapsed values.
+			const currentValue = (completionValue || 0) + (elapsedTime || 0);
 			const goal = completionGoal || 1; // Prevent division by zero
 			return Math.min(1, currentValue / goal);
 		}

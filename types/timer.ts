@@ -10,5 +10,3 @@ export interface Timer {
 }
 
 export type TimerMap = Record<Habit["id"], Record<DateStamp, Timer>>;
-
-export type TimerElapsedTimeMap = Record<Timer["id"], timeMs>;

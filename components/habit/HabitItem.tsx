@@ -3,6 +3,7 @@ import { useHabitDisplay } from "@/hooks/habit/useHabitDisplay";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import { Habit, CompletionType } from "@/types/habit";
+import { getEpochMilliseconds } from "@/utils/date";
 import { MoreVertical } from "lucide-react-native";
 import React, { useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
@@ -25,8 +26,13 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
   const startTimer = useHabitStore((state) => state.activateTimer);
   const removeTimer = useHabitStore((state) => state.removeTimer);
   const timer = useHabitStore((state) => state.activeTimers[habitId]?.[selectedDate]);
-  const elapsedTime = useHabitStore((state) => state.timerElapsedTimeMap[timer?.id] || 0);
+  const timerRenderTickMs = useHabitStore((state) => state.timerRenderTickMs);
   const isTimerActive = !!timer?.lastResumedAt;
+  const elapsedTime = React.useMemo(() => {
+    if (!timer?.lastResumedAt || !isTimerActive) return 0;
+    const resumeMs = getEpochMilliseconds(timer.lastResumedAt);
+    return Math.max(0, timerRenderTickMs - resumeMs);
+  }, [isTimerActive, timer?.lastResumedAt, timerRenderTickMs]);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   // Get completion status data

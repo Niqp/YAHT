@@ -1,99 +1,76 @@
 import type { StateCreator } from "zustand";
 import type { HabitState } from "../habitStore";
-import { TimerMap, TimerElapsedTimeMap } from "@/types/timer";
+import { TimerMap } from "@/types/timer";
 import * as Crypto from "expo-crypto";
-import { calculateGoalCompletionDate, getCurrentIsoString } from "@/utils/date";
+import { calculateGoalCompletionDate, getCurrentIsoString, getDayjs } from "@/utils/date";
 import { cancelNotification, setNotification } from "@/utils/notifications";
 import { DateStamp } from "@/types/date";
+import { CompletionData } from "./completionSlice";
 
 export interface TimerSlice {
   activeTimers: TimerMap;
-  timerElapsedTimeMap: TimerElapsedTimeMap;
-  incrementAllTimers: (elapsedTime: number) => void;
-  resetAllElapsedTime: () => void;
-  mergeTimerElapsedTimeUpdates: (updatedTimers: TimerElapsedTimeMap) => void;
+  timerRenderTickMs: number;
+  tickForeground: (nowMs?: number) => void;
+  reconcileActiveTimers: (nowIso?: string) => Promise<void>;
   activateTimer: (habitId: string, date: DateStamp) => void;
-  removeTimer: (habitId: string, date: DateStamp) => void;
-  mergeTimerUpdates: (updatedTimers: TimerMap) => void;
+  removeTimer: (habitId: string, date: DateStamp, nowIso?: string) => Promise<void>;
 }
 
-export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (set) => ({
+const getElapsedSince = (lastResumedAt: string | null, nowIso: string): number => {
+  if (!lastResumedAt) return 0;
+  const elapsed = getDayjs(nowIso).diff(getDayjs(lastResumedAt), "milliseconds");
+  return Math.max(0, elapsed);
+};
+
+export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (set, get) => ({
   activeTimers: {},
-  timerElapsedTimeMap: {},
+  timerRenderTickMs: Date.now(),
 
-  incrementAllTimers: (addedTime) => {
-    set((state) => {
-      // Create a new object to avoid direct mutations
-      const updatedElapsedTimeMap: TimerElapsedTimeMap = {};
-
-      for (const habitId of Object.keys(state.activeTimers)) {
-        const dateTimers = state.activeTimers[habitId];
-
-        for (const [date, timer] of Object.entries(dateTimers)) {
-          const elapsedTime = state.timerElapsedTimeMap[timer.id] || 0;
-          const habit = state.habits[habitId];
-          if (!habit) continue; // Skip if habit is not found
-          const habitGoal = habit?.completion?.goal || 0;
-
-          // Calculate new elapsed time (avoid direct mutation)
-          const newElapsedTime = elapsedTime + addedTime;
-
-          updatedElapsedTimeMap[timer.id] = newElapsedTime;
-
-          // Check if habit should be completed
-          const combinedTime = newElapsedTime + (habit.completionHistory[date]?.value || 0);
-          if (habit && habitGoal <= combinedTime && !habit.completionHistory[date]?.isCompleted) {
-            state.updateCompletion({ id: habitId, date, value: combinedTime });
-            updatedElapsedTimeMap[timer.id] = 0; // Reset elapsed time after completion
-          }
-        }
-      }
-
-      return { timerElapsedTimeMap: updatedElapsedTimeMap };
-    });
+  tickForeground: (nowMs) => {
+    set({ timerRenderTickMs: nowMs ?? Date.now() });
   },
 
-  mergeTimerElapsedTimeUpdates: (updatedTimers: TimerElapsedTimeMap) => {
-    set((state) => {
-      return {
-        timerElapsedTimeMap: {
-          ...state.timerElapsedTimeMap,
-          ...updatedTimers,
-        },
-      };
-    });
-  },
+  reconcileActiveTimers: async (nowIso) => {
+    const resolvedNowIso = nowIso ?? getCurrentIsoString();
+    const { activeTimers, habits } = get();
+    const completionUpdates: CompletionData[] = [];
+    const mergedTimers: TimerMap = {};
 
-  mergeTimerUpdates: (updatedTimers) => {
-    set((state) => {
-      for (const habitId of Object.keys(updatedTimers)) {
-        const dateTimers = updatedTimers[habitId];
-        for (const [dateStamp, timer] of Object.entries(dateTimers)) {
-          const elapsedTime = state.timerElapsedTimeMap[timer.id] || 0;
+    for (const [habitId, dateTimers] of Object.entries(activeTimers)) {
+      for (const [date, timer] of Object.entries(dateTimers)) {
+        const habit = habits[habitId];
+        if (!habit) continue;
 
-          const habit = state.habits[habitId];
+        const elapsedTime = getElapsedSince(timer.lastResumedAt, resolvedNowIso);
+        const storedTime = habit.completionHistory[date]?.value || 0;
+        const combinedTime = storedTime + elapsedTime;
 
-          const storedTime = state.habits[habitId]?.completionHistory[dateStamp]?.value || 0;
-          const combinedTime = elapsedTime + storedTime;
+        if (!mergedTimers[habitId]) {
+          mergedTimers[habitId] = {};
+        }
+        mergedTimers[habitId][date] = {
+          ...timer,
+          lastResumedAt: resolvedNowIso,
+        };
 
-          if (timer.lastResumedAt && combinedTime && habit) {
-            state.updateCompletion({ id: habitId, date: dateStamp, value: combinedTime });
-          }
+        if (timer.lastResumedAt) {
+          completionUpdates.push({ id: habitId, date, value: combinedTime });
         }
       }
-      return {
+    }
+
+    if (Object.keys(mergedTimers).length > 0) {
+      set((state) => ({
         activeTimers: {
           ...state.activeTimers,
-          ...updatedTimers,
+          ...mergedTimers,
         },
-      };
-    });
-  },
+      }));
+    }
 
-  resetAllElapsedTime: () => {
-    set(() => ({
-      timerElapsedTimeMap: {},
-    }));
+    if (completionUpdates.length > 0) {
+      await get().updateCompletionMultiple(completionUpdates);
+    }
   },
 
   activateTimer: (habitId, date) => {
@@ -124,37 +101,35 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
     return newLastResumedAt;
   },
 
-  removeTimer: (habitId, date) => {
-    set((state) => {
-      // Create a copy of the current active timers
-      const newActiveTimers = { ...state.activeTimers };
-      const habitTimers = newActiveTimers[habitId];
+  removeTimer: async (habitId, date, nowIso) => {
+    const resolvedNowIso = nowIso ?? getCurrentIsoString();
+    const state = get();
+    const timerToRemove = state.activeTimers[habitId]?.[date];
+    if (!timerToRemove) return;
 
-      // Check if the habitId exists in activeTimers
-      if (habitTimers) {
-        // Create a copy of the date timers for this habit
-        const dateTimers = { ...habitTimers };
-        const timerToRemove = dateTimers[date];
-        cancelNotification(timerToRemove.id); // Cancel the notification for this timer
-        const elapsedTime = state.timerElapsedTimeMap[timerToRemove.id] || 0;
-        const storedTime = state.habits[habitId]?.completionHistory[date]?.value || 0;
-        const combinedTime = elapsedTime + storedTime;
+    cancelNotification(timerToRemove.id);
 
-        state.updateCompletion({ id: habitId, date, value: combinedTime });
+    const storedTime = state.habits[habitId]?.completionHistory[date]?.value || 0;
+    const elapsedTime = getElapsedSince(timerToRemove.lastResumedAt, resolvedNowIso);
+    const combinedTime = storedTime + elapsedTime;
 
-        // Remove the timer for the specified date
-        delete dateTimers[date];
+    await get().updateCompletion({ id: habitId, date, value: combinedTime });
 
-        // If there are no more dates for this habit, remove the habitId
-        if (Object.keys(dateTimers).length === 0) {
-          delete newActiveTimers[habitId];
-        } else {
-          // Otherwise, update the timers for this habit
-          newActiveTimers[habitId] = dateTimers;
-        }
+    set((currentState) => {
+      const nextActiveTimers = { ...currentState.activeTimers };
+      const habitTimers = nextActiveTimers[habitId];
+      if (!habitTimers) return { activeTimers: nextActiveTimers };
+
+      const nextDateTimers = { ...habitTimers };
+      delete nextDateTimers[date];
+
+      if (Object.keys(nextDateTimers).length === 0) {
+        delete nextActiveTimers[habitId];
+      } else {
+        nextActiveTimers[habitId] = nextDateTimers;
       }
 
-      return { activeTimers: newActiveTimers };
+      return { activeTimers: nextActiveTimers };
     });
   },
 });

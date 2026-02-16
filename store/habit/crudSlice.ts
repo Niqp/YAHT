@@ -87,7 +87,7 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
     set({
       habits: {},
       activeTimers: {},
-      timerElapsedTimeMap: {},
+      timerRenderTickMs: Date.now(),
       selectedDate: getCurrentDateStamp(),
       error: null,
     });

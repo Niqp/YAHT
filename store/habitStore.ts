@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { mmkvStorage } from "@/utils/storage";
-import type { TimerMap, TimerElapsedTimeMap } from "../types/timer";
+import type { TimerMap } from "../types/timer";
 import type { DateStamp } from "../types/date";
 import type { Habit, HabitMap } from "../types/habit";
 
@@ -16,7 +16,7 @@ export interface HabitState {
   habits: HabitMap;
   selectedDate: string;
   activeTimers: TimerMap;
-  timerElapsedTimeMap: TimerElapsedTimeMap;
+  timerRenderTickMs: number;
   error: string | null;
 
   // Methods will be implemented in slices
@@ -30,12 +30,10 @@ export interface HabitState {
   getHabitById: (id: string) => Habit | undefined;
   importHabits: (importedHabits: HabitMap) => Promise<number>;
   resetStore: () => void;
-  incrementAllTimers: (elapsedTime: number) => void;
+  tickForeground: (nowMs?: number) => void;
+  reconcileActiveTimers: (nowIso?: string) => Promise<void>;
   activateTimer: (habitId: string, date: DateStamp) => void;
-  removeTimer: (habitId: string, date: DateStamp) => void;
-  mergeTimerUpdates: (updatedTimers: TimerMap) => void;
-  mergeTimerElapsedTimeUpdates: (updatedTimers: TimerElapsedTimeMap) => void;
-  resetAllElapsedTime: () => void;
+  removeTimer: (habitId: string, date: DateStamp, nowIso?: string) => Promise<void>;
 }
 
 // Create custom storage adapter using our MMKV instance
@@ -47,6 +45,7 @@ export const useHabitStore = create<HabitState>()(
       selectedDate: getCurrentDateStamp(),
       error: null,
       _hasHydrated: false,
+      timerRenderTickMs: Date.now(),
 
       setHydrationState: (state) => {
         const set = args[0];

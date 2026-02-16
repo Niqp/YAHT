@@ -5,10 +5,11 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
-import TimerManager from "@/components/TimerManager";
+import { useTimerManager } from "@/hooks/timer/useTimerManager";
 
 export default function RootLayout() {
   const { colors, updateSystemTheme, setupSystemThemeListener } = useTheme();
+  useTimerManager();
 
   useEffect(() => {
     updateSystemTheme();
@@ -21,7 +22,6 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Add BottomSheetModalProvider to ensure proper rendering of bottom sheets */}
-      <TimerManager />
       <BottomSheetModalProvider>
         <StatusBar backgroundColor="transparent" translucent />
         <SafeAreaProvider>
