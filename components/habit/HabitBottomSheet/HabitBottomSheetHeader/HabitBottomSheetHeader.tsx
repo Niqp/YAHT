@@ -19,11 +19,11 @@ export default function HabitBottomSheetHeader({
 					{habit.title}
 				</Text>
 				<Text style={[styles.habitSubtitle, { color: colors.textSecondary }]}>
-					{habit.completionType === "simple"
+					{habit.completion.type === "simple"
 						? "Goal: complete once"
-						: habit.completionType === "repetitions"
-							? `Goal: ${habit.completionGoal} repetitions`
-							: `Goal: ${Math.floor((habit.completionGoal || 0) / 60)} minutes`}
+						: habit.completion.type === "repetitions"
+							? `Goal: ${habit.completion.goal || 0} repetitions`
+							: `Goal: ${Math.floor((habit.completion.goal || 0) / 60)} minutes`}
 				</Text>
 			</View>
 			<TouchableOpacity

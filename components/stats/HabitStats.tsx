@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Award, CheckSquare, RotateCcw, TrendingUp, Clock } from 'lucide-react-native';
 import { useTheme } from '../../hooks/useTheme';
-import { CompletionType } from '../../types/habit';
+import type { CompletionType, HabitStats as HabitStatsData } from '../../types/habit';
 import { formatTime } from '../../utils/date';
 
 interface StatItem {
@@ -13,21 +13,7 @@ interface StatItem {
 
 interface HabitStatsProps {
   completionType: CompletionType;
-  habitStats: {
-    // Common stats
-    bestStreak: number;
-    totalCompletions: number;
-    
-    // Repetition habit stats
-    averageRepetitions: number;
-    bestRepetitions: number;
-    totalRepetitions: number;
-    
-    // Timed habit stats
-    totalTimeSpent: number;
-    averageTimePerSession: number;
-    longestSession: number;
-  };
+  habitStats: HabitStatsData;
 }
 
 const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) => {

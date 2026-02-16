@@ -42,3 +42,19 @@ export interface Habit {
   createdAt: string;
   color?: string;
 }
+
+export interface HabitStats {
+  completionRate: number;
+  currentStreak: number;
+  bestStreak: number;
+  totalCompletions: number;
+  lastCompletionDate: string;
+  averageRepetitions: number;
+  bestRepetitions: number;
+  goalAchievementRate: number;
+  totalRepetitions: number;
+  totalTimeSpent: number;
+  averageTimePerSession: number;
+  longestSession: number;
+  completionSinceCreation: number;
+}

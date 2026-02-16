@@ -58,7 +58,6 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     isCompleted,
     completionValue,
     completionGoal,
-    isTimerActive,
     elapsedTime,
   });
 

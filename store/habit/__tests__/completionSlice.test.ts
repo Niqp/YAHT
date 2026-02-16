@@ -37,7 +37,7 @@ function createHarness(initialHabits: HabitMap, selectedDate = DATE) {
 
   const get = () => state as HabitState;
 
-  const slice = createCompletionSlice(set as never, get as never);
+  const slice = createCompletionSlice(set as never, get as never, {} as never);
   state.updateCompletion = slice.updateCompletion;
 
   return {

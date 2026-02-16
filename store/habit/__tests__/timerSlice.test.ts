@@ -76,7 +76,7 @@ function createHarness(initialHabits: HabitMap, selectedDate = DATE) {
   };
 
   const get = () => state as HabitState;
-  const slice = createTimerSlice(set as never, get as never);
+  const slice = createTimerSlice(set as never, get as never, {} as never);
 
   const updateCompletion = jest.fn(applyCompletionUpdate);
   const updateCompletionMultiple = jest.fn(async (updates: CompletionData[]) => {

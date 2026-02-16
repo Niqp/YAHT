@@ -45,7 +45,6 @@ export const useHabitStore = create<HabitState>()(
       selectedDate: getCurrentDateStamp(),
       error: null,
       _hasHydrated: false,
-      timerRenderTickMs: Date.now(),
 
       setHydrationState: (state) => {
         const set = args[0];

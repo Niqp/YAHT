@@ -37,7 +37,6 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
     backgroundGradientToOpacity: 0,
     labelColor: (opacity = 1) => colors.text,
     strokeWidth: 2, // Ensure stroke width is set correctly
-    propsForLabels: { display: 'none' }, // Hide labels as we use hideLegend
   }), [colors, isDarkMode]);
 
   // Always use completionSinceCreation regardless of habit type

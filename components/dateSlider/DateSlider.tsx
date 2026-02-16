@@ -1,6 +1,7 @@
 import { ChevronLeft } from "lucide-react-native";
 import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import type { ConfigType as DayjsConfigType } from "dayjs";
 import { useTheme } from "../../hooks/useTheme";
 import { useHabitStore } from "../../store/habitStore";
 import styles from "./DateSlider.styles";
@@ -55,14 +56,14 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
     styles.dayName,
     { color: colors.textSecondary },
     isSelected && { color: colors.textInverse },
-    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: "bold" },
+    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: "bold" as const },
   ];
 
   const dayNumberStyle = [
     styles.dayNumber,
     { color: colors.text },
     isSelected && { color: colors.textInverse },
-    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: "bold" },
+    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: "bold" as const },
   ];
 
   return (
@@ -77,7 +78,7 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
 DateItem.displayName = "DateItem";
 
 // Generate a range of dates
-const generateDateRange = (startDate: dayjs.ConfigType, numDays: number): DateInfo[] => {
+const generateDateRange = (startDate: DayjsConfigType, numDays: number): DateInfo[] => {
   const result: DateInfo[] = [];
 
   for (let i = 0; i < numDays; i++) {
@@ -100,7 +101,7 @@ const generateDateRange = (startDate: dayjs.ConfigType, numDays: number): DateIn
 export default function DateSlider() {
   const { colors } = useTheme();
   const { selectedDate, setSelectedDate } = useHabitStore();
-  const recyclerListRef = useRef<RecyclerListView>(null);
+  const recyclerListRef = useRef<RecyclerListView<any, any>>(null);
   const today = useMemo(() => formatDate(getCurrentDateDayjs()), []);
   const [showTodayButton, setShowTodayButton] = useState(false);
 

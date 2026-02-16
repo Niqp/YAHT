@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
-import { Habit } from '../../types/habit';
+import type { Habit, HabitStats as HabitStatsData } from '../../types/habit';
 import HabitTypeIndicator from './HabitTypeIndicator';
 import SimpleHabitChart from './charts/SimpleHabitChart';
 import PerformanceLineChart from './charts/PerformanceLineChart';
@@ -18,7 +18,7 @@ interface HabitDetailViewProps {
     labels?: string[];
     data: number[];
   };
-  habitStats: any; // Using any here as the stats object has many properties
+  habitStats: HabitStatsData;
 }
 
 const HabitDetailView: React.FC<HabitDetailViewProps> = ({
@@ -37,11 +37,11 @@ const HabitDetailView: React.FC<HabitDetailViewProps> = ({
         <Text style={[styles.habitTitle, { color: colors.text }]}>
           {habit.icon} {habit.title}
         </Text>
-        <HabitTypeIndicator completionType={habit.completionType} />
+        <HabitTypeIndicator completionType={habit.completion.type} />
       </View>
       
       {/* Chart based on habit type */}
-      {habit.completionType === 'simple' ? (
+      {habit.completion.type === 'simple' ? (
         <SimpleHabitChart 
           labels={lineChartData.labels}
           data={lineChartData.datasets[0].data}
@@ -53,13 +53,13 @@ const HabitDetailView: React.FC<HabitDetailViewProps> = ({
       {/* Progress circle for all habit types */}
       <ProgressCircle 
         progressData={progressData}
-        completionType={habit.completionType}
+        completionType={habit.completion.type}
         stats={habitStats}
       />
       
       {/* Type-specific stats */}
       <HabitStats 
-        completionType={habit.completionType}
+        completionType={habit.completion.type}
         habitStats={habitStats}
       />
     </View>
