@@ -210,8 +210,8 @@
 
 | Milestone | Scope (concrete paths) | Owner | Status |
 |---|---|---|---|
-| A | `store/habit/crudSlice.ts`, `store/habit/importSlice.ts`, `store/habitStore.ts`, `utils/storage.ts`, `store/themeStore.ts` | Unassigned | Not Started |
-| B | `hooks/useStats.ts`, `hooks/habit/useHabitDisplay.ts`, `utils/date.ts`, `utils/statsUtils.ts`, `hooks/timer/useTimerManager.ts`, `utils/notifications.ts` | Unassigned | Not Started |
+| A | `store/habit/crudSlice.ts`, `store/habit/importSlice.ts`, `store/habitStore.ts`, `utils/storage.ts`, `store/themeStore.ts` | Unassigned | ✅ Complete |
+| B | `hooks/useStats.ts`, `hooks/habit/useHabitDisplay.ts`, `utils/date.ts`, `utils/statsUtils.ts`, `hooks/timer/useTimerManager.ts`, `utils/notifications.ts` | Unassigned | ✅ Complete |
 | C | `app/(tabs)/today.tsx`, `app/(tabs)/stats.tsx`, `app/(tabs)/settings.tsx`, `app/add.tsx`, `components/habit/HabitItem.tsx`, `components/dateSlider/DateSlider.tsx` | Unassigned | Not Started |
 
 
