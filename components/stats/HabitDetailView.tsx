@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../../hooks/useTheme';
-import type { Habit, HabitStats as HabitStatsData } from '../../types/habit';
-import HabitTypeIndicator from './HabitTypeIndicator';
-import SimpleHabitChart from './charts/SimpleHabitChart';
-import PerformanceLineChart from './charts/PerformanceLineChart';
-import ProgressCircle from './charts/ProgressCircle';
-import HabitStats from './HabitStats';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useTheme } from "../../hooks/useTheme";
+import type { Habit, HabitStats as HabitStatsData } from "../../types/habit";
+import HabitTypeIndicator from "./HabitTypeIndicator";
+import SimpleHabitChart from "./charts/SimpleHabitChart";
+import PerformanceLineChart from "./charts/PerformanceLineChart";
+import ProgressCircle from "./charts/ProgressCircle";
+import HabitStats from "./HabitStats";
 
 interface HabitDetailViewProps {
   habit: Habit;
@@ -21,12 +21,7 @@ interface HabitDetailViewProps {
   habitStats: HabitStatsData;
 }
 
-const HabitDetailView: React.FC<HabitDetailViewProps> = ({
-  habit,
-  lineChartData,
-  progressData,
-  habitStats
-}) => {
+const HabitDetailView: React.FC<HabitDetailViewProps> = ({ habit, lineChartData, progressData, habitStats }) => {
   const { colors } = useTheme();
 
   if (!habit) return null;
@@ -39,29 +34,19 @@ const HabitDetailView: React.FC<HabitDetailViewProps> = ({
         </Text>
         <HabitTypeIndicator completionType={habit.completion.type} />
       </View>
-      
+
       {/* Chart based on habit type */}
-      {habit.completion.type === 'simple' ? (
-        <SimpleHabitChart 
-          labels={lineChartData.labels}
-          data={lineChartData.datasets[0].data}
-        />
+      {habit.completion.type === "simple" ? (
+        <SimpleHabitChart labels={lineChartData.labels} data={lineChartData.datasets[0].data} />
       ) : (
         <PerformanceLineChart lineChartData={lineChartData} />
       )}
-      
+
       {/* Progress circle for all habit types */}
-      <ProgressCircle 
-        progressData={progressData}
-        completionType={habit.completion.type}
-        stats={habitStats}
-      />
-      
+      <ProgressCircle progressData={progressData} completionType={habit.completion.type} stats={habitStats} />
+
       {/* Type-specific stats */}
-      <HabitStats 
-        completionType={habit.completion.type}
-        habitStats={habitStats}
-      />
+      <HabitStats completionType={habit.completion.type} habitStats={habitStats} />
     </View>
   );
 };
@@ -71,14 +56,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   habitHeaderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   habitTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

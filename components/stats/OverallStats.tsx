@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../../hooks/useTheme';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { useTheme } from "../../hooks/useTheme";
 
 interface OverallStatsProps {
   stats: {
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -61,24 +61,24 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   statItem: {
-    width: '45%',
+    width: "45%",
     borderRadius: 8,
     padding: 16,
     marginBottom: 15,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 5,
   },
   statLabel: {

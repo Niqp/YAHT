@@ -19,34 +19,34 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 
 ## Tech Stack
 
-| Category | Technology | Notes |
-|--|--|--|
-| Framework | Expo 52 (managed + dev-client) | `expo-router` 4.x for file-based routing |
-| Language | TypeScript 5.x | Strict mode, `@/*` path alias to project root |
-| State Management | Zustand 5.x + persist middleware | MMKV storage via `react-native-mmkv` |
-| Date Library | dayjs 1.x | Plugins: `isSameOrAfter`, `isToday`, `duration` |
-| Animations | react-native-reanimated 3.16 | + react-native-gesture-handler 2.20 |
-| UI | lucide-react-native (icons), @rneui/themed (buttons), @gorhom/bottom-sheet 5.x | |
-| Charts | react-native-chart-kit 6.12 | |
-| Notifications | @notifee/react-native 9.x | Timestamp-triggered, Android alarm permissions |
-| Virtualization | recyclerlistview 4.x | Used in DateSlider |
-| Linting | ESLint 9 flat config + typescript-eslint | |
+| Category         | Technology                                                                     | Notes                                           |
+| ---------------- | ------------------------------------------------------------------------------ | ----------------------------------------------- |
+| Framework        | Expo 52 (managed + dev-client)                                                 | `expo-router` 4.x for file-based routing        |
+| Language         | TypeScript 5.x                                                                 | Strict mode, `@/*` path alias to project root   |
+| State Management | Zustand 5.x + persist middleware                                               | MMKV storage via `react-native-mmkv`            |
+| Date Library     | dayjs 1.x                                                                      | Plugins: `isSameOrAfter`, `isToday`, `duration` |
+| Animations       | react-native-reanimated 3.16                                                   | + react-native-gesture-handler 2.20             |
+| UI               | lucide-react-native (icons), @rneui/themed (buttons), @gorhom/bottom-sheet 5.x |                                                 |
+| Charts           | react-native-chart-kit 6.12                                                    |                                                 |
+| Notifications    | @notifee/react-native 9.x                                                      | Timestamp-triggered, Android alarm permissions  |
+| Virtualization   | recyclerlistview 4.x                                                           | Used in DateSlider                              |
+| Linting          | ESLint 9 flat config + typescript-eslint                                       |                                                 |
 
 ---
 
 ## Directory Layout
 
-| Directory | Purpose |
-|--|--|
-| `app/` | Expo Router pages. Root `_layout.tsx` provides GestureHandler, BottomSheet, SafeArea, and TimerManager providers. Tabs: `today`, `stats`, `settings`. `add.tsx` is a modal route for create/edit. |
-| `components/` | UI components grouped by feature in subfolders. Each component may have a colocated `.styles.ts` file. |
-| `store/` | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`. |
-| `hooks/` | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`. |
-| `types/` | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases). |
-| `utils/` | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV + Map serialization), `map.ts` (sorted insertion), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`. |
-| `constants/` | `Colors.ts` — static light/dark theme color definitions. |
-| `plugins/` | Expo config plugins (`notifee-mod.js`). |
-| `assets/` | Images, fonts, splash screen. |
+| Directory     | Purpose                                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/`        | Expo Router pages. Root `_layout.tsx` provides GestureHandler, BottomSheet, SafeArea, and TimerManager providers. Tabs: `today`, `stats`, `settings`. `add.tsx` is a modal route for create/edit. |
+| `components/` | UI components grouped by feature in subfolders. Each component may have a colocated `.styles.ts` file.                                                                                            |
+| `store/`      | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`.                                                      |
+| `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.  |
+| `types/`      | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases).                                                                                         |
+| `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV + Map serialization), `map.ts` (sorted insertion), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`.                |
+| `constants/`  | `Colors.ts` — static light/dark theme color definitions.                                                                                                                                          |
+| `plugins/`    | Expo config plugins (`notifee-mod.js`).                                                                                                                                                           |
+| `assets/`     | Images, fonts, splash screen.                                                                                                                                                                     |
 
 ---
 
@@ -72,6 +72,7 @@ export const useHabitStore = create<HabitState>()(
 ```
 
 **Conventions:**
+
 - Each slice: `StateCreator<HabitState, [], [], SliceInterface>`
 - `partialize` selectively persists only `habits` and `activeTimers`
 - Hydration tracked via `_hasHydrated` flag — check before rendering data-dependent UI
@@ -80,11 +81,13 @@ export const useHabitStore = create<HabitState>()(
 ### Data Model
 
 **Habit** has three completion types via discriminated unions:
+
 - `SIMPLE` — yes/no toggle
 - `REPETITIONS` — counter toward a `goal`
 - `TIMED` — millisecond timer toward a `goal`
 
 **Repetition scheduling** (also discriminated unions):
+
 - `DAILY` — every day
 - `WEEKDAYS` — specific day numbers (0=Sunday...6=Saturday)
 - `INTERVAL` — every N days since last completion
@@ -94,6 +97,7 @@ export const useHabitStore = create<HabitState>()(
 ### Timer System
 
 Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/useTimerManager.ts`:
+
 1. `activateTimer()` stores `lastResumedAt` ISO timestamp
 2. `useTimerManager` ticks every 1s via `setInterval`, calling `incrementAllTimers(1000)`
 3. On foreground resume, recalculates true elapsed time from `lastResumedAt`
@@ -119,25 +123,30 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 ## Code Style Conventions
 
 **Formatting:**
+
 - Double quotes for strings. Semicolons. Arrow functions for most expressions.
 - `export default function` for page/component exports
 - Named `export const` for hooks and utilities
 
 **Imports:**
+
 - Prefer `@/` path aliases: `@/store/habitStore`, `@/utils/date`
 - `import type { ... }` for type-only imports
 - `import React from "react"` explicitly
 
 **Naming:**
+
 - PascalCase for components/files: `HabitItem.tsx`, `DateSlider.tsx`
 - camelCase for hooks/utilities: `useStats.ts`, `statsUtils.ts`
 - Colocated styles: `ComponentName.styles.ts` using `StyleSheet.create()`
 
 **Error handling:**
+
 - Try-catch in async store actions → `console.error` + `set({ error: "..." })`
 - Defensive null checks on habit data in components
 
 **Types:**
+
 - Enums for finite sets (`CompletionType`, `RepetitionType`)
 - Discriminated unions for variant configs (`CompletionConfig`, `RepetitionConfig`)
 - String type aliases for semantic meaning (`DateStamp`, `DateTimeStamp`, `UUIDv4`, `timeMs`)
@@ -146,14 +155,14 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 ## Commands
 
-| Command | Description |
-|--|--|
-| `npm start` | Start Expo dev server |
-| `npm run android` | Run on Android |
-| `npm run ios` | Run on iOS |
-| `npm run web` | Start web version |
+| Command            | Description                  |
+| ------------------ | ---------------------------- |
+| `npm start`        | Start Expo dev server        |
+| `npm run android`  | Run on Android               |
+| `npm run ios`      | Run on iOS                   |
+| `npm run web`      | Start web version            |
 | `npm run cleanRun` | Clean prebuild + run Android |
-| `npm run prod` | Release build for Android |
+| `npm run prod`     | Release build for Android    |
 
 ---
 
@@ -164,6 +173,7 @@ This skill must stay in sync with the codebase. Follow these rules:
 ### When to Update
 
 Update this file when any of the following change:
+
 - **Directory layout**: New top-level directories, renamed/moved feature folders, new routing pages
 - **Tech stack**: Dependencies added, removed, or replaced
 - **Architecture patterns**: New store slices, new middleware, changed data flow patterns
@@ -173,6 +183,7 @@ Update this file when any of the following change:
 ### When NOT to Update
 
 Do **not** update this file for:
+
 - Adding individual components within existing feature folders
 - Bug fixes that don't change architecture
 - Content changes within existing patterns (e.g., adding a field to an existing type)

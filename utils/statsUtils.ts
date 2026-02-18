@@ -41,7 +41,9 @@ export const calculateOverallStats = (habitsMap: HabitMap) => {
 
   if (habits.length > 0) {
     // Sort dates in descending order (newest first)
-    const allDates = Object.keys(habits[0]?.completionHistory ?? {}).sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1));
+    const allDates = Object.keys(habits[0]?.completionHistory ?? {}).sort((a, b) =>
+      getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1
+    );
 
     for (const date of allDates) {
       // Check if any habit was completed on this date
@@ -108,7 +110,9 @@ export const calculateHabitStats = (habit: Habit) => {
   const totalCompletions = completionDates.filter((date) => completionHistory[date]?.isCompleted).length;
 
   const lastCompletionDate =
-    completionDates.filter((date) => completionHistory[date]?.isCompleted).sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1))[0] || "";
+    completionDates
+      .filter((date) => completionHistory[date]?.isCompleted)
+      .sort((a, b) => (getDayjs(b).isAfter(getDayjs(a)) ? 1 : -1))[0] || "";
 
   // Calculate streaks for this specific habit
   let currentStreak = 0;
@@ -180,7 +184,9 @@ export const calculateHabitStats = (habit: Habit) => {
       const bestRepetitions = Math.max(...values);
 
       // Calculate how often the goal was reached
-      const goalReachedCount = completionDates.filter((date) => (completionHistory[date]?.value || 0) >= (habit.completion.goal || 0)).length;
+      const goalReachedCount = completionDates.filter(
+        (date) => (completionHistory[date]?.value || 0) >= (habit.completion.goal || 0)
+      ).length;
 
       const goalAchievementRate = Math.round((goalReachedCount / completionDates.length) * 100);
 
@@ -205,7 +211,9 @@ export const calculateHabitStats = (habit: Habit) => {
       const longestSession = Math.max(...values);
 
       // Calculate how often the goal was reached
-      const goalReachedCount = completionDates.filter((date) => (completionHistory[date]?.value || 0) >= (habit.completion.goal || 0)).length;
+      const goalReachedCount = completionDates.filter(
+        (date) => (completionHistory[date]?.value || 0) >= (habit.completion.goal || 0)
+      ).length;
 
       const goalAchievementRate = Math.round((goalReachedCount / completionDates.length) * 100);
 

@@ -4,18 +4,18 @@ import { useTheme } from "../../hooks/useTheme";
 import styles from "./FloatingButton.styles";
 
 interface FloatingButtonProps {
-	navigateToAddHabit: () => void;
+  navigateToAddHabit: () => void;
 }
 
 export function FloatingButton({ navigateToAddHabit }: FloatingButtonProps) {
-	const { colors } = useTheme();
-	return (
-		<TouchableOpacity
-			style={[styles.floatingButton, { backgroundColor: colors.primary }]}
-			onPress={navigateToAddHabit}
-			activeOpacity={0.8}
-		>
-			<Plus size={24} color={colors.textInverse} />
-		</TouchableOpacity>
-	);
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      style={[styles.floatingButton, { backgroundColor: colors.primary }]}
+      onPress={navigateToAddHabit}
+      activeOpacity={0.8}
+    >
+      <Plus size={24} color={colors.textInverse} />
+    </TouchableOpacity>
+  );
 }

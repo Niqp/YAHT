@@ -1,4 +1,10 @@
-import notifee, { TriggerType, TimestampTrigger, RepeatFrequency, AndroidNotificationSetting, AuthorizationStatus } from "@notifee/react-native";
+import notifee, {
+  TriggerType,
+  TimestampTrigger,
+  RepeatFrequency,
+  AndroidNotificationSetting,
+  AuthorizationStatus,
+} from "@notifee/react-native";
 import type { Dayjs } from "dayjs";
 import { Platform } from "react-native";
 export const setNotification = async (timerId: string, habitTitle: string, date: Dayjs) => {

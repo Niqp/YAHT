@@ -16,7 +16,10 @@ jest.mock("expo-crypto", () => ({
 const DATE = "2026-02-16";
 const DEFAULT_NOW = "2026-02-16T10:00:00.000Z";
 
-type TimerHarnessState = Pick<HabitState, "habits" | "activeTimers" | "selectedDate" | "error" | "timerRenderTickMs"> & {
+type TimerHarnessState = Pick<
+  HabitState,
+  "habits" | "activeTimers" | "selectedDate" | "error" | "timerRenderTickMs"
+> & {
   updateCompletion: HabitState["updateCompletion"];
   updateCompletionMultiple: HabitState["updateCompletionMultiple"];
 };

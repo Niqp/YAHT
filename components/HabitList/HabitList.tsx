@@ -44,10 +44,14 @@ export default function HabitList(props: HabitListProps) {
 
     try {
       // Get incomplete habits
-      const incompleteHabits = filteredHabits.filter((habit: Habit) => !habit.completionHistory?.[selectedDate]?.isCompleted);
+      const incompleteHabits = filteredHabits.filter(
+        (habit: Habit) => !habit.completionHistory?.[selectedDate]?.isCompleted
+      );
 
       // Get completed habits
-      const completedHabits = filteredHabits.filter((habit: Habit) => habit.completionHistory?.[selectedDate]?.isCompleted);
+      const completedHabits = filteredHabits.filter(
+        (habit: Habit) => habit.completionHistory?.[selectedDate]?.isCompleted
+      );
 
       // Create sections for SectionList - To Do first, then Completed
       const sections = [];
@@ -79,7 +83,12 @@ export default function HabitList(props: HabitListProps) {
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: { title: string; completed: boolean; data: Habit[] } }) => (
-      <TaskGroupSeparator title={section.title} completed={section.completed} count={section.data.length} colors={colors} />
+      <TaskGroupSeparator
+        title={section.title}
+        completed={section.completed}
+        count={section.data.length}
+        colors={colors}
+      />
     ),
     [colors]
   );
@@ -105,7 +114,10 @@ export default function HabitList(props: HabitListProps) {
   return isEmpty ? (
     <View style={styles.emptyContainer}>
       <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No habits for this day</Text>
-      <TouchableOpacity style={[styles.addHabitButton, { backgroundColor: colors.primary }]} onPress={navigateToAddHabit}>
+      <TouchableOpacity
+        style={[styles.addHabitButton, { backgroundColor: colors.primary }]}
+        onPress={navigateToAddHabit}
+      >
         <Text style={[styles.addHabitButtonText, { color: colors.textInverse }]}>Add a habit</Text>
       </TouchableOpacity>
     </View>

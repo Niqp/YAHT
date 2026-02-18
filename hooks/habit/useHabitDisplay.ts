@@ -11,7 +11,13 @@ type HabitDisplayProps = {
   elapsedTime: number;
 };
 
-export function useHabitDisplay({ habit, isCompleted, completionValue, completionGoal, elapsedTime }: HabitDisplayProps) {
+export function useHabitDisplay({
+  habit,
+  isCompleted,
+  completionValue,
+  completionGoal,
+  elapsedTime,
+}: HabitDisplayProps) {
   // Format the time for display
   const getDisplayTime = useCallback(() => {
     const combinedTime = completionValue + elapsedTime;

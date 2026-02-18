@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { ProgressChart } from 'react-native-chart-kit';
-import { useTheme } from '../../../hooks/useTheme';
-import { CompletionType } from '../../../types/habit';
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { ProgressChart } from "react-native-chart-kit";
+import { useTheme } from "../../../hooks/useTheme";
+import { CompletionType } from "../../../types/habit";
 
 interface ProgressCircleProps {
   progressData: {
@@ -19,35 +19,32 @@ interface ProgressCircleProps {
   };
 }
 
-const ProgressCircle: React.FC<ProgressCircleProps> = ({ 
-  progressData, 
-  completionType,
-  stats
-}) => {
+const ProgressCircle: React.FC<ProgressCircleProps> = ({ progressData, completionType, stats }) => {
   const { colors, isDarkMode } = useTheme();
-  const screenWidth = Dimensions.get('window').width;
+  const screenWidth = Dimensions.get("window").width;
 
   // Memoize chart config
-  const chartConfig = useMemo(() => ({
-    backgroundColor: colors.cardBackground,
-    backgroundGradientFrom: colors.cardBackground,
-    backgroundGradientTo: colors.cardBackground,
-    color: (opacity = 1) => `rgba(${isDarkMode ? '106, 142, 174' : '74, 101, 114'}, ${opacity})`,
-    backgroundGradientFromOpacity: 0,
-    backgroundGradientToOpacity: 0,
-    labelColor: (opacity = 1) => colors.text,
-    strokeWidth: 2, // Ensure stroke width is set correctly
-  }), [colors, isDarkMode]);
+  const chartConfig = useMemo(
+    () => ({
+      backgroundColor: colors.cardBackground,
+      backgroundGradientFrom: colors.cardBackground,
+      backgroundGradientTo: colors.cardBackground,
+      color: (opacity = 1) => `rgba(${isDarkMode ? "106, 142, 174" : "74, 101, 114"}, ${opacity})`,
+      backgroundGradientFromOpacity: 0,
+      backgroundGradientToOpacity: 0,
+      labelColor: (opacity = 1) => colors.text,
+      strokeWidth: 2, // Ensure stroke width is set correctly
+    }),
+    [colors, isDarkMode]
+  );
 
   // Always use completionSinceCreation regardless of habit type
   const progressValue = stats.completionSinceCreation;
 
   return (
     <View style={styles.progressSection}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        Completion Since Creation
-      </Text>
-      
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Completion Since Creation</Text>
+
       <View style={styles.progressRow}>
         <View style={styles.progressChartContainer}>
           <ProgressChart
@@ -60,28 +57,18 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
             hideLegend={true}
             style={styles.progressChart}
           />
-          <Text style={[styles.progressText, { color: colors.primary }]}>
-            {`${progressValue}%`}
-          </Text>
+          <Text style={[styles.progressText, { color: colors.primary }]}>{`${progressValue}%`}</Text>
         </View>
-        
+
         <View style={styles.progressStatsContainer}>
           <View style={[styles.progressStat, { backgroundColor: colors.input }]}>
-            <Text style={[styles.progressStatValue, { color: colors.text }]}>
-              {stats.totalCompletions}
-            </Text>
-            <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>
-              Completions
-            </Text>
+            <Text style={[styles.progressStatValue, { color: colors.text }]}>{stats.totalCompletions}</Text>
+            <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>Completions</Text>
           </View>
-          
+
           <View style={[styles.progressStat, { backgroundColor: colors.input }]}>
-            <Text style={[styles.progressStatValue, { color: colors.text }]}>
-              {stats.currentStreak}
-            </Text>
-            <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>
-              Current Streak
-            </Text>
+            <Text style={[styles.progressStatValue, { color: colors.text }]}>{stats.currentStreak}</Text>
+            <Text style={[styles.progressStatLabel, { color: colors.textSecondary }]}>Current Streak</Text>
           </View>
         </View>
       </View>
@@ -89,7 +76,7 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
   );
 };
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get("window").width;
 
 const styles = StyleSheet.create({
   progressSection: {
@@ -97,52 +84,52 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
   },
   progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
     marginTop: 10,
     paddingHorizontal: 8,
   },
   progressChartContainer: {
     width: screenWidth * 0.35,
     height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
   },
   progressChart: {
     borderRadius: 12,
   },
   progressText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    position: 'absolute',
+    fontWeight: "bold",
+    position: "absolute",
   },
   progressStatsContainer: {
     width: screenWidth * 0.45,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
   },
   progressStat: {
-    width: '100%',
+    width: "100%",
     padding: 10,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 8,
   },
   progressStatValue: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 5,
   },
   progressStatLabel: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 

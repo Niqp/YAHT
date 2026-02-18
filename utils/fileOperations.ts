@@ -39,7 +39,10 @@ export const exportData = async (): Promise<void> => {
 
       Alert.alert("Export Successful", "Your habits data has been exported successfully.");
     } else {
-      Alert.alert("Sharing not available", `Sharing is not available on this device, but the file was saved to ${filePath}`);
+      Alert.alert(
+        "Sharing not available",
+        `Sharing is not available on this device, but the file was saved to ${filePath}`
+      );
     }
   } catch (error) {
     console.error("Error exporting data:", error);
@@ -78,29 +81,33 @@ export const importData = async (): Promise<void> => {
       }
 
       // Confirm import with the user
-      Alert.alert("Import Data", `Found ${Object.keys(importedHabits).length} habits in the file. This will replace your current data. Continue?`, [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Import",
-          onPress: async () => {
-            // Use the importHabits function from the store
-            const importHabits = useHabitStore((state) => state.importHabits);
-
-            try {
-              const importedCount = await importHabits(importedHabits);
-              Alert.alert("Import Complete", `Successfully imported ${importedCount} habits.`);
-            } catch (error) {
-              if (error instanceof Error) {
-                console.error("Error importing habits:", error.message);
-              }
-              Alert.alert("Import Failed", "Failed to import data. Please try again.");
-            }
+      Alert.alert(
+        "Import Data",
+        `Found ${Object.keys(importedHabits).length} habits in the file. This will replace your current data. Continue?`,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
           },
-        },
-      ]);
+          {
+            text: "Import",
+            onPress: async () => {
+              // Use the importHabits function from the store
+              const importHabits = useHabitStore((state) => state.importHabits);
+
+              try {
+                const importedCount = await importHabits(importedHabits);
+                Alert.alert("Import Complete", `Successfully imported ${importedCount} habits.`);
+              } catch (error) {
+                if (error instanceof Error) {
+                  console.error("Error importing habits:", error.message);
+                }
+                Alert.alert("Import Failed", "Failed to import data. Please try again.");
+              }
+            },
+          },
+        ]
+      );
     } catch (error) {
       console.error("Error parsing JSON:", error);
       Alert.alert("Import Failed", "The selected file contains invalid data.");

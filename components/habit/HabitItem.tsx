@@ -8,7 +8,11 @@ import { MoreVertical } from "lucide-react-native";
 import React, { useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
 import styles from "./HabitItem.styles";
-import { HabitStatusIndicator, HabitSubtitle, RepetitionControls } from "./habitViewSubComponents/HabitViewSubComponents";
+import {
+  HabitStatusIndicator,
+  HabitSubtitle,
+  RepetitionControls,
+} from "./habitViewSubComponents/HabitViewSubComponents";
 
 interface HabitItemProps {
   habitId: Habit["id"];
@@ -146,7 +150,13 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
             {habit.title}
           </Text>
           {habit?.completion?.type !== "simple" && (
-            <HabitSubtitle habit={habit} isCompleted={isCompleted} timerActive={isTimerActive} getSubtitleText={getSubtitleText} colors={colors} />
+            <HabitSubtitle
+              habit={habit}
+              isCompleted={isCompleted}
+              timerActive={isTimerActive}
+              getSubtitleText={getSubtitleText}
+              colors={colors}
+            />
           )}
         </View>
 
@@ -160,7 +170,12 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
               colors={colors}
             />
           ) : (
-            <HabitStatusIndicator isCompleted={isCompleted} timerActive={isTimerActive} completionType={habit?.completion?.type} colors={colors} />
+            <HabitStatusIndicator
+              isCompleted={isCompleted}
+              timerActive={isTimerActive}
+              completionType={habit?.completion?.type}
+              colors={colors}
+            />
           )}
         </View>
       </TouchableOpacity>

@@ -5,7 +5,16 @@ import type { ConfigType as DayjsConfigType } from "dayjs";
 import { useTheme } from "../../hooks/useTheme";
 import { useHabitStore } from "../../store/habitStore";
 import styles from "./DateSlider.styles";
-import { addDays, formatDate, getMonthName, getShortDayName, getDay, getYear, getEpochMilliseconds, getCurrentDateDayjs } from "../../utils/date";
+import {
+  addDays,
+  formatDate,
+  getMonthName,
+  getShortDayName,
+  getDay,
+  getYear,
+  getEpochMilliseconds,
+  getCurrentDateDayjs,
+} from "../../utils/date";
 import { RecyclerListView, DataProvider, LayoutProvider } from "recyclerlistview";
 
 interface DateInfo {
@@ -142,7 +151,12 @@ export default function DateSlider() {
   // Row renderer (replaces renderItem)
   const rowRenderer = useCallback(
     (type: any, item: DateInfo) => (
-      <DateItem item={item} isSelected={item.date === selectedDate} isToday={item.date === today} onPress={setSelectedDate} />
+      <DateItem
+        item={item}
+        isSelected={item.date === selectedDate}
+        isToday={item.date === today}
+        onPress={setSelectedDate}
+      />
     ),
     [selectedDate, today, setSelectedDate]
   );
