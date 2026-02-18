@@ -45,7 +45,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | `store/`      | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`.                                                      |
 | `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.  |
 | `types/`      | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases).                                                                                         |
-| `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV adapter for Zustand persist), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`.                                    |
+| `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV adapter for Zustand persist), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`.                                     |
 | `constants/`  | `Colors.ts` — static light/dark theme color definitions.                                                                                                                                          |
 | `plugins/`    | Expo config plugins (`notifee-mod.js`).                                                                                                                                                           |
 | `assets/`     | Images, fonts, splash screen.                                                                                                                                                                     |
@@ -131,12 +131,12 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 ### Coverage by area
 
-| Area | Test files |
-| --- | --- |
-| `utils/` | `utils/__tests__/date.test.ts`, `utils/__tests__/completionHistory.test.ts` |
-| `store/habit/` | `__tests__/completionSlice.test.ts`, `__tests__/crudSlice.test.ts`, `__tests__/importSlice.test.ts`, `__tests__/timerSlice.test.ts` |
-| `hooks/` | `hooks/habit/useHabitDisplay.test.ts`, `hooks/habit/useHabitProgress.test.ts`, `hooks/timer/useTimerManager.test.tsx`, `hooks/useStats.test.ts` |
-| `components/` | `components/__tests__/smoke.test.tsx` (trivial render check) |
+| Area           | Test files                                                                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `utils/`       | `utils/__tests__/date.test.ts`, `utils/__tests__/completionHistory.test.ts`                                                                     |
+| `store/habit/` | `__tests__/completionSlice.test.ts`, `__tests__/crudSlice.test.ts`, `__tests__/importSlice.test.ts`, `__tests__/timerSlice.test.ts`             |
+| `hooks/`       | `hooks/habit/useHabitDisplay.test.ts`, `hooks/habit/useHabitProgress.test.ts`, `hooks/timer/useTimerManager.test.tsx`, `hooks/useStats.test.ts` |
+| `components/`  | `components/__tests__/smoke.test.tsx` (trivial render check)                                                                                    |
 
 ### Patterns for writing tests
 
@@ -183,17 +183,17 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 ## Commands
 
-| Command                  | Description                              |
-| ------------------------ | ---------------------------------------- |
-| `npm start`              | Start Expo dev server                    |
-| `npm run android`        | Run on Android                           |
-| `npm run ios`            | Run on iOS                               |
-| `npm run web`            | Start web version                        |
-| `npm run cleanRun`       | Clean prebuild + run Android             |
-| `npm run prod`           | Release build for Android                |
-| `npm test`               | Run Jest test suite                      |
-| `npm run format`         | Format all source files with Prettier    |
-| `npm run format:check`   | Check formatting (non-destructive, CI)   |
+| Command                | Description                            |
+| ---------------------- | -------------------------------------- |
+| `npm start`            | Start Expo dev server                  |
+| `npm run android`      | Run on Android                         |
+| `npm run ios`          | Run on iOS                             |
+| `npm run web`          | Start web version                      |
+| `npm run cleanRun`     | Clean prebuild + run Android           |
+| `npm run prod`         | Release build for Android              |
+| `npm test`             | Run Jest test suite                    |
+| `npm run format`       | Format all source files with Prettier  |
+| `npm run format:check` | Check formatting (non-destructive, CI) |
 
 ---
 

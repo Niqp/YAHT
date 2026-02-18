@@ -16,17 +16,21 @@
 ### Currently covered files by requested test locations
 
 #### `components/__tests__`
+
 - `components/__tests__/smoke.test.tsx` (framework smoke check; does not target a specific feature module)
 
 #### `hooks/*/*.test*`
+
 - `hooks/habit/useHabitProgress.test.ts` → `hooks/habit/useHabitProgress.ts`
 - `hooks/timer/useTimerManager.test.tsx` → `hooks/timer/useTimerManager.ts`
 
 #### `store/habit/__tests__`
+
 - `store/habit/__tests__/completionSlice.test.ts` → `store/habit/completionSlice.ts`
 - `store/habit/__tests__/timerSlice.test.ts` → `store/habit/timerSlice.ts`
 
 #### `utils/__tests__`
+
 - `utils/__tests__/completionHistory.test.ts` → `utils/statsUtils.ts`, `utils/date.ts`
 
 ### Immediate baseline gaps (high-signal)
@@ -208,12 +212,11 @@
 
 ### Progress table
 
-| Milestone | Scope (concrete paths) | Owner | Status |
-|---|---|---|---|
-| A | `store/habit/crudSlice.ts`, `store/habit/importSlice.ts`, `store/habitStore.ts`, `utils/storage.ts`, `store/themeStore.ts` | Unassigned | ✅ Complete |
-| B | `hooks/useStats.ts`, `hooks/habit/useHabitDisplay.ts`, `utils/date.ts`, `utils/statsUtils.ts`, `hooks/timer/useTimerManager.ts`, `utils/notifications.ts` | Unassigned | ✅ Complete |
-| C | `app/(tabs)/today.tsx`, `app/(tabs)/stats.tsx`, `app/(tabs)/settings.tsx`, `app/add.tsx`, `components/habit/HabitItem.tsx`, `components/dateSlider/DateSlider.tsx` | Unassigned | Not Started |
-
+| Milestone | Scope (concrete paths)                                                                                                                                             | Owner      | Status      |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ----------- |
+| A         | `store/habit/crudSlice.ts`, `store/habit/importSlice.ts`, `store/habitStore.ts`, `utils/storage.ts`, `store/themeStore.ts`                                         | Unassigned | ✅ Complete |
+| B         | `hooks/useStats.ts`, `hooks/habit/useHabitDisplay.ts`, `utils/date.ts`, `utils/statsUtils.ts`, `hooks/timer/useTimerManager.ts`, `utils/notifications.ts`          | Unassigned | ✅ Complete |
+| C         | `app/(tabs)/today.tsx`, `app/(tabs)/stats.tsx`, `app/(tabs)/settings.tsx`, `app/add.tsx`, `components/habit/HabitItem.tsx`, `components/dateSlider/DateSlider.tsx` | Unassigned | Not Started |
 
 ### PR checklist (required for every test coverage change)
 
