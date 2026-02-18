@@ -1,93 +1,164 @@
 /**
- * Comprehensive color system for the app, supporting both light and dark themes.
+ * YAHT Design System — Color Tokens
+ *
+ * Full light/dark palette as specified in UI_UX_GUIDELINES.md §2.
+ * Rules:
+ *  - Never hardcode hex values in components. Always use `colors.<token>` from `useTheme()`.
+ *  - No new tokens without updating this file AND the guidelines doc.
+ *  - Gradients only on large surfaces (full-width cards, page headers, FAB).
  */
-
-// Primary application colors
-const primaryLight = "#4A6572";
-const primaryDark = "#6A8EAE";
-const accentLight = "#4CAF50";
-const accentDark = "#66BB6A";
 
 export const Colors = {
   light: {
-    // Core UI colors
-    primary: primaryLight,
-    accent: accentLight,
-    background: "#FFFFFF",
+    // ── Backgrounds ──────────────────────────────────────────────────────────
+    background: "#FAF7F2",
+    surface: "#F3EDE4",
     cardBackground: "#FFFFFF",
-    surface: "#F8F9FA",
 
-    // Text colors
-    text: "#212121",
-    textSecondary: "#757575",
-    textTertiary: "#9E9E9E",
-    textInverse: "#FFFFFF",
+    // ── Accent ───────────────────────────────────────────────────────────────
+    primary: "#8B6F47",
+    primaryMuted: "#A8916E",
+    primarySubtle: "#D4C4AA",
+    accent: "#C4813D",
 
-    // UI element colors
-    border: "#E0E0E0",
-    divider: "#F0F0F0",
-    icon: "#687076",
-    input: "#F5F5F5",
-    error: "#F44336",
-    success: "#4CAF50",
+    // ── Text ─────────────────────────────────────────────────────────────────
+    text: "#2C2418",
+    textSecondary: "#6B5D4F",
+    textTertiary: "#9C8E7E",
+    textInverse: "#FAF7F2",
 
-    // Tab navigation
+    // ── Borders & Dividers ───────────────────────────────────────────────────
+    border: "#E2D9CC",
+    divider: "#EDE7DD",
+
+    // ── Icons ─────────────────────────────────────────────────────────────────
+    icon: "#7A6B5A",
+    iconMuted: "#A89C8C",
+
+    // ── Inputs ───────────────────────────────────────────────────────────────
+    input: "#F5F0E8",
+    inputBorder: "#D4C4AA",
+    inputFocusBorder: "#8B6F47",
+
+    // ── Semantic ─────────────────────────────────────────────────────────────
+    success: "#5A8A5E",
+    successSubtle: "#E8F0E8",
+    error: "#C0523E",
+    errorSubtle: "#FAE8E4",
+    warning: "#C4813D",
+    warningSubtle: "#FFF3E0",
+
+    // ── Interactive ───────────────────────────────────────────────────────────
+    buttonPrimary: "#8B6F47",
+    buttonPrimaryText: "#FAF7F2",
+    buttonSecondary: "#F5F0E8",
+    buttonSecondaryText: "#8B6F47",
+    buttonDisabled: "#D4C4AA",
+    buttonDisabledText: "#A8916E",
+    buttonDestructive: "#C0523E",
+
+    // ── Tab Bar ───────────────────────────────────────────────────────────────
     tabBackground: "#FFFFFF",
-    tabIconDefault: "#B0BEC5",
-    tabIconSelected: primaryLight,
+    tabIconDefault: "#B0A494",
+    tabIconSelected: "#8B6F47",
 
-    // Habit states
-    habitBackground: "#F5F5F5",
-    habitCompleted: "#F5F9F7",
+    // ── Utility ───────────────────────────────────────────────────────────────
+    ripple: "rgba(139,111,71, 0.10)",
+    shadow: "rgba(44,36,24, 0.08)",
+    overlay: "rgba(44,36,24, 0.40)",
 
-    // Interactive elements
-    buttonPrimary: primaryLight,
-    buttonDisabled: "#BDBDBD",
-    ripple: "rgba(0, 0, 0, 0.1)",
-    selectedItem: primaryLight,
-    todayIndicator: accentLight,
-    shadow: "rgba(0, 0, 0, 0.1)",
+    // ── Legacy aliases (used by existing components — do not remove until migrated) ──
+    /** @deprecated Use `primary` instead */
+    selectedItem: "#8B6F47",
+    /** @deprecated Use `accent` instead */
+    todayIndicator: "#C4813D",
+    /** @deprecated Use `surface` instead */
+    habitBackground: "#F3EDE4",
+    /** @deprecated Use `successSubtle` instead */
+    habitCompleted: "#E8F0E8",
+
+    // ── Gradients ─────────────────────────────────────────────────────────────
+    gradientCardStart: "#FFFFFF",
+    gradientCardEnd: "#FAF7F2",
+    gradientHeaderStart: "#FAF7F2",
+    gradientHeaderEnd: "#F3EDE4",
   },
+
   dark: {
-    // Core UI colors
-    primary: primaryDark,
-    accent: accentDark,
-    background: "#121212",
-    cardBackground: "#1E1E1E",
-    surface: "#242424",
+    // ── Backgrounds ──────────────────────────────────────────────────────────
+    background: "#1A1612",
+    surface: "#231F1A",
+    cardBackground: "#2C2620",
 
-    // Text colors
-    text: "#ECEDEE",
-    textSecondary: "#B0B0B0",
-    textTertiary: "#767676",
-    textInverse: "#121212",
+    // ── Accent ───────────────────────────────────────────────────────────────
+    primary: "#C4A882",
+    primaryMuted: "#9C8568",
+    primarySubtle: "#3D3428",
+    accent: "#D4944A",
 
-    // UI element colors
-    border: "#383838",
-    divider: "#2C2C2C",
-    icon: "#9BA1A6",
-    input: "#2C2C2C",
-    error: "#F77B72",
-    success: "#66BB6A",
+    // ── Text ─────────────────────────────────────────────────────────────────
+    text: "#EDE5D8",
+    textSecondary: "#A89C8C",
+    textTertiary: "#6B5D4F",
+    textInverse: "#1A1612",
 
-    // Tab navigation
-    tabBackground: "#1E1E1E",
-    tabIconDefault: "#606060",
-    tabIconSelected: primaryDark,
+    // ── Borders & Dividers ───────────────────────────────────────────────────
+    border: "#3D3428",
+    divider: "#302A22",
 
-    // Habit states
-    habitBackground: "#1E1E1E",
-    habitCompleted: "#1E2922",
+    // ── Icons ─────────────────────────────────────────────────────────────────
+    icon: "#A89C8C",
+    iconMuted: "#6B5D4F",
 
-    // Interactive elements
-    buttonPrimary: primaryDark,
-    buttonDisabled: "#555555",
-    ripple: "rgba(255, 255, 255, 0.1)",
-    selectedItem: primaryDark,
-    todayIndicator: accentDark,
-    shadow: "rgba(0, 0, 0, 0.5)",
+    // ── Inputs ───────────────────────────────────────────────────────────────
+    input: "#2C2620",
+    inputBorder: "#3D3428",
+    inputFocusBorder: "#C4A882",
+
+    // ── Semantic ─────────────────────────────────────────────────────────────
+    success: "#7AAF7E",
+    successSubtle: "#1E2B1E",
+    error: "#E07060",
+    errorSubtle: "#2E1C18",
+    warning: "#D4944A",
+    warningSubtle: "#2E2418",
+
+    // ── Interactive ───────────────────────────────────────────────────────────
+    buttonPrimary: "#C4A882",
+    buttonPrimaryText: "#1A1612",
+    buttonSecondary: "#2C2620",
+    buttonSecondaryText: "#C4A882",
+    buttonDisabled: "#3D3428",
+    buttonDisabledText: "#6B5D4F",
+    buttonDestructive: "#E07060",
+
+    // ── Tab Bar ───────────────────────────────────────────────────────────────
+    tabBackground: "#231F1A",
+    tabIconDefault: "#5C5248",
+    tabIconSelected: "#C4A882",
+
+    // ── Utility ───────────────────────────────────────────────────────────────
+    ripple: "rgba(196,168,130, 0.12)",
+    shadow: "rgba(0,0,0, 0.30)",
+    overlay: "rgba(0,0,0, 0.60)",
+
+    // ── Legacy aliases (used by existing components — do not remove until migrated) ──
+    /** @deprecated Use `primary` instead */
+    selectedItem: "#C4A882",
+    /** @deprecated Use `accent` instead */
+    todayIndicator: "#D4944A",
+    /** @deprecated Use `surface` instead */
+    habitBackground: "#231F1A",
+    /** @deprecated Use `successSubtle` instead */
+    habitCompleted: "#1E2B1E",
+
+    // ── Gradients ─────────────────────────────────────────────────────────────
+    gradientCardStart: "#2C2620",
+    gradientCardEnd: "#231F1A",
+    gradientHeaderStart: "#231F1A",
+    gradientHeaderEnd: "#1A1612",
   },
 };
 
-// Type definition for accessing colors
+/** Type for accessing color tokens — derived from the light theme shape. */
 export type ColorTheme = typeof Colors.light;

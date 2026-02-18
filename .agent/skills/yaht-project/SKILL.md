@@ -26,7 +26,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | State Management | Zustand 5.x + persist middleware                                               | MMKV storage via `react-native-mmkv`            |
 | Date Library     | dayjs 1.x                                                                      | Plugins: `isSameOrAfter`, `isToday`, `duration` |
 | Animations       | react-native-reanimated 3.16                                                   | + react-native-gesture-handler 2.20             |
-| UI               | lucide-react-native (icons), @rneui/themed (buttons), @gorhom/bottom-sheet 5.x |                                                 |
+| UI               | lucide-react-native (icons), @rneui/themed (buttons), @gorhom/bottom-sheet 5.x, expo-linear-gradient, expo-haptics | Design system components in `components/ui/` |
 | Charts           | react-native-chart-kit 6.12                                                    |                                                 |
 | Notifications    | @notifee/react-native 9.x                                                      | Timestamp-triggered, Android alarm permissions  |
 | Virtualization   | recyclerlistview 4.x                                                           | Used in DateSlider                              |
@@ -46,7 +46,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.  |
 | `types/`      | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases).                                                                                         |
 | `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV adapter for Zustand persist), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`.                                     |
-| `constants/`  | `Colors.ts` — static light/dark theme color definitions.                                                                                                                                          |
+| `constants/`  | Design system tokens: `Colors.ts` (full light/dark palette), `Typography.ts` (9-level type scale), `Spacing.ts` (4pt grid + border radii), `Elevation.ts` (platform shadow presets), `Animation.ts` (spring/timing configs). |
 | `plugins/`    | Expo config plugins (`notifee-mod.js`).                                                                                                                                                           |
 | `assets/`     | Images, fonts, splash screen.                                                                                                                                                                     |
 
@@ -112,6 +112,31 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 - `useTheme()` hook provides `colors` object from `constants/Colors.ts`
 - Colors applied via **inline styles**: `{ backgroundColor: colors.background }`
 - System theme changes detected via `AppState` listener in `setupSystemThemeListener()`
+
+### Design System
+
+All visual constants live in `constants/`. Import from there — never hardcode values in components.
+
+| File | Exports | Usage |
+|---|---|---|
+| `Colors.ts` | `Colors`, `ColorTheme` | Full light/dark token palette. Use via `useTheme().colors`. |
+| `Typography.ts` | `Typography`, `TypographyVariant` | `StyleSheet` with 9 named text styles. |
+| `Spacing.ts` | `Spacing`, `BorderRadius` | 4pt grid spacing + border radius tokens. |
+| `Elevation.ts` | `Elevation` | Platform-aware shadow presets (levels 0–3). Spread + add `shadowColor: colors.shadow`. |
+| `Animation.ts` | `SpringConfig`, `TimingConfig`, `PressScale` | Reanimated spring/timing configs for consistent motion. |
+
+**Design system UI components** live in `components/ui/` and are barrel-exported from `components/ui/index.ts`:
+
+| Component | Purpose |
+|---|---|
+| `AppText` | Typography-scale-aware `Text` wrapper with `variant` prop and `tabularNums` support. |
+| `ScaleButton` | Animated button with spring press feedback; variants: `primary`, `secondary`, `destructive`. |
+| `PressableCard` | Card-style pressable with platform ripple/opacity feedback and configurable elevation. |
+| `AppBottomSheet` | `@gorhom/bottom-sheet` wrapper with guideline defaults (radius-xl, overlay backdrop, handle). |
+
+**Haptics utility**: `utils/haptics.ts` — thin wrapper around `expo-haptics` with `complete`, `success`, `warning`, `medium` methods.
+
+**Colors.ts legacy tokens**: `selectedItem`, `todayIndicator`, `habitBackground`, `habitCompleted` are kept as `@deprecated` aliases for backward compatibility. Migrate usages to the canonical tokens (`primary`, `accent`, `surface`, `successSubtle`) when touching those components.
 
 ### Routing
 
