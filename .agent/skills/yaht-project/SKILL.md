@@ -30,7 +30,9 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | Charts           | react-native-chart-kit 6.12                                                    |                                                 |
 | Notifications    | @notifee/react-native 9.x                                                      | Timestamp-triggered, Android alarm permissions  |
 | Virtualization   | recyclerlistview 4.x                                                           | Used in DateSlider                              |
-| Linting          | ESLint 9 flat config + typescript-eslint                                       |                                                 |
+| Linting          | ESLint 9 flat config + typescript-eslint + eslint-config-prettier              |                                                 |
+| Formatting       | Prettier (`.prettierrc`)                                                       | Enforces project style — run `npm run format`   |
+| Testing          | Jest (jest-expo preset) + @testing-library/react-native                        | 11 test suites, ~121 tests                      |
 
 ---
 
@@ -43,7 +45,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | `store/`      | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`.                                                      |
 | `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.  |
 | `types/`      | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases).                                                                                         |
-| `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV + Map serialization), `map.ts` (sorted insertion), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`.                |
+| `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV adapter for Zustand persist), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`.                                    |
 | `constants/`  | `Colors.ts` — static light/dark theme color definitions.                                                                                                                                          |
 | `plugins/`    | Expo config plugins (`notifee-mod.js`).                                                                                                                                                           |
 | `assets/`     | Images, fonts, splash screen.                                                                                                                                                                     |
@@ -92,15 +94,15 @@ export const useHabitStore = create<HabitState>()(
 - `WEEKDAYS` — specific day numbers (0=Sunday...6=Saturday)
 - `INTERVAL` — every N days since last completion
 
-**Completion history** is a `Map<string, CompletionHistory>` keyed by date string, sorted chronologically. The Map requires custom JSON serialization (`{ __isMap: true, entries: [...] }` format in `utils/storage.ts`) and sorted insertion via `utils/map.ts`.
+**Completion history** is a `Record<string, CompletionHistory>` keyed by `YYYY-MM-DD` date strings. Standard JSON serialization works natively — no custom Map serialization is needed. Keys are inserted in chronological order; use `Object.keys(history).sort()` when order matters.
 
 ### Timer System
 
 Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/useTimerManager.ts`:
 
 1. `activateTimer()` stores `lastResumedAt` ISO timestamp
-2. `useTimerManager` ticks every 1s via `setInterval`, calling `incrementAllTimers(1000)`
-3. On foreground resume, recalculates true elapsed time from `lastResumedAt`
+2. `useTimerManager` ticks every 1s via `setInterval`, calling `tickForeground(nowMs)`
+3. On foreground resume, `reconcileActiveTimers()` recalculates true elapsed time from `lastResumedAt`
 4. Auto-completes habits when `elapsedTime + storedValue >= goal`
 5. `TimerManager` component in root layout mounts the hook
 
@@ -109,7 +111,7 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 - `themeStore` persists `mode` (light/dark/system) and `weekStartDay`
 - `useTheme()` hook provides `colors` object from `constants/Colors.ts`
 - Colors applied via **inline styles**: `{ backgroundColor: colors.background }`
-- System theme changes detected via `AppState` listener
+- System theme changes detected via `AppState` listener in `setupSystemThemeListener()`
 
 ### Routing
 
@@ -120,11 +122,37 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 ---
 
+## Testing
+
+- **Preset**: `jest-expo` with `@testing-library/react-native`
+- **Path alias**: `@/` mapped via `moduleNameMapper` in `jest.config.js`
+- **Setup file**: `jest.setup.ts`
+- **Test file locations**: colocated in `__tests__/` subdirectories next to the source files they cover
+
+### Coverage by area
+
+| Area | Test files |
+| --- | --- |
+| `utils/` | `utils/__tests__/date.test.ts`, `utils/__tests__/completionHistory.test.ts` |
+| `store/habit/` | `__tests__/completionSlice.test.ts`, `__tests__/crudSlice.test.ts`, `__tests__/importSlice.test.ts`, `__tests__/timerSlice.test.ts` |
+| `hooks/` | `hooks/habit/useHabitDisplay.test.ts`, `hooks/habit/useHabitProgress.test.ts`, `hooks/timer/useTimerManager.test.tsx`, `hooks/useStats.test.ts` |
+| `components/` | `components/__tests__/smoke.test.tsx` (trivial render check) |
+
+### Patterns for writing tests
+
+- **Pure slices**: use a local harness — create a `state` object, wire `set`/`get` manually, instantiate the slice, call actions directly. No Zustand store needed.
+- **Hooks with store deps**: mock `@/store/habitStore` with `jest.mock(...)`, provide a `mockStoreState` object, use `renderHook`.
+- **Native modules** (MMKV, expo-crypto, notifications): always mock at the top of the test file.
+
+---
+
 ## Code Style Conventions
 
-**Formatting:**
+**Formatting (enforced by Prettier):**
 
 - Double quotes for strings. Semicolons. Arrow functions for most expressions.
+- 2-space indentation, `printWidth: 120`, `trailingComma: "es5"`
+- Run `npm run format` to auto-format; `npm run format:check` for CI
 - `export default function` for page/component exports
 - Named `export const` for hooks and utilities
 
@@ -155,14 +183,17 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 ## Commands
 
-| Command            | Description                  |
-| ------------------ | ---------------------------- |
-| `npm start`        | Start Expo dev server        |
-| `npm run android`  | Run on Android               |
-| `npm run ios`      | Run on iOS                   |
-| `npm run web`      | Start web version            |
-| `npm run cleanRun` | Clean prebuild + run Android |
-| `npm run prod`     | Release build for Android    |
+| Command                  | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `npm start`              | Start Expo dev server                    |
+| `npm run android`        | Run on Android                           |
+| `npm run ios`            | Run on iOS                               |
+| `npm run web`            | Start web version                        |
+| `npm run cleanRun`       | Clean prebuild + run Android             |
+| `npm run prod`           | Release build for Android                |
+| `npm test`               | Run Jest test suite                      |
+| `npm run format`         | Format all source files with Prettier    |
+| `npm run format:check`   | Check formatting (non-destructive, CI)   |
 
 ---
 
