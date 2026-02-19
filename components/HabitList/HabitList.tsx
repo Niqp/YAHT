@@ -1,34 +1,30 @@
-import { useCallback, useMemo } from "react";
-import { SectionList, Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "../../hooks/useTheme";
-import type { Habit } from "../../types/habit";
-import { shouldShowHabitOnDate } from "../../utils/date";
+import React, { useCallback, useMemo } from "react";
+import { SectionList, View } from "react-native";
+import { BookOpen } from "lucide-react-native";
+import { useTheme } from "@/hooks/useTheme";
+import { useHabitStore } from "@/store/habitStore";
+import type { Habit } from "@/types/habit";
+import { shouldShowHabitOnDate } from "@/utils/date";
+import { AppText, ScaleButton } from "@/components/ui";
+import { Spacing } from "@/constants/Spacing";
 import HabitItem from "../habit/HabitItem";
 import styles from "./HabitList.styles";
 import TaskGroupSeparator from "./TaskGroupSeparator/TaskGroupSeparator";
-import React from "react";
-import { useHabitStore } from "@/store/habitStore";
 
 interface HabitListProps {
   handleHabitAction: (habit: Habit) => void;
   navigateToAddHabit: () => void;
 }
 
-export default function HabitList(props: HabitListProps) {
-  const { handleHabitAction, navigateToAddHabit } = props;
+export default function HabitList({ handleHabitAction, navigateToAddHabit }: HabitListProps) {
   const { colors } = useTheme();
   const habitsMap = useHabitStore((state) => state.habits);
   const selectedDate = useHabitStore((state) => state.selectedDate);
 
-  const habits = useMemo(() => {
-    // Convert the habits map to an array of habits
-    return Object.values(habitsMap).map((habit) => habit);
-  }, [habitsMap]);
+  const habits = useMemo(() => Object.values(habitsMap), [habitsMap]);
 
-  // Get all valid habits for the selected date
   const filteredHabits = useMemo(() => {
     if (!habits || !selectedDate) return [];
-
     try {
       return habits.filter((habit: Habit) => shouldShowHabitOnDate(habit, selectedDate));
     } catch (error) {
@@ -37,43 +33,23 @@ export default function HabitList(props: HabitListProps) {
     }
   }, [habits, selectedDate]);
 
-  // Group habits by completion status - swapped To Do and Completed order
   const groupedHabits = useMemo(() => {
-    // Safely handle potentially undefined or empty filteredHabits
     if (!filteredHabits || filteredHabits.length === 0) return [];
-
     try {
-      // Get incomplete habits
       const incompleteHabits = filteredHabits.filter(
         (habit: Habit) => !habit.completionHistory?.[selectedDate]?.isCompleted
       );
-
-      // Get completed habits
       const completedHabits = filteredHabits.filter(
         (habit: Habit) => habit.completionHistory?.[selectedDate]?.isCompleted
       );
 
-      // Create sections for SectionList - To Do first, then Completed
       const sections = [];
-
-      // Add incomplete section if there are incomplete habits
       if (incompleteHabits.length > 0) {
-        sections.push({
-          title: "To Do",
-          data: incompleteHabits,
-          completed: false,
-        });
+        sections.push({ title: "To Do", data: incompleteHabits, completed: false });
       }
-
-      // Add completed section if there are completed habits
       if (completedHabits.length > 0) {
-        sections.push({
-          title: "Completed",
-          data: completedHabits,
-          completed: true,
-        });
+        sections.push({ title: "Completed", data: completedHabits, completed: true });
       }
-
       return sections;
     } catch (error) {
       console.error("Error grouping habits:", error);
@@ -83,45 +59,50 @@ export default function HabitList(props: HabitListProps) {
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: { title: string; completed: boolean; data: Habit[] } }) => (
-      <TaskGroupSeparator
-        title={section.title}
-        completed={section.completed}
-        count={section.data.length}
-        colors={colors}
-      />
+      <TaskGroupSeparator title={section.title} completed={section.completed} count={section.data.length} />
     ),
-    [colors]
+    []
   );
 
   const keyExtractor = useCallback((item: Habit) => item?.id || Math.random().toString(), []);
 
-  // Memoized render functions
   const renderHabitItem = useCallback(
     ({ item }: { item: Habit }) => {
-      // Safety check for null items
       if (!item) return null;
-
       return <HabitItem habitId={item.id} onLongPress={handleHabitAction} />;
     },
     [handleHabitAction]
   );
 
-  const isEmpty = useMemo(() => {
-    // Check if the grouped habits array is empty
-    return groupedHabits.length === 0;
-  }, [groupedHabits]);
+  const isEmpty = groupedHabits.length === 0;
 
-  return isEmpty ? (
-    <View style={styles.emptyContainer}>
-      <Text style={[styles.emptyText, { color: colors.textTertiary }]}>No habits for this day</Text>
-      <TouchableOpacity
-        style={[styles.addHabitButton, { backgroundColor: colors.primary }]}
-        onPress={navigateToAddHabit}
-      >
-        <Text style={[styles.addHabitButtonText, { color: colors.textInverse }]}>Add a habit</Text>
-      </TouchableOpacity>
-    </View>
-  ) : (
+  if (isEmpty) {
+    return (
+      <View style={styles.emptyContainer}>
+        <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface }]}>
+          <BookOpen size={32} color={colors.iconMuted} strokeWidth={1.5} />
+        </View>
+        <View style={styles.emptyTextBlock}>
+          <AppText variant="body" color={colors.textSecondary} style={{ textAlign: "center" }}>
+            No habits for this day
+          </AppText>
+          <AppText variant="caption" color={colors.textTertiary} style={{ textAlign: "center" }}>
+            Start building your routine
+          </AppText>
+        </View>
+        <ScaleButton
+          label="Add a habit"
+          onPress={navigateToAddHabit}
+          variant="primary"
+          style={styles.addHabitButton}
+          accessibilityLabel="Add a habit"
+          accessibilityHint="Opens the habit creation screen"
+        />
+      </View>
+    );
+  }
+
+  return (
     <View style={styles.listWrapper}>
       <SectionList
         sections={groupedHabits}
@@ -129,11 +110,11 @@ export default function HabitList(props: HabitListProps) {
         renderItem={renderHabitItem}
         renderSectionHeader={renderSectionHeader}
         stickySectionHeadersEnabled={false}
-        ItemSeparatorComponent={() => <View style={{ height: 7 }} />}
+        ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
         contentContainerStyle={styles.habitList}
-        SectionSeparatorComponent={() => <View style={{ height: 20 }} />}
-        ListHeaderComponent={() => <View style={{ height: 10 }} />}
-        ListFooterComponent={() => <View style={{ height: 80 }} />}
+        SectionSeparatorComponent={() => <View style={{ height: Spacing.lg }} />}
+        ListHeaderComponent={() => <View style={{ height: Spacing.sm }} />}
+        ListFooterComponent={() => <View style={{ height: Spacing.xxxl }} />}
         showsVerticalScrollIndicator={false}
         initialNumToRender={20}
         maxToRenderPerBatch={10}

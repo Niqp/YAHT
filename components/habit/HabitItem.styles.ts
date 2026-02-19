@@ -1,14 +1,15 @@
 import { StyleSheet } from "react-native";
+import { Spacing, BorderRadius } from "@/constants/Spacing";
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
-    marginHorizontal: 16,
+    borderRadius: BorderRadius.md,
+    marginHorizontal: Spacing.base,
     borderWidth: 1,
     borderColor: "transparent",
-    height: 70,
+    minHeight: 70,
     overflow: "hidden",
     position: "relative",
   },
@@ -23,16 +24,19 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 14,
+    paddingLeft: Spacing.md,
     paddingRight: 0,
+    // Ensure the touch area is at least 56pt tall (list item row per §5.1)
+    minHeight: 56,
   },
   iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    // 44×44 minimum touch target (§5.1)
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
+    marginRight: Spacing.md,
   },
   iconText: {
     fontSize: 22,
@@ -40,31 +44,32 @@ const styles = StyleSheet.create({
   infoContainer: {
     flex: 1,
     justifyContent: "center",
-    marginRight: 8,
+    marginRight: Spacing.sm,
   },
   title: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: Spacing.xxs,
   },
   subtitleContainer: {
     flexDirection: "row",
     alignItems: "center",
+    gap: Spacing.xs,
   },
   subtitle: {
     fontSize: 13,
-    marginLeft: 4,
   },
   actionButtons: {
-    width: 88,
-    height: 22,
+    // Enough width for rep controls; height is set by parent row
+    minWidth: 88,
     alignItems: "center",
     justifyContent: "flex-end",
     flexDirection: "row",
   },
   statusContainer: {
-    width: 22,
-    height: 22,
+    // 44×44 minimum touch target (§5.1)
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -72,27 +77,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    width: 88,
   },
   repButton: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    // 44×44 minimum touch target (§5.1) — visual circle is smaller via inner icon
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
   },
   repCount: {
     fontSize: 16,
     fontWeight: "600",
-    marginHorizontal: 6,
-    width: 16,
+    minWidth: 20,
     textAlign: "center",
+    fontVariant: ["tabular-nums"],
   },
   moreButton: {
+    // 44×44 minimum touch target (§5.1)
+    width: 44,
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 12,
   },
 });
 

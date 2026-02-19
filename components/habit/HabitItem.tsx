@@ -4,9 +4,12 @@ import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import { Habit, CompletionType } from "@/types/habit";
 import { getEpochMilliseconds } from "@/utils/date";
+import { haptic } from "@/utils/haptics";
 import { MoreVertical } from "lucide-react-native";
-import React, { useRef } from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, useReducedMotion } from "react-native-reanimated";
+import { SpringConfig, PressScale } from "@/constants/Animation";
 import styles from "./HabitItem.styles";
 import {
   HabitStatusIndicator,
@@ -20,7 +23,6 @@ interface HabitItemProps {
 }
 
 export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
-  // Fail early if habit is undefined
   if (!habitId) return null;
 
   const habit = useHabitStore((state) => state.habits[habitId]);
@@ -32,12 +34,30 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
   const timer = useHabitStore((state) => state.activeTimers[habitId]?.[selectedDate]);
   const timerRenderTickMs = useHabitStore((state) => state.timerRenderTickMs);
   const isTimerActive = !!timer?.lastResumedAt;
+
   const elapsedTime = React.useMemo(() => {
     if (!timer?.lastResumedAt || !isTimerActive) return 0;
     const resumeMs = getEpochMilliseconds(timer.lastResumedAt);
     return Math.max(0, timerRenderTickMs - resumeMs);
   }, [isTimerActive, timer?.lastResumedAt, timerRenderTickMs]);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  // Reanimated spring press feedback (replaces old Animated.sequence)
+  const scale = useSharedValue(1);
+  const reducedMotion = useReducedMotion();
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (reducedMotion) return;
+    scale.value = withSpring(PressScale.button, SpringConfig.buttonPress);
+  };
+
+  const handlePressOut = () => {
+    if (reducedMotion) return;
+    scale.value = withSpring(1, SpringConfig.buttonPress);
+  };
 
   // Get completion status data
   const completionToday = habit?.completionHistory[selectedDate];
@@ -65,25 +85,13 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     elapsedTime,
   });
 
-  // Handle main press action with animation
   const handlePress = async () => {
-    // Animate the press
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.97,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     if (habit?.completion?.type === "simple") {
-      // For simple habits, toggle completion
       await updateCompletion({ id: habit.id });
+      // Haptic feedback on completion toggle (§10.4)
+      if (!isCompleted) {
+        haptic.complete();
+      }
     } else if (habit?.completion?.type === "timed") {
       if (!isTimerActive) {
         startTimer(habit.id, selectedDate);
@@ -95,13 +103,12 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     }
   };
 
-  // Handle increment for repetition habits
   const handleIncrement = () => {
     const newValue = (completionValue || 0) + 1;
     updateCompletion({ id: habit.id, value: newValue });
+    haptic.complete();
   };
 
-  // Handle decrement for repetition habits
   const handleDecrement = () => {
     if (completionValue <= 0) return;
     const newValue = Math.max(0, (completionValue || 0) - 1);
@@ -112,12 +119,12 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     <Animated.View
       style={[
         styles.container,
+        animatedStyle,
         {
-          backgroundColor: colors.habitBackground,
+          // Migrated from deprecated habitBackground/habitCompleted tokens
+          backgroundColor: isCompleted ? colors.successSubtle : colors.surface,
           borderColor: colors.border,
-          transform: [{ scale: scaleAnim }],
         },
-        isCompleted && { backgroundColor: colors.habitCompleted },
       ]}
     >
       {/* Progress indicator */}
@@ -134,10 +141,15 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
 
       <TouchableOpacity
         style={styles.mainContent}
-        onPress={habit?.completion?.type !== "repetitions" ? handlePress : handlePress}
+        onPress={habit?.completion?.type !== "repetitions" ? handlePress : undefined}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         onLongPress={() => onLongPress(habit)}
-        activeOpacity={0.7}
+        activeOpacity={1}
         disabled={habit?.completion?.type === "repetitions"}
+        accessibilityRole="button"
+        accessibilityLabel={habit?.title}
+        accessibilityState={{ checked: isCompleted }}
       >
         {/* Left section - Icon */}
         <View style={[styles.iconContainer, { backgroundColor: colors.input }]}>
@@ -181,8 +193,14 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
       </TouchableOpacity>
 
       {/* More options button */}
-      <TouchableOpacity style={styles.moreButton} onPress={() => onLongPress(habit)}>
-        <MoreVertical size={20} color={colors.textSecondary} />
+      <TouchableOpacity
+        style={styles.moreButton}
+        onPress={() => onLongPress(habit)}
+        accessibilityRole="button"
+        accessibilityLabel="More options"
+        accessibilityHint="Opens habit actions menu"
+      >
+        <MoreVertical size={20} color={colors.textSecondary} strokeWidth={2} />
       </TouchableOpacity>
     </Animated.View>
   );

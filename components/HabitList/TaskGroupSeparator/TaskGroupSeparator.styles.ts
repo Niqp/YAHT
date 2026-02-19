@@ -1,24 +1,21 @@
 import { StyleSheet } from "react-native";
+import { Spacing, BorderRadius } from "@/constants/Spacing";
 
 const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginBottom: 7,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.base,
+    marginBottom: Spacing.sm,
   },
   sectionIconContainer: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: "600",
+    marginRight: Spacing.sm,
   },
 });
 
