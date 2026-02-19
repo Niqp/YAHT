@@ -36,9 +36,11 @@ jest.mock("@notifee/react-native", () => ({
 
 // ── Mock Platform ─────────────────────────────────────────────────────────────
 
-jest.mock("react-native/Libraries/Utilities/Platform", () => ({
-  OS: "android",
-  select: (obj: Record<string, unknown>) => obj.android,
+jest.mock("react-native", () => ({
+  Platform: {
+    OS: "android",
+    select: (obj: Record<string, unknown>) => obj.android ?? obj.default,
+  },
 }));
 
 import { setNotification, cancelNotification, cancelAllNotifications } from "@/utils/notifications";

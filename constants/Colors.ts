@@ -86,7 +86,7 @@ export const Colors = {
 
   dark: {
     // ── Backgrounds ──────────────────────────────────────────────────────────
-    background: "#1A1612",
+    background: "#0f0d0bff",
     surface: "#231F1A",
     cardBackground: "#2C2620",
 
