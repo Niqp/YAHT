@@ -27,16 +27,7 @@
         }
       }
     },
-    "plugins": [
-      "./plugins/notifee-mod.js",
-      "expo-router",
-      [
-        "expo-notifications",
-        {
-          "color": "#ffffff"
-        }
-      ]
-    ],
+    "plugins": ["./plugins/notifee-mod.js", "expo-router"],
     "scheme": "yaht-app",
     "experiments": {
       "typedRoutes": true,

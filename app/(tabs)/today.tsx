@@ -17,7 +17,6 @@ export default function TodayScreen() {
   const { colors } = useTheme();
 
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
   const isHydrated = useHabitStore((state) => state._hasHydrated);
   const selectedDate = useHabitStore((state) => state.selectedDate);
@@ -62,11 +61,9 @@ export default function TodayScreen() {
 
   const handleHabitAction = useCallback((habit: Habit) => {
     setSelectedHabit(habit);
-    setIsBottomSheetOpen(true);
   }, []);
 
   const closeBottomSheet = useCallback(() => {
-    setIsBottomSheetOpen(false);
     setSelectedHabit(null);
   }, []);
 
@@ -80,9 +77,9 @@ export default function TodayScreen() {
         </View>
       ) : (
         <>
-          <HabitList handleHabitAction={handleHabitAction} navigateToAddHabit={navigateToAddHabit} />
+          <HabitList handleHabitAction={handleHabitAction} />
           <FloatingButton navigateToAddHabit={navigateToAddHabit} />
-          <HabitBottomSheet habit={selectedHabit} onClose={closeBottomSheet} isOpen={isBottomSheetOpen} />
+          <HabitBottomSheet habit={selectedHabit} onClose={closeBottomSheet} isOpen={selectedHabit !== null} />
         </>
       )}
     </View>

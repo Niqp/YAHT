@@ -26,10 +26,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.xs,
   },
-  addHabitButton: {
-    alignSelf: "stretch",
-    marginTop: Spacing.sm,
-  },
 });
 
 export default styles;

@@ -1,8 +1,9 @@
 import React from "react";
-import { useTheme } from "@/hooks/useTheme";
+import { AppBottomSheet } from "@/components/ui";
 import { useHabitStore } from "@/store/habitStore";
 import type { Habit } from "@/types/habit";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import type BottomSheet from "@gorhom/bottom-sheet";
+import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import styles from "./HabitBottomSheet.styles";
@@ -18,8 +19,9 @@ interface HabitBottomSheetProps {
 }
 
 export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottomSheetProps) {
-  const { colors } = useTheme();
-  const { deleteHabit, updateCompletion, selectedDate } = useHabitStore();
+  const deleteHabit = useHabitStore((state) => state.deleteHabit);
+  const updateCompletion = useHabitStore((state) => state.updateCompletion);
+  const selectedDate = useHabitStore((state) => state.selectedDate);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const isCompleted = !!habit?.completionHistory?.[selectedDate]?.isCompleted;
@@ -71,31 +73,25 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
   }, [isOpen]);
 
   return (
-    <BottomSheet
+    <AppBottomSheet
       ref={bottomSheetRef}
-      enablePanDownToClose={true}
-      index={0}
       onChange={(index) => {
         if (index === -1) onClose();
       }}
-      backgroundStyle={[styles.bottomSheetBackground, { backgroundColor: colors.cardBackground }]}
-      handleIndicatorStyle={[styles.indicator, { backgroundColor: colors.textTertiary }]}
     >
       {!!habit && (
         <BottomSheetView style={styles.contentContainer}>
-          <>
-            <HabitBottomSheetHeader habit={habit} onClose={onClose} />
-            <HabitBottomSheetStatus habit={habit} isCompleted={isCompleted} selectedDate={selectedDate} />
-            <HabitBottomSheetActions
-              isCompleted={isCompleted}
-              handleEdit={handleEdit}
-              handleDelete={handleDelete}
-              handleComplete={handleComplete}
-              handleReset={handleReset}
-            />
-          </>
+          <HabitBottomSheetHeader habit={habit} onClose={onClose} />
+          <HabitBottomSheetStatus habit={habit} isCompleted={isCompleted} selectedDate={selectedDate} />
+          <HabitBottomSheetActions
+            isCompleted={isCompleted}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+            handleComplete={handleComplete}
+            handleReset={handleReset}
+          />
         </BottomSheetView>
       )}
-    </BottomSheet>
+    </AppBottomSheet>
   );
 }

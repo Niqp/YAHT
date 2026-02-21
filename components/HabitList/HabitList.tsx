@@ -5,7 +5,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import type { Habit } from "@/types/habit";
 import { shouldShowHabitOnDate } from "@/utils/date";
-import { AppText, ScaleButton } from "@/components/ui";
+import { AppText } from "@/components/ui";
 import { Spacing } from "@/constants/Spacing";
 import HabitItem from "../habit/HabitItem";
 import styles from "./HabitList.styles";
@@ -13,10 +13,9 @@ import TaskGroupSeparator from "./TaskGroupSeparator/TaskGroupSeparator";
 
 interface HabitListProps {
   handleHabitAction: (habit: Habit) => void;
-  navigateToAddHabit: () => void;
 }
 
-export default function HabitList({ handleHabitAction, navigateToAddHabit }: HabitListProps) {
+export default function HabitList({ handleHabitAction }: HabitListProps) {
   const { colors } = useTheme();
   const habitsMap = useHabitStore((state) => state.habits);
   const selectedDate = useHabitStore((state) => state.selectedDate);
@@ -64,7 +63,7 @@ export default function HabitList({ handleHabitAction, navigateToAddHabit }: Hab
     []
   );
 
-  const keyExtractor = useCallback((item: Habit) => item?.id || Math.random().toString(), []);
+  const keyExtractor = useCallback((item: Habit) => item.id, []);
 
   const renderHabitItem = useCallback(
     ({ item }: { item: Habit }) => {
@@ -87,17 +86,9 @@ export default function HabitList({ handleHabitAction, navigateToAddHabit }: Hab
             No habits for this day
           </AppText>
           <AppText variant="caption" color={colors.textTertiary} style={{ textAlign: "center" }}>
-            Start building your routine
+            Tap the + button to add your first habit
           </AppText>
         </View>
-        <ScaleButton
-          label="Add a habit"
-          onPress={navigateToAddHabit}
-          variant="primary"
-          style={styles.addHabitButton}
-          accessibilityLabel="Add a habit"
-          accessibilityHint="Opens the habit creation screen"
-        />
       </View>
     );
   }

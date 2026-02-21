@@ -60,27 +60,27 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   const containerStyle = [
     styles.dateItem,
     { backgroundColor: colors.input },
-    isSelected && { backgroundColor: colors.selectedItem },
+    isSelected && { backgroundColor: colors.primary },
     isToday &&
-    !isSelected && {
-      backgroundColor: colors.input,
-      borderWidth: 2,
-      borderColor: colors.todayIndicator,
-    },
+      !isSelected && {
+        backgroundColor: colors.input,
+        borderWidth: 2,
+        borderColor: colors.accent,
+      },
   ];
 
   const dayNameStyle = [
     styles.dayName,
     { color: colors.textSecondary },
     isSelected && { color: colors.textInverse },
-    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: "bold" as const },
+    isToday && !isSelected && { color: colors.accent, fontWeight: "bold" as const },
   ];
 
   const dayNumberStyle = [
     styles.dayNumber,
     { color: colors.text },
     isSelected && { color: colors.textInverse },
-    isToday && !isSelected && { color: colors.todayIndicator, fontWeight: "bold" as const },
+    isToday && !isSelected && { color: colors.accent, fontWeight: "bold" as const },
   ];
 
   return (
@@ -125,7 +125,7 @@ export default function DateSlider() {
   const lastRangeExtensionAtRef = useRef<string | null>(null);
 
   const [listWidth, setListWidth] = useState(() => Math.max(1, Math.round(viewportWidth)));
-  const today = useMemo(() => formatDate(getCurrentDateDayjs()), []);
+  const [today, setToday] = useState(() => formatDate(getCurrentDateDayjs()));
   const streak = useAllHabitsStreak();
   const reducedMotion = useReducedMotion();
   const visibleItems = useMemo(() => Math.ceil(listWidth / ITEM_WIDTH), [listWidth]);
@@ -144,16 +144,21 @@ export default function DateSlider() {
   }, [viewportWidth]);
 
   useEffect(() => {
+    const intervalId = setInterval(() => {
+      const currentToday = formatDate(getCurrentDateDayjs());
+      setToday((previousToday) => (previousToday === currentToday ? previousToday : currentToday));
+    }, 60_000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     if (showTodayButton) {
       // Expand: spring for a natural "pop" feel
-      todayPillAnim.value = reducedMotion
-        ? 1
-        : withSpring(1, { damping: 18, stiffness: 200, mass: 0.8 });
+      todayPillAnim.value = reducedMotion ? 1 : withSpring(1, { damping: 18, stiffness: 200, mass: 0.8 });
     } else {
       // Collapse: timing ease-in for a quick tuck-away
-      todayPillAnim.value = reducedMotion
-        ? 0
-        : withTiming(0, TimingConfig.itemDismiss);
+      todayPillAnim.value = reducedMotion ? 0 : withTiming(0, TimingConfig.itemDismiss);
     }
   }, [showTodayButton, reducedMotion]);
 
