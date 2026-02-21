@@ -1,74 +1,67 @@
 import { StyleSheet } from "react-native";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { Typography } from "@/constants/Typography";
 
 export const styles = StyleSheet.create({
-  section: {
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+  container: {
+    marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
+    ...Typography.label,
+    fontSize: 13,
+    marginBottom: Spacing.sm,
+    marginLeft: Spacing.md,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  optionsContainer: {
+  surface: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+  },
+  segmentedControlContainer: {
     flexDirection: "row",
-    marginBottom: 15,
+    height: 44,
   },
-  optionButton: {
+  segmentButton: {
     flex: 1,
-    padding: 10,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    marginHorizontal: 4,
-    borderRadius: 8,
   },
-  optionText: {
-    fontSize: 14,
+  segmentMiddle: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
   },
-  completionOptionsContainer: {
-    marginTop: 10,
+  segmentText: {
+    ...Typography.bodyMedium,
+  },
+  optionsWrapper: {
+    borderTopWidth: 1,
+    padding: Spacing.base,
+    minHeight: 100,
+    justifyContent: "center",
   },
   completionTypeContainer: {
-    marginBottom: 15,
+    marginBottom: Spacing.sm,
   },
   completionTypeDescription: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
   },
   completionDescription: {
-    fontSize: 14,
-    marginLeft: 10,
+    ...Typography.body,
+    marginLeft: Spacing.md,
   },
   goalContainer: {
-    marginLeft: 34,
-    marginTop: 8,
+    marginLeft: 40, // 24 (icon) + 16 (spacing.md)
+    marginTop: Spacing.md,
   },
-  goalLabel: {
-    fontSize: 14,
-    marginRight: 10,
-  },
-  goalInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    width: 70,
-    textAlign: "center",
-    fontSize: 16,
+  editNoticeContainer: {
+    padding: Spacing.base,
+    paddingTop: 0,
   },
   editNotice: {
-    fontSize: 14,
+    ...Typography.label,
     fontStyle: "italic",
-    marginTop: 10,
+    textAlign: "center",
   },
 });

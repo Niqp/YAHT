@@ -45,63 +45,73 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   const renderRepetitionOptions = () => {
     switch (repetitionType) {
       case RepetitionType.DAILY:
-        return <Text style={[styles.repetitionDescription, { color: colors.textSecondary }]}>Repeat every day</Text>;
+        return (
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              This habit will repeat every single day.
+            </Text>
+          </View>
+        );
       case RepetitionType.WEEKDAYS:
         return (
           <View style={styles.daysContainer}>
-            {WEEKDAYS.map((day: { dayIndex: number; name: string }) => (
-              <TouchableOpacity
-                key={day.dayIndex}
-                style={[
-                  styles.dayButton,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.input,
-                  },
-                  isDaySelected(day.dayIndex) && {
-                    backgroundColor: colors.primary,
-                    borderColor: colors.primary,
-                  },
-                ]}
-                onPress={() => handleDayToggle(day.dayIndex)}
-              >
-                <Text
+            {WEEKDAYS.map((day: { dayIndex: number; name: string }) => {
+              const selected = isDaySelected(day.dayIndex);
+              return (
+                <TouchableOpacity
+                  key={day.dayIndex}
                   style={[
-                    styles.dayButtonText,
-                    { color: colors.textSecondary },
-                    isDaySelected(day.dayIndex) && { color: colors.textInverse },
+                    styles.dayChip,
+                    {
+                      backgroundColor: selected ? colors.primary : colors.input,
+                      borderColor: selected ? colors.primary : colors.border,
+                    },
                   ]}
+                  onPress={() => handleDayToggle(day.dayIndex)}
                 >
-                  {day.name.substring(0, 3)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.dayChipText,
+                      { color: selected ? colors.textInverse : colors.text },
+                    ]}
+                  >
+                    {day.name.substring(0, 1)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         );
       case RepetitionType.INTERVAL:
         return (
           <View style={styles.customDaysContainer}>
-            <Text style={[styles.repetitionDescription, { color: colors.textSecondary }]}>Repeat every</Text>
-            <TextInput
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Repeat every</Text>
+            <View
               style={[
-                styles.customDaysInput,
+                styles.customDaysInputContainer,
                 {
-                  borderColor: colors.border,
                   backgroundColor: colors.input,
-                  color: colors.text,
+                  borderColor: colors.border,
                 },
               ]}
-              value={customDays.toString()}
-              onChangeText={(text) => {
-                const value = Number.parseInt(text);
-                if (!Number.isNaN(value) && value > 0) {
-                  setCustomDays(value);
-                }
-              }}
-              keyboardType="number-pad"
-              placeholderTextColor={colors.textTertiary}
-            />
-            <Text style={[styles.repetitionDescription, { color: colors.textSecondary }]}>days</Text>
+            >
+              <TextInput
+                style={[
+                  styles.customDaysInput,
+                  { color: colors.primary },
+                ]}
+                value={customDays.toString()}
+                onChangeText={(text) => {
+                  const value = Number.parseInt(text);
+                  if (!Number.isNaN(value) && value > 0) {
+                    setCustomDays(value);
+                  }
+                }}
+                keyboardType="number-pad"
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>days</Text>
           </View>
         );
       default:
@@ -110,87 +120,101 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   };
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Repetition Pattern</Text>
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-            },
-            repetitionType === "daily" && {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary,
-            },
-          ]}
-          onPress={() => setRepetitionType(RepetitionType.DAILY)}
-        >
-          <Text
+    <View style={styles.container}>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>SCHEDULE</Text>
+      <View
+        style={[
+          styles.surface,
+          {
+            backgroundColor: colors.surface,
+          },
+        ]}
+      >
+        <View style={styles.segmentedControlContainer}>
+          <TouchableOpacity
             style={[
-              styles.optionText,
-              { color: colors.textSecondary },
-              repetitionType === RepetitionType.DAILY && { color: colors.textInverse },
+              styles.segmentButton,
+              repetitionType === RepetitionType.DAILY && {
+                backgroundColor: colors.primary,
+              },
             ]}
+            onPress={() => setRepetitionType(RepetitionType.DAILY)}
           >
-            Daily
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-            },
-            repetitionType === RepetitionType.WEEKDAYS && {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary,
-            },
-          ]}
-          onPress={() => setRepetitionType(RepetitionType.WEEKDAYS)}
-        >
-          <Text
+            <Text
+              style={[
+                styles.segmentText,
+                {
+                  color:
+                    repetitionType === RepetitionType.DAILY
+                      ? colors.textInverse
+                      : colors.textSecondary,
+                },
+              ]}
+            >
+              Daily
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.optionText,
-              { color: colors.textSecondary },
+              styles.segmentButton,
+              styles.segmentMiddle,
+              { borderLeftColor: colors.divider, borderRightColor: colors.divider },
               repetitionType === RepetitionType.WEEKDAYS && {
-                color: colors.textInverse,
+                backgroundColor: colors.primary,
+                borderLeftColor: colors.primary,
+                borderRightColor: colors.primary,
               },
             ]}
+            onPress={() => setRepetitionType(RepetitionType.WEEKDAYS)}
           >
-            Weekly
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-            },
-            repetitionType === RepetitionType.INTERVAL && {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary,
-            },
-          ]}
-          onPress={() => setRepetitionType(RepetitionType.INTERVAL)}
-        >
-          <Text
+            <Text
+              style={[
+                styles.segmentText,
+                {
+                  color:
+                    repetitionType === RepetitionType.WEEKDAYS
+                      ? colors.textInverse
+                      : colors.textSecondary,
+                },
+              ]}
+            >
+              Weekly
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.optionText,
-              { color: colors.textSecondary },
+              styles.segmentButton,
               repetitionType === RepetitionType.INTERVAL && {
-                color: colors.textInverse,
+                backgroundColor: colors.primary,
               },
             ]}
+            onPress={() => setRepetitionType(RepetitionType.INTERVAL)}
           >
-            Every X Days
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.segmentText,
+                {
+                  color:
+                    repetitionType === RepetitionType.INTERVAL
+                      ? colors.textInverse
+                      : colors.textSecondary,
+                },
+              ]}
+            >
+              Interval
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={[
+            styles.optionsWrapper,
+            { borderTopColor: colors.divider },
+          ]}
+        >
+          {renderRepetitionOptions()}
+        </View>
       </View>
-      <View style={styles.repetitionOptionsContainer}>{renderRepetitionOptions()}</View>
     </View>
   );
 };

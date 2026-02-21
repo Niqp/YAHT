@@ -1,43 +1,48 @@
 import { StyleSheet } from "react-native";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { Typography } from "@/constants/Typography";
 
 export const styles = StyleSheet.create({
-  section: {
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+  container: {
+    marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
+    ...Typography.label,
+    fontSize: 13,
+    marginBottom: Spacing.sm,
+    marginLeft: Spacing.md,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  inputContainer: {
-    marginBottom: 15,
+  surface: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
   },
-  label: {
-    fontSize: 14,
-    marginBottom: 5,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
   },
-  input: {
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
   },
   emojiInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 24,
+    ...Typography.title,
     textAlign: "center",
-    width: 70,
+    width: "100%",
+    height: "100%",
+  },
+  titleInput: {
+    flex: 1,
+    ...Typography.body,
+    fontSize: 18,
+    minHeight: 48,
   },
 });

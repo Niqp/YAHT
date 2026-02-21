@@ -14,40 +14,51 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Basic Information</Text>
-      <View style={styles.inputContainer}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Title</Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-              color: colors.text,
-            },
-          ]}
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Enter habit title"
-          placeholderTextColor={colors.textTertiary}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Icon/Emoji</Text>
-        <TextInput
-          style={[
-            styles.emojiInput,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-              color: colors.text,
-            },
-          ]}
-          value={icon}
-          onChangeText={setIcon}
-          maxLength={2}
-        />
+    <View style={styles.container}>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>BASIC INFO</Text>
+      <View
+        style={[
+          styles.surface,
+          {
+            backgroundColor: colors.surface,
+          },
+        ]}
+      >
+        <View style={styles.row}>
+          <View
+            style={[
+              styles.iconContainer,
+              {
+                backgroundColor: colors.input,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <TextInput
+              style={[
+                styles.emojiInput,
+                {
+                  color: colors.text,
+                },
+              ]}
+              value={icon}
+              onChangeText={setIcon}
+              maxLength={2}
+            />
+          </View>
+          <TextInput
+            style={[
+              styles.titleInput,
+              {
+                color: colors.text,
+              },
+            ]}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Habit title..."
+            placeholderTextColor={colors.textTertiary}
+          />
+        </View>
       </View>
     </View>
   );

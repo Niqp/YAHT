@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Clock } from "lucide-react-native";
 import { useTheme } from "../../hooks/useTheme";
+import { Elevation } from "@/constants/Elevation";
 
 import styles from "./TimedControls.styles";
 
@@ -32,12 +33,11 @@ const generateTimeValues = (count: number, padZero = true) => {
 export default function IOSTimerPicker({
   value,
   onChange,
-  min = 60000, // 1 minute minimum (in ms)
-  max = 86400000, // 24 hours maximum (in ms)
+  min: _min = 60000, // 1 minute minimum (in ms)
+  max: _max = 86400000, // 24 hours maximum (in ms)
   label = "Target time:",
 }: IOSTimerPickerProps) {
-  const { colors, colorScheme } = useTheme();
-  const isDarkMode = colorScheme === "dark";
+  const { colors } = useTheme();
 
   // Calculate hours, minutes from milliseconds
   const totalSeconds = Math.floor(value / 1000);
@@ -183,7 +183,7 @@ export default function IOSTimerPicker({
     <View style={styles.container}>
       <View style={styles.headingRow}>
         <Clock size={18} color={colors.primary} />
-        <Text style={[styles.label, { color: colors.textSecondary, marginLeft: 8 }]}>{label}</Text>
+        <Text style={[styles.label, styles.headingLabel, { color: colors.textSecondary }]}>{label}</Text>
       </View>
 
       {/* Time display - tap to show/hide picker */}
@@ -206,7 +206,17 @@ export default function IOSTimerPicker({
 
       {/* iOS-style time picker */}
       {showPicker && (
-        <View style={[styles.pickerContainer, { backgroundColor: isDarkMode ? "#1c1c1e" : "#f1f1f1" }]}>
+        <View
+          style={[
+            styles.pickerContainer,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              shadowColor: colors.shadow,
+            },
+            Elevation[1],
+          ]}
+        >
           <View style={styles.pickerControls}>
             {/* Hours */}
             <View style={styles.pickerColumn}>
@@ -214,7 +224,7 @@ export default function IOSTimerPicker({
 
               <View style={styles.pickerHighlightContainer}>
                 {/* Center highlight */}
-                <View style={[styles.pickerHighlight, { backgroundColor: isDarkMode ? "#2c2c2e" : "#e1e1e1" }]} />
+                <View style={[styles.pickerHighlight, { backgroundColor: colors.primarySubtle }]} />
 
                 <ScrollView
                   ref={hourScrollRef}
@@ -248,7 +258,7 @@ export default function IOSTimerPicker({
 
               <View style={styles.pickerHighlightContainer}>
                 {/* Center highlight */}
-                <View style={[styles.pickerHighlight, { backgroundColor: isDarkMode ? "#2c2c2e" : "#e1e1e1" }]} />
+                <View style={[styles.pickerHighlight, { backgroundColor: colors.primarySubtle }]} />
 
                 <ScrollView
                   ref={minuteScrollRef}
@@ -276,10 +286,10 @@ export default function IOSTimerPicker({
 
           {/* Done button */}
           <Pressable
-            style={[styles.doneButton, { backgroundColor: colors.primary }]}
+            style={[styles.doneButton, { backgroundColor: colors.buttonPrimary }]}
             onPress={() => setShowPicker(false)}
           >
-            <Text style={[styles.doneButtonText, { color: colors.textInverse }]}>Done</Text>
+            <Text style={[styles.doneButtonText, { color: colors.buttonPrimaryText }]}>Done</Text>
           </Pressable>
         </View>
       )}
@@ -309,7 +319,7 @@ export default function IOSTimerPicker({
                 style={[
                   styles.presetButtonText,
                   {
-                    color: value === preset.value ? colors.textInverse : colors.text,
+                    color: value === preset.value ? colors.buttonPrimaryText : colors.text,
                   },
                 ]}
               >

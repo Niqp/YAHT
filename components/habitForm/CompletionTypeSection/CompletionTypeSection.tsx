@@ -74,110 +74,130 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   };
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Completion Type</Text>
-      <View style={styles.optionsContainer}>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-            },
-            completionType === "simple" && {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary,
-            },
-            isEditMode && { opacity: 0.6 },
-          ]}
-          onPress={() => !isEditMode && setCompletionType(CompletionType.SIMPLE)}
-          disabled={isEditMode}
-        >
-          <Text
+    <View style={styles.container}>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>COMPLETION GOAL</Text>
+      <View
+        style={[
+          styles.surface,
+          {
+            backgroundColor: colors.surface,
+          },
+        ]}
+      >
+        <View style={styles.segmentedControlContainer}>
+          <TouchableOpacity
             style={[
-              styles.optionText,
-              { color: colors.textSecondary },
+              styles.segmentButton,
               completionType === "simple" && {
-                color: colors.textInverse,
+                backgroundColor: colors.primary,
               },
               isEditMode &&
+              completionType !== "simple" && {
+                backgroundColor: colors.buttonDisabled,
+              },
+            ]}
+            onPress={() => !isEditMode && setCompletionType(CompletionType.SIMPLE)}
+            disabled={isEditMode}
+          >
+            <Text
+              style={[
+                styles.segmentText,
+                { color: colors.textSecondary },
+                completionType === "simple" && {
+                  color: colors.textInverse,
+                },
+                isEditMode &&
                 completionType !== "simple" && {
-                  color: colors.textTertiary,
+                  color: colors.buttonDisabledText,
                 },
-            ]}
-          >
-            Simple
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-            },
-            completionType === "repetitions" && {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary,
-            },
-            isEditMode && { opacity: 0.6 },
-          ]}
-          onPress={() => !isEditMode && setCompletionType(CompletionType.REPETITIONS)}
-          disabled={isEditMode}
-        >
-          <Text
+              ]}
+            >
+              Simple
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.optionText,
-              { color: colors.textSecondary },
+              styles.segmentButton,
+              styles.segmentMiddle,
+              { borderLeftColor: colors.divider, borderRightColor: colors.divider },
               completionType === "repetitions" && {
-                color: colors.textInverse,
+                backgroundColor: colors.primary,
+                borderLeftColor: colors.primary,
+                borderRightColor: colors.primary,
               },
               isEditMode &&
+              completionType !== "repetitions" && {
+                backgroundColor: colors.buttonDisabled,
+                borderLeftColor: colors.border,
+                borderRightColor: colors.border,
+              },
+            ]}
+            onPress={() => !isEditMode && setCompletionType(CompletionType.REPETITIONS)}
+            disabled={isEditMode}
+          >
+            <Text
+              style={[
+                styles.segmentText,
+                { color: colors.textSecondary },
+                completionType === "repetitions" && {
+                  color: colors.textInverse,
+                },
+                isEditMode &&
                 completionType !== "repetitions" && {
-                  color: colors.textTertiary,
+                  color: colors.buttonDisabledText,
                 },
-            ]}
-          >
-            Repetitions
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.optionButton,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-            },
-            completionType === "timed" && {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary,
-            },
-            isEditMode && { opacity: 0.6 },
-          ]}
-          onPress={() => !isEditMode && setCompletionType(CompletionType.TIMED)}
-          disabled={isEditMode}
-        >
-          <Text
+              ]}
+            >
+              Repetitions
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[
-              styles.optionText,
-              { color: colors.textSecondary },
-              completionType === "timed" && { color: colors.textInverse },
+              styles.segmentButton,
+              completionType === "timed" && {
+                backgroundColor: colors.primary,
+              },
               isEditMode &&
-                completionType !== "timed" && {
-                  color: colors.textTertiary,
-                },
+              completionType !== "timed" && {
+                backgroundColor: colors.buttonDisabled,
+              },
             ]}
+            onPress={() => !isEditMode && setCompletionType(CompletionType.TIMED)}
+            disabled={isEditMode}
           >
-            Timed
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.segmentText,
+                { color: colors.textSecondary },
+                completionType === "timed" && { color: colors.textInverse },
+                isEditMode &&
+                completionType !== "timed" && {
+                  color: colors.buttonDisabledText,
+                },
+              ]}
+            >
+              Timed
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={[
+            styles.optionsWrapper,
+            { borderTopColor: colors.divider },
+          ]}
+        >
+          {renderCompletionOptions()}
+        </View>
+
+        {isEditMode && (
+          <View style={styles.editNoticeContainer}>
+            <Text style={[styles.editNotice, { color: colors.error }]}>
+              Note: Completion type cannot be changed after a habit is created.
+            </Text>
+          </View>
+        )}
       </View>
-      <View style={styles.completionOptionsContainer}>{renderCompletionOptions()}</View>
-      {isEditMode && (
-        <Text style={[styles.editNotice, { color: colors.error }]}>
-          Note: Completion type cannot be changed after a habit is created.
-        </Text>
-      )}
     </View>
   );
 };

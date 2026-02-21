@@ -1,67 +1,59 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet } from "react-native";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { Typography } from "@/constants/Typography";
 
 const ITEM_HEIGHT = 50;
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginVertical: Spacing.sm,
   },
   headingRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+  },
+  headingLabel: {
+    marginLeft: Spacing.sm,
   },
   label: {
-    fontSize: 14,
+    ...Typography.label,
   },
   timeDisplay: {
-    alignSelf: "center",
-    width: "90%",
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    width: "100%",
+    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    marginBottom: Spacing.base,
     borderWidth: 1,
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   timeDisplayText: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 4,
+    ...Typography.title,
+    marginBottom: Spacing.xs,
   },
   timeHintText: {
-    fontSize: 12,
+    ...Typography.small,
   },
   pickerContainer: {
-    borderRadius: 14,
+    borderRadius: BorderRadius.md,
     overflow: "hidden",
-    marginBottom: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    marginBottom: Spacing.base,
+    borderWidth: 1,
   },
   pickerControls: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    paddingVertical: Spacing.base,
+    paddingHorizontal: Spacing.md,
   },
   pickerColumn: {
     alignItems: "center",
   },
   pickerLabel: {
-    fontSize: 12,
-    marginBottom: 10,
-    fontWeight: "500",
+    ...Typography.small,
+    marginBottom: Spacing.sm,
   },
   pickerHighlightContainer: {
     height: 150,
@@ -73,7 +65,7 @@ const styles = StyleSheet.create({
     height: ITEM_HEIGHT,
     left: 0,
     right: 0,
-    borderRadius: 8,
+    borderRadius: BorderRadius.sm,
     zIndex: 0, // Behind the text
   },
   pickerScrollView: {
@@ -90,43 +82,42 @@ const styles = StyleSheet.create({
     zIndex: 1, // Text above highlight
   },
   pickerItemText: {
-    fontSize: 22,
-    fontWeight: "500",
+    ...Typography.title,
   },
   pickerSeparator: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginHorizontal: 10,
+    ...Typography.title,
+    marginHorizontal: Spacing.sm,
   },
   doneButton: {
-    paddingVertical: 14,
+    minHeight: 48,
+    paddingVertical: Spacing.md,
     alignItems: "center",
     justifyContent: "center",
   },
   doneButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+    ...Typography.bodyMedium,
   },
   presetsContainer: {
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   presetsLabel: {
-    fontSize: 14,
-    marginBottom: 8,
+    ...Typography.label,
+    marginBottom: Spacing.sm,
   },
   presetButtonsScroll: {
-    paddingBottom: 8,
+    paddingBottom: Spacing.sm,
   },
   presetButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    marginRight: 8,
+    minHeight: 36,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginRight: Spacing.sm,
     borderWidth: 1,
+    justifyContent: "center",
   },
   presetButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
+    ...Typography.label,
   },
 });
 

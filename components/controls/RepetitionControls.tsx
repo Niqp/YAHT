@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { Minus, Plus } from "lucide-react-native";
 import { useTheme } from "../../hooks/useTheme";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { Typography } from "@/constants/Typography";
 
 interface RepetitionControlsProps {
   value: number;
@@ -85,13 +87,15 @@ export default function RepetitionControls({
         <TouchableOpacity
           style={[
             styles.button,
-            { backgroundColor: colors.input, borderColor: colors.border },
-            value <= min && { opacity: 0.5 },
+            {
+              backgroundColor: value <= min ? colors.buttonDisabled : colors.input,
+              borderColor: value <= min ? colors.buttonDisabled : colors.border,
+            },
           ]}
           onPress={handleDecrement}
           disabled={value <= min}
         >
-          <Minus size={18} color={colors.textSecondary} />
+          <Minus size={18} color={value <= min ? colors.buttonDisabledText : colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Text input */}
@@ -116,13 +120,15 @@ export default function RepetitionControls({
         <TouchableOpacity
           style={[
             styles.button,
-            { backgroundColor: colors.input, borderColor: colors.border },
-            value >= max && { opacity: 0.5 },
+            {
+              backgroundColor: value >= max ? colors.buttonDisabled : colors.input,
+              borderColor: value >= max ? colors.buttonDisabled : colors.border,
+            },
           ]}
           onPress={handleIncrement}
           disabled={value >= max}
         >
-          <Plus size={18} color={colors.textSecondary} />
+          <Plus size={18} color={value >= max ? colors.buttonDisabledText : colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -146,7 +152,7 @@ export default function RepetitionControls({
                 style={[
                   styles.presetButtonText,
                   {
-                    color: value === preset ? colors.textInverse : colors.text,
+                    color: value === preset ? colors.buttonPrimaryText : colors.text,
                   },
                 ]}
               >
@@ -162,56 +168,57 @@ export default function RepetitionControls({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginVertical: Spacing.sm,
   },
   label: {
-    fontSize: 14,
-    marginBottom: 8,
+    ...Typography.label,
+    marginBottom: Spacing.sm,
   },
   controlsRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   button: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   input: {
-    height: 40,
+    height: 48,
     width: 60,
     borderWidth: 1,
-    borderRadius: 8,
-    marginHorizontal: 10,
+    borderRadius: BorderRadius.sm,
+    marginHorizontal: Spacing.sm,
     textAlign: "center",
-    fontSize: 16,
+    ...Typography.body,
   },
   presetsContainer: {
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   presetsLabel: {
-    fontSize: 14,
-    marginBottom: 8,
+    ...Typography.label,
+    marginBottom: Spacing.sm,
   },
   presetButtons: {
     flexDirection: "row",
     flexWrap: "wrap",
   },
   presetButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
+    minHeight: 36,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginRight: Spacing.sm,
+    marginBottom: Spacing.sm,
     borderWidth: 1,
+    justifyContent: "center",
   },
   presetButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
+    ...Typography.label,
   },
 });
