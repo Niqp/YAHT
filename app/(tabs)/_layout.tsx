@@ -28,27 +28,13 @@ export default function TabsLayout() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <Tabs
         screenOptions={{
+          headerShown: false,
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.tabIconDefault,
           tabBarStyle: {
             backgroundColor: colors.tabBackground,
             ...tabBarShadow,
             height: 60, // Slightly taller for better touch targets
-          },
-          headerStyle: {
-            backgroundColor: colors.cardBackground,
-            elevation: 5,
-            shadowOpacity: 0.1,
-            shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 3,
-            borderBottomWidth: 0,
-            height: 70,
-          },
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            color: colors.text,
           },
           tabBarLabelStyle: {
             fontSize: 12,

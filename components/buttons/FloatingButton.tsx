@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, useReducedMotion } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { Plus } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { SpringConfig, PressScale } from "@/constants/Animation";
@@ -48,21 +49,25 @@ export function FloatingButton({ navigateToAddHabit }: FloatingButtonProps) {
         accessibilityRole="button"
         accessibilityLabel="Add a habit"
         accessibilityHint="Opens the habit creation screen"
-        style={[
-          {
+      >
+        <LinearGradient
+          colors={[colors.gradientFabStart, colors.gradientFabEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={{
             width: 56,
             height: 56,
             borderRadius: BorderRadius.full,
-            backgroundColor: colors.primary,
             justifyContent: "center",
             alignItems: "center",
             ...Elevation[3],
             shadowColor: colors.shadow,
-          },
-        ]}
-      >
-        <Plus size={24} color={colors.textInverse} strokeWidth={2} />
+          }}
+        >
+          <Plus size={24} color={colors.textInverse} strokeWidth={2} />
+        </LinearGradient>
       </Pressable>
     </Animated.View>
   );
 }
+

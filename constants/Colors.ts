@@ -12,7 +12,7 @@ export const Colors = {
   light: {
     // ── Backgrounds ──────────────────────────────────────────────────────────
     background: "#FAF7F2",
-    surface: "#F3EDE4",
+    surface: "#c7a97dff",
     cardBackground: "#FFFFFF",
 
     // ── Accent ───────────────────────────────────────────────────────────────
@@ -82,12 +82,14 @@ export const Colors = {
     gradientCardEnd: "#FAF7F2",
     gradientHeaderStart: "#FAF7F2",
     gradientHeaderEnd: "#F3EDE4",
+    gradientFabStart: "#9A7D55",
+    gradientFabEnd: "#8B6F47",
   },
 
   dark: {
     // ── Backgrounds ──────────────────────────────────────────────────────────
     background: "#0f0d0bff",
-    surface: "#231F1A",
+    surface: "#1f1c16ff",
     cardBackground: "#2C2620",
 
     // ── Accent ───────────────────────────────────────────────────────────────
@@ -157,6 +159,8 @@ export const Colors = {
     gradientCardEnd: "#231F1A",
     gradientHeaderStart: "#231F1A",
     gradientHeaderEnd: "#1A1612",
+    gradientFabStart: "#D4B892",
+    gradientFabEnd: "#C4A882",
   },
 };
 

@@ -10,8 +10,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
     minHeight: 70,
-    overflow: "hidden",
     position: "relative",
+  },
+  contentWrapper: {
+    ...({ overflow: "hidden" } as const),
+    borderRadius: BorderRadius.md,
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    position: "relative" as const,
+    minHeight: 70,
   },
   progressBar: {
     position: "absolute",

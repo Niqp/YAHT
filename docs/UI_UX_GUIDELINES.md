@@ -83,6 +83,8 @@ The palette is built around warm, paper-like tones. The accent is a "book page" 
 | `gradientCardEnd`      | `#FAF7F2`                | Card gradient bottom                          |
 | `gradientHeaderStart`  | `#FAF7F2`                | Header gradient start                         |
 | `gradientHeaderEnd`    | `#F3EDE4`                | Header gradient end                           |
+| `gradientFabStart`     | `#9A7D55`                | FAB gradient top (lighter primary)            |
+| `gradientFabEnd`       | `#8B6F47`                | FAB gradient bottom (standard primary)        |
 
 ### 2.2 Dark Theme
 
@@ -140,6 +142,8 @@ The palette is built around warm, paper-like tones. The accent is a "book page" 
 | `gradientCardEnd`      | `#231F1A`                 | Card gradient bottom                 |
 | `gradientHeaderStart`  | `#231F1A`                 | Header gradient start                |
 | `gradientHeaderEnd`    | `#1A1612`                 | Header gradient end                  |
+| `gradientFabStart`     | `#D4B892`                 | FAB gradient top (lighter primary)   |
+| `gradientFabEnd`       | `#C4A882`                 | FAB gradient bottom (standard primary)|
 
 ### 2.3 Color Rules
 

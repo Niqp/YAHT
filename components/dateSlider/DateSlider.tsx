@@ -1,9 +1,18 @@
 import { ChevronLeft } from "lucide-react-native";
 import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  useReducedMotion,
+} from "react-native-reanimated";
+import { TimingConfig } from "@/constants/Animation";
 import type { ConfigType as DayjsConfigType } from "dayjs";
 import { useTheme } from "../../hooks/useTheme";
 import { useHabitStore } from "../../store/habitStore";
+import { useAllHabitsStreak } from "@/hooks/useAllHabitsStreak";
 import styles from "./DateSlider.styles";
 import {
   addDays,
@@ -54,11 +63,11 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
     { backgroundColor: colors.input },
     isSelected && { backgroundColor: colors.selectedItem },
     isToday &&
-      !isSelected && {
-        backgroundColor: colors.input,
-        borderWidth: 2,
-        borderColor: colors.todayIndicator,
-      },
+    !isSelected && {
+      backgroundColor: colors.input,
+      borderWidth: 2,
+      borderColor: colors.todayIndicator,
+    },
   ];
 
   const dayNameStyle = [
@@ -112,7 +121,37 @@ export default function DateSlider() {
   const { selectedDate, setSelectedDate } = useHabitStore();
   const recyclerListRef = useRef<RecyclerListView<any, any>>(null);
   const today = useMemo(() => formatDate(getCurrentDateDayjs()), []);
-  const [showTodayButton, setShowTodayButton] = useState(false);
+  const streak = useAllHabitsStreak();
+  const reducedMotion = useReducedMotion();
+
+  // Track whether the today pill is visible in the scroll viewport
+  const [isTodayPillVisible, setIsTodayPillVisible] = useState(true);
+
+  // Show Today button if selected date is not today OR the today pill scrolled out of view
+  const showTodayButton = selectedDate !== today || !isTodayPillVisible;
+
+  // Animated expand/collapse for the Today pill
+  const todayPillAnim = useSharedValue(0);
+
+  useEffect(() => {
+    if (showTodayButton) {
+      // Expand: spring for a natural "pop" feel
+      todayPillAnim.value = reducedMotion
+        ? 1
+        : withSpring(1, { damping: 18, stiffness: 200, mass: 0.8 });
+    } else {
+      // Collapse: timing ease-in for a quick tuck-away
+      todayPillAnim.value = reducedMotion
+        ? 0
+        : withTiming(0, TimingConfig.itemDismiss);
+    }
+  }, [showTodayButton, reducedMotion]);
+
+  const todayPillStyle = useAnimatedStyle(() => ({
+    maxWidth: todayPillAnim.value * 100,
+    opacity: todayPillAnim.value,
+    overflow: "hidden" as const,
+  }));
 
   // State to track the visible month and year as user scrolls
   const [visibleMonthYear, setVisibleMonthYear] = useState("");
@@ -176,16 +215,17 @@ export default function DateSlider() {
     }
   }, [todayIndex, dateRange]);
 
-  // Handle scrolling, track visible month/year, and decide whether to show the Today button
+  // Handle scrolling, track visible month/year, and decide whether today pill is visible
   const handleScroll = useCallback(
     (_rawEvent: any, offsetX: number, _offsetY: number) => {
-      const centerIndex = Math.floor(offsetX / ITEM_WIDTH) + Math.floor(VISIBLE_ITEMS / 2);
-
-      const centerDate = dateRange[centerIndex]?.date;
-      setShowTodayButton(centerDate !== today && todayIndex >= 0);
-
-      // Find the first visible item
+      // Determine the range of visible item indices
       const firstVisibleIndex = Math.floor(offsetX / ITEM_WIDTH);
+      const lastVisibleIndex = firstVisibleIndex + VISIBLE_ITEMS;
+
+      // Check if the today index falls within the visible range
+      setIsTodayPillVisible(todayIndex >= firstVisibleIndex && todayIndex <= lastVisibleIndex);
+
+      // Track visible month/year from first visible item
       if (dateRange[firstVisibleIndex]) {
         const item = dateRange[firstVisibleIndex];
         const monthYearString = `${item.month} ${item.year}`;
@@ -197,6 +237,7 @@ export default function DateSlider() {
       }
 
       // Dynamically extend the date range if we're nearing the end
+      const centerIndex = Math.floor(offsetX / ITEM_WIDTH) + Math.floor(VISIBLE_ITEMS / 2);
       const remainingItems = dateRange.length - centerIndex;
       if (remainingItems < BUFFER_ITEMS * 2) {
         const lastDate = dateRange[dateRange.length - 1];
@@ -205,7 +246,7 @@ export default function DateSlider() {
         setDateRange((prevDates) => [...prevDates, ...newDates]);
       }
     },
-    [dateRange, today, todayIndex, visibleMonthYear]
+    [dateRange, todayIndex, visibleMonthYear]
   );
 
   // Scroll to today when the Today button is pressed
@@ -221,19 +262,31 @@ export default function DateSlider() {
       style={[
         styles.container,
         {
-          backgroundColor: colors.cardBackground,
-          borderBottomColor: colors.divider,
+          backgroundColor: colors.surface,
         },
       ]}
     >
       <View style={styles.headerContainer}>
         <Text style={[styles.monthText, { color: colors.primary }]}>{visibleMonthYear}</Text>
-        {showTodayButton && (
-          <TouchableOpacity style={[styles.todayButton, { backgroundColor: colors.primary }]} onPress={scrollToToday}>
-            <ChevronLeft size={14} color={colors.textInverse} />
-            <Text style={[styles.todayButtonText, { color: colors.textInverse }]}>Today</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.pillRow}>
+          {/* Today button — animated expand/collapse */}
+          <Animated.View style={todayPillStyle}>
+            <TouchableOpacity
+              style={[styles.todayButton, { backgroundColor: colors.primary }]}
+              onPress={scrollToToday}
+              accessibilityRole="button"
+              accessibilityLabel="Go to today"
+            >
+              <ChevronLeft size={14} color={colors.textInverse} />
+              <Text style={[styles.todayButtonText, { color: colors.textInverse }]}>Today</Text>
+            </TouchableOpacity>
+          </Animated.View>
+          {/* Streak pill — always visible */}
+          <View style={[styles.streakPill, { backgroundColor: colors.input }]}>
+            <Text style={styles.streakEmoji}>🔥</Text>
+            <Text style={[styles.streakText, { color: colors.text }]}>{streak}</Text>
+          </View>
+        </View>
       </View>
       <RecyclerListView
         ref={recyclerListRef}

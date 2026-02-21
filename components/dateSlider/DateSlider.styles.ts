@@ -1,28 +1,49 @@
 import { StyleSheet } from "react-native";
+import { Spacing, BorderRadius } from "@/constants/Spacing";
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
+    paddingVertical: Spacing.sm,
   },
   headerContainer: {
     height: 40,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 15,
-    marginBottom: 10,
+    paddingHorizontal: Spacing.base,
+    marginBottom: Spacing.sm,
   },
   monthText: {
     fontSize: 16,
     fontWeight: "600",
   },
+  pillRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  streakPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.xxs,
+  },
+  streakText: {
+    fontSize: 12,
+    fontWeight: "600",
+    fontVariant: ["tabular-nums"],
+  },
+  streakEmoji: {
+    fontSize: 14,
+  },
   todayButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.lg,
   },
   todayButtonText: {
     fontSize: 12,
@@ -30,7 +51,7 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   flatListContent: {
-    paddingHorizontal: 10,
+    paddingHorizontal: Spacing.sm,
   },
   dateItem: {
     alignItems: "center",
@@ -42,7 +63,7 @@ const styles = StyleSheet.create({
   },
   dayName: {
     fontSize: 12,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   dayNumber: {
     fontSize: 16,

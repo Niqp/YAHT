@@ -9,7 +9,9 @@ import { MoreVertical } from "lucide-react-native";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, useReducedMotion } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { SpringConfig, PressScale } from "@/constants/Animation";
+import { Elevation } from "@/constants/Elevation";
 import styles from "./HabitItem.styles";
 import {
   HabitStatusIndicator,
@@ -115,18 +117,9 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     updateCompletion({ id: habit.id, value: newValue });
   };
 
-  return (
-    <Animated.View
-      style={[
-        styles.container,
-        animatedStyle,
-        {
-          // Migrated from deprecated habitBackground/habitCompleted tokens
-          backgroundColor: isCompleted ? colors.successSubtle : colors.surface,
-          borderColor: colors.border,
-        },
-      ]}
-    >
+  // Card inner content (shared between gradient and flat variants)
+  const cardInner = (
+    <>
       {/* Progress indicator */}
       <View
         style={[
@@ -202,6 +195,34 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
       >
         <MoreVertical size={20} color={colors.textSecondary} strokeWidth={2} />
       </TouchableOpacity>
+    </>
+  );
+
+  return (
+    <Animated.View
+      style={[
+        styles.container,
+        animatedStyle,
+        {
+          borderColor: colors.border,
+          ...Elevation[1],
+          shadowColor: colors.shadow,
+        },
+      ]}
+    >
+      {isCompleted ? (
+        <View style={[styles.contentWrapper, { backgroundColor: colors.successSubtle }]}>{cardInner}</View>
+      ) : (
+        <LinearGradient
+          colors={[colors.gradientCardStart, colors.gradientCardEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.contentWrapper}
+        >
+          {cardInner}
+        </LinearGradient>
+      )}
     </Animated.View>
   );
 }
+
