@@ -19,7 +19,6 @@ export default function TodayScreen() {
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
 
   const isHydrated = useHabitStore((state) => state._hasHydrated);
-  const selectedDate = useHabitStore((state) => state.selectedDate);
   const setSelectedDate = useHabitStore((state) => state.setSelectedDate);
 
   // Prevent loading flash: only hide the spinner after MIN_LOADING_MS has passed
@@ -49,10 +48,12 @@ export default function TodayScreen() {
   useFocusEffect(
     useCallback(() => {
       const currentDate = getCurrentDateStamp();
-      if (selectedDate !== currentDate) {
+      const currentSelectedDate = useHabitStore.getState().selectedDate;
+
+      if (currentSelectedDate !== currentDate) {
         setSelectedDate(currentDate);
       }
-    }, [selectedDate, setSelectedDate])
+    }, [setSelectedDate])
   );
 
   const navigateToAddHabit = useCallback(() => {

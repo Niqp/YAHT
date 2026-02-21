@@ -12,6 +12,7 @@ import {
   getShortDayName,
   getYear,
 } from "@/utils/date";
+import { useIsFocused } from "@react-navigation/native";
 import type { ConfigType as DayjsConfigType } from "dayjs";
 import { ChevronLeft } from "lucide-react-native";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -51,8 +52,8 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   const { colors } = useTheme();
   const { date, dayName, dayNumber } = item;
 
-  // Memoize the onPress callback for this specific date
-  const handlePress = useCallback(() => {
+  // Memoize the activation callback for this specific date
+  const handleActivate = useCallback(() => {
     onPress(date);
   }, [date, onPress]);
 
@@ -62,11 +63,11 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
     { backgroundColor: colors.input },
     isSelected && { backgroundColor: colors.primary },
     isToday &&
-      !isSelected && {
-        backgroundColor: colors.input,
-        borderWidth: 2,
-        borderColor: colors.accent,
-      },
+    !isSelected && {
+      backgroundColor: colors.input,
+      borderWidth: 2,
+      borderColor: colors.accent,
+    },
   ];
 
   const dayNameStyle = [
@@ -84,7 +85,14 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   ];
 
   return (
-    <TouchableOpacity style={containerStyle} onPress={handlePress}>
+    <TouchableOpacity
+      style={containerStyle}
+      onPress={handleActivate}
+      onAccessibilityTap={handleActivate}
+      accessibilityRole="button"
+      accessibilityLabel={`Select date ${date}`}
+      testID={`date-item-${date}`}
+    >
       <Text style={dayNameStyle}>{dayName}</Text>
       <Text style={dayNumberStyle}>{dayNumber}</Text>
     </TouchableOpacity>
@@ -117,6 +125,7 @@ const generateDateRange = (startDate: DayjsConfigType, numDays: number): DateInf
 
 export default function DateSlider() {
   const { colors } = useTheme();
+  const isFocused = useIsFocused();
   const selectedDate = useHabitStore((state) => state.selectedDate);
   const setSelectedDate = useHabitStore((state) => state.setSelectedDate);
   const { width: viewportWidth } = useWindowDimensions();
@@ -219,6 +228,10 @@ export default function DateSlider() {
 
   // Initialize scroll position to today and set initial visible month
   useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
     if (recyclerListRef.current && todayIndex >= 0) {
       initialScrollTimeoutRef.current = setTimeout(() => {
         recyclerListRef.current?.scrollToIndex(todayIndex, true);
@@ -236,7 +249,7 @@ export default function DateSlider() {
         initialScrollTimeoutRef.current = null;
       }
     };
-  }, [todayIndex]);
+  }, [isFocused, todayIndex]);
 
   const handleListLayout = useCallback((event: LayoutChangeEvent) => {
     const measuredWidth = Math.max(1, Math.round(event.nativeEvent.layout.width));
@@ -318,31 +331,33 @@ export default function DateSlider() {
           </View>
         </View>
       </View>
-      <View style={styles.recyclerContainer} onLayout={handleListLayout}>
-        <RecyclerListView
-          ref={recyclerListRef}
-          style={styles.recyclerList}
-          canChangeSize={true}
-          isHorizontal={true}
-          dataProvider={dataProvider}
-          layoutProvider={layoutProvider}
-          rowRenderer={rowRenderer}
-          initialRenderIndex={todayIndex}
-          renderAheadOffset={BUFFER_ITEMS * ITEM_WIDTH}
-          onScroll={handleScroll}
-          scrollViewProps={{
-            contentContainerStyle: styles.flatListContent,
-            showsHorizontalScrollIndicator: false,
-            showsVerticalScrollIndicator: false,
-          }}
-          extendedState={extendedState}
-          scrollThrottle={16}
-          layoutSize={{
-            width: listWidth,
-            height: ITEM_HEIGHT,
-          }}
-          onEndReachedThreshold={BUFFER_ITEMS}
-        />
+      <View testID="date-slider-recycler-container" style={styles.recyclerContainer} onLayout={handleListLayout}>
+        {isFocused && listWidth > 1 ? (
+          <RecyclerListView
+            ref={recyclerListRef}
+            style={[styles.recyclerList, { width: listWidth }]}
+            canChangeSize={true}
+            isHorizontal={true}
+            dataProvider={dataProvider}
+            layoutProvider={layoutProvider}
+            rowRenderer={rowRenderer}
+            initialRenderIndex={todayIndex}
+            renderAheadOffset={BUFFER_ITEMS * ITEM_WIDTH}
+            onScroll={handleScroll}
+            scrollViewProps={{
+              contentContainerStyle: styles.flatListContent,
+              showsHorizontalScrollIndicator: false,
+              showsVerticalScrollIndicator: false,
+            }}
+            extendedState={extendedState}
+            scrollThrottle={16}
+            layoutSize={{
+              width: listWidth,
+              height: ITEM_HEIGHT,
+            }}
+            onEndReachedThreshold={BUFFER_ITEMS}
+          />
+        ) : null}
       </View>
     </View>
   );
