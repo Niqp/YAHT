@@ -332,6 +332,8 @@ export default function DateSlider() {
           onScroll={handleScroll}
           scrollViewProps={{
             contentContainerStyle: styles.flatListContent,
+            showsHorizontalScrollIndicator: false,
+            showsVerticalScrollIndicator: false,
           }}
           extendedState={extendedState}
           scrollThrottle={16}

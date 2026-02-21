@@ -39,6 +39,7 @@ export default function RootLayout() {
 
   const stackScreenOptions = useMemo<NativeStackNavigationOptions>(
     () => ({
+      headerShown: false,
       headerStyle: {
         backgroundColor: colors.cardBackground,
       },

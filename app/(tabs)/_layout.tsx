@@ -73,6 +73,7 @@ export default function TabsLayout() {
           key={tab.name}
           name={tab.name}
           options={{
+            headerShown: false,
             title: tab.title,
             tabBarIcon: ({ color, size }) => tab.renderIcon(color, size),
           }}

@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
   recyclerContainer: {
     width: "100%",
     height: 70,
+    overflow: "hidden",
   },
   recyclerList: {
     width: "100%",
