@@ -10,7 +10,7 @@
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Clean**       | Every screen has one clear purpose. If an element doesn't help the user understand or act, remove it.                                         |
 | **Focused**     | One primary action per screen. Secondary actions are visually subordinate.                                                                    |
-| **Warm & Cosy** | The palette uses warm tones inspired by aged book pages. The app should feel like a well-loved journal, not a clinical dashboard.             |
+| **Theme-aware** | YAHT supports sepia, clear, and OLED themes. UI structure stays consistent while color tone adapts per theme and mode.                        |
 | **Glanceable**  | Core status (done / in progress / not started) must be readable in under 1 second. Use color, icons, and spatial grouping — never text alone. |
 | **Trustworthy** | Animations are smooth and purposeful. Nothing jumps or flashes.                                                                               |
 
@@ -25,138 +25,47 @@
 
 ## 2. Color System
 
-The palette is built around warm, paper-like tones. The accent is a "book page" brown — darker in light mode, lighter in dark mode.
+YAHT uses three color themes (`sepia`, `clear`, `oled`) and two display modes (`light`, `dark`).
 
-### 2.1 Light Theme
+### 2.1 Theme Model
 
-| Token                  | Value                    | Usage                                         |
-| ---------------------- | ------------------------ | --------------------------------------------- |
-| **Backgrounds**        |                          |                                               |
-| `background`           | `#FAF7F2`                | Root page background                          |
-| `surface`              | `#F3EDE4`                | Grouped sections, secondary surfaces          |
-| `cardBackground`       | `#FFFFFF`                | Elevated card surfaces                        |
-| **Accent**             |                          |                                               |
-| `primary`              | `#8B6F47`                | Primary accent (warm brown)                   |
-| `primaryMuted`         | `#A8916E`                | Softer variant for fills, selected states     |
-| `primarySubtle`        | `#D4C4AA`                | Faintest tint — tags, chips, icon containers  |
-| `accent`               | `#C4813D`                | Secondary warm accent (amber) — timers, today |
-| **Text**               |                          |                                               |
-| `text`                 | `#2C2418`                | Primary text                                  |
-| `textSecondary`        | `#6B5D4F`                | Labels, subtitles, metadata                   |
-| `textTertiary`         | `#9C8E7E`                | Hints, placeholders, disabled text            |
-| `textInverse`          | `#FAF7F2`                | Text on filled/primary surfaces               |
-| **Borders & Dividers** |                          |                                               |
-| `border`               | `#E2D9CC`                | Card borders, input borders                   |
-| `divider`              | `#EDE7DD`                | Subtle list separators                        |
-| **Icons**              |                          |                                               |
-| `icon`                 | `#7A6B5A`                | Default icon tint                             |
-| `iconMuted`            | `#A89C8C`                | De-emphasized icons                           |
-| **Inputs**             |                          |                                               |
-| `input`                | `#F5F0E8`                | Text input background                         |
-| `inputBorder`          | `#D4C4AA`                | Input border (rest)                           |
-| `inputFocusBorder`     | `#8B6F47`                | Input border (focused)                        |
-| **Semantic**           |                          |                                               |
-| `success`              | `#5A8A5E`                | Completed, positive actions                   |
-| `successSubtle`        | `#E8F0E8`                | Positive state background tint                |
-| `error`                | `#C0523E`                | Destructive actions, errors                   |
-| `errorSubtle`          | `#FAE8E4`                | Error state background tint                   |
-| `warning`              | `#C4813D`                | In-progress, caution                          |
-| `warningSubtle`        | `#FFF3E0`                | Warning background tint                       |
-| **Interactive**        |                          |                                               |
-| `buttonPrimary`        | `#8B6F47`                | Primary button fill                           |
-| `buttonPrimaryText`    | `#FAF7F2`                | Primary button label                          |
-| `buttonSecondary`      | `#F5F0E8`                | Secondary button fill                         |
-| `buttonSecondaryText`  | `#8B6F47`                | Secondary button label                        |
-| `buttonDisabled`       | `#D4C4AA`                | Disabled button fill                          |
-| `buttonDisabledText`   | `#A8916E`                | Disabled button label                         |
-| `buttonDestructive`    | `#C0523E`                | Destructive button fill                       |
-| **Tab bar**            |                          |                                               |
-| `tabBackground`        | `#FFFFFF`                | Bottom tab bar                                |
-| `tabIconDefault`       | `#B0A494`                | Inactive tab icon                             |
-| `tabIconSelected`      | `#8B6F47`                | Active tab icon & label                       |
-| **Utility**            |                          |                                               |
-| `ripple`               | `rgba(139,111,71, 0.10)` | Press feedback                                |
-| `shadow`               | `rgba(44,36,24, 0.08)`   | Elevation shadow                              |
-| `overlay`              | `rgba(44,36,24, 0.40)`   | Modal overlay/backdrop                        |
-| **Gradients**          |                          |                                               |
-| `gradientCardStart`    | `#FFFFFF`                | Card gradient top                             |
-| `gradientCardEnd`      | `#FAF7F2`                | Card gradient bottom                          |
-| `gradientHeaderStart`  | `#FAF7F2`                | Header gradient start                         |
-| `gradientHeaderEnd`    | `#F3EDE4`                | Header gradient end                           |
-| `gradientFabStart`     | `#9A7D55`                | FAB gradient top (lighter primary)            |
-| `gradientFabEnd`       | `#8B6F47`                | FAB gradient bottom (standard primary)        |
+| Theme   | Light mode                 | Dark mode                          | Notes                             |
+| ------- | -------------------------- | ---------------------------------- | --------------------------------- |
+| `sepia` | Warm paper palette         | Warm low-light palette             | Journal-like tone                 |
+| `clear` | Neutral blue-slate palette | Deep blue-slate palette            | Default high-legibility palette   |
+| `oled`  | Same as `clear` light      | True-black variant of `clear` dark | Optimized for OLED power/contrast |
 
-### 2.2 Dark Theme
+Rules:
 
-| Token                  | Value                     | Usage                                |
-| ---------------------- | ------------------------- | ------------------------------------ |
-| **Backgrounds**        |                           |                                      |
-| `background`           | `#1A1612`                 | Root page background                 |
-| `surface`              | `#231F1A`                 | Grouped sections, secondary surfaces |
-| `cardBackground`       | `#2C2620`                 | Elevated card surfaces               |
-| **Accent**             |                           |                                      |
-| `primary`              | `#C4A882`                 | Primary accent (warm tan)            |
-| `primaryMuted`         | `#9C8568`                 | Softer variant for fills             |
-| `primarySubtle`        | `#3D3428`                 | Faintest tint — tags, chips          |
-| `accent`               | `#D4944A`                 | Secondary warm accent (amber)        |
-| **Text**               |                           |                                      |
-| `text`                 | `#EDE5D8`                 | Primary text                         |
-| `textSecondary`        | `#A89C8C`                 | Labels, subtitles, metadata          |
-| `textTertiary`         | `#6B5D4F`                 | Hints, placeholders, disabled        |
-| `textInverse`          | `#1A1612`                 | Text on filled/primary surfaces      |
-| **Borders & Dividers** |                           |                                      |
-| `border`               | `#3D3428`                 | Card borders                         |
-| `divider`              | `#302A22`                 | Subtle list separators               |
-| **Icons**              |                           |                                      |
-| `icon`                 | `#A89C8C`                 | Default icon tint                    |
-| `iconMuted`            | `#6B5D4F`                 | De-emphasized icons                  |
-| **Inputs**             |                           |                                      |
-| `input`                | `#2C2620`                 | Text input background                |
-| `inputBorder`          | `#3D3428`                 | Input border (rest)                  |
-| `inputFocusBorder`     | `#C4A882`                 | Input border (focused)               |
-| **Semantic**           |                           |                                      |
-| `success`              | `#7AAF7E`                 | Completed, positive                  |
-| `successSubtle`        | `#1E2B1E`                 | Positive background tint             |
-| `error`                | `#E07060`                 | Destructive, errors                  |
-| `errorSubtle`          | `#2E1C18`                 | Error background tint                |
-| `warning`              | `#D4944A`                 | In-progress, caution                 |
-| `warningSubtle`        | `#2E2418`                 | Warning background tint              |
-| **Interactive**        |                           |                                      |
-| `buttonPrimary`        | `#C4A882`                 | Primary button fill                  |
-| `buttonPrimaryText`    | `#1A1612`                 | Primary button label                 |
-| `buttonSecondary`      | `#2C2620`                 | Secondary button fill                |
-| `buttonSecondaryText`  | `#C4A882`                 | Secondary button label               |
-| `buttonDisabled`       | `#3D3428`                 | Disabled button fill                 |
-| `buttonDisabledText`   | `#6B5D4F`                 | Disabled button label                |
-| `buttonDestructive`    | `#E07060`                 | Destructive button fill              |
-| **Tab bar**            |                           |                                      |
-| `tabBackground`        | `#231F1A`                 | Bottom tab bar                       |
-| `tabIconDefault`       | `#5C5248`                 | Inactive tab icon                    |
-| `tabIconSelected`      | `#C4A882`                 | Active tab icon & label              |
-| **Utility**            |                           |                                      |
-| `ripple`               | `rgba(196,168,130, 0.12)` | Press feedback                       |
-| `shadow`               | `rgba(0,0,0, 0.30)`       | Elevation shadow                     |
-| `overlay`              | `rgba(0,0,0, 0.60)`       | Modal overlay/backdrop               |
-| **Gradients**          |                           |                                      |
-| `gradientCardStart`    | `#2C2620`                 | Card gradient top                    |
-| `gradientCardEnd`      | `#231F1A`                 | Card gradient bottom                 |
-| `gradientHeaderStart`  | `#231F1A`                 | Header gradient start                |
-| `gradientHeaderEnd`    | `#1A1612`                 | Header gradient end                  |
-| `gradientFabStart`     | `#D4B892`                 | FAB gradient top (lighter primary)   |
-| `gradientFabEnd`       | `#C4A882`                 | FAB gradient bottom (standard primary)|
+- `oled.light` must remain identical to `clear.light` in `constants/Colors.ts`.
+- `clear.dark` and `oled.dark` share the same accent family (`primary`, `accent`) to keep action semantics consistent.
+- Theme differences should come from tokens, not component-level conditionals.
+
+### 2.2 Core Palette Anchors
+
+Source of truth for all tokens: `constants/Colors.ts`. The table below documents the primary anchor tokens used to define each theme.
+
+| Theme + mode  | `background`          | `surface`             | `cardBackground`      | `primary`             | `accent`              | `text`                | `textSecondary`       | `border`              | `tabBackground`       |
+| ------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
+| `sepia.light` | `#FAF7F2`             | `#c7a97dff`           | `#FFFFFF`             | `#8B6F47`             | `#C4813D`             | `#2C2418`             | `#6B5D4F`             | `#E2D9CC`             | `#FFFFFF`             |
+| `sepia.dark`  | `#0f0d0bff`           | `#1f1c16ff`           | `#2C2620`             | `#C4A882`             | `#D4944A`             | `#EDE5D8`             | `#A89C8C`             | `#3D3428`             | `#231F1A`             |
+| `clear.light` | `#F6F8FB`             | `#EAF0F7`             | `#FFFFFF`             | `#3F74B5`             | `#5D90D2`             | `#18212C`             | `#4F6278`             | `#D5DFEB`             | `#FFFFFF`             |
+| `clear.dark`  | `#0F1620`             | `#162130`             | `#1D2A3A`             | `#7FB1E8`             | `#95C2F5`             | `#E7EEF8`             | `#B2C0D2`             | `#2D415A`             | `#162130`             |
+| `oled.light`  | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` |
+| `oled.dark`   | `#000000`             | `#050B14`             | `#0B1320`             | `#7FB1E8`             | `#95C2F5`             | `#EDF3FB`             | `#B4C2D5`             | `#1A2B40`             | `#000000`             |
 
 ### 2.3 Color Rules
 
 1. **Never hardcode hex values in components.** Always use `colors.<token>` from `useTheme()`.
 2. **No new tokens without updating this document and `Colors.ts`.**
-3. **Gradients only on large surfaces** — full-width cards, page headers, FAB. Small elements stay flat.
-4. **Gradient direction**: always top-to-bottom or top-left to bottom-right. The start and end colors should differ by no more than 2–3 HSL lightness points — subtle warmth, not drama.
-5. **Opacity variants**: derive with `rgba()` from the full-opacity token. Don't create separate "alpha" tokens unless the value is reused app-wide (like `ripple`, `shadow`, `overlay`).
+3. **Gradients only on large surfaces** - full-width cards, page headers, FAB. Small elements stay flat.
+4. **Gradient direction**: always top-to-bottom or top-left to bottom-right. Keep gradients subtle (about 2-3 HSL lightness points).
+5. **Opacity variants**: derive with `rgba()` from the full-opacity token. Do not create separate alpha tokens unless app-wide reuse is needed (`ripple`, `shadow`, `overlay`).
 6. **Contrast minimums** (WCAG AA):
-   - `text` on `background` / `cardBackground` → ≥ 4.5:1
-   - `textSecondary` → ≥ 4.5:1
-   - `textTertiary` → ≥ 3:1 (supplemental info only)
-   - `buttonPrimaryText` on `buttonPrimary` → ≥ 4.5:1
+   - `text` on `background` / `cardBackground` -> >= 4.5:1
+   - `textSecondary` -> >= 4.5:1
+   - `textTertiary` -> >= 3:1 (supplemental info only)
+   - `buttonPrimaryText` on `buttonPrimary` -> >= 4.5:1
 7. **Never convey information by color alone.** Always pair with an icon, text, or shape change.
 
 ---
@@ -405,7 +314,7 @@ Use sparingly:
 - Use the 4pt spacing scale for all padding, margin, gap
 - Use the border radius scale for all corners
 - Provide press feedback on every touchable
-- Test both themes before considering a component done
+- Test all theme and mode combinations before considering a component done
 - Use `accessibilityLabel` on interactive elements
 - Use gradients only on large surfaces
 - Use `fontVariant: ["tabular-nums"]` for changing numbers

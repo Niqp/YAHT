@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Sun, Moon, Smartphone } from "lucide-react-native";
+import { Sun, Moon, Smartphone, BookOpen, Droplets, Monitor } from "lucide-react-native";
 import { useTheme } from "../hooks/useTheme";
 import type { ThemeMode } from "../store/themeStore";
+import type { ColorThemeName } from "../constants/Colors";
 
 export default function ThemeToggle() {
-  const { colors, mode, colorScheme, setMode } = useTheme();
+  const { colors, mode, colorScheme, colorTheme, setMode, setColorTheme } = useTheme();
 
   const themeOptions: { value: ThemeMode; label: string; icon: JSX.Element }[] = [
     {
@@ -22,6 +23,24 @@ export default function ThemeToggle() {
       value: "system",
       label: "System",
       icon: <Smartphone size={20} color={mode === "system" ? colors.textInverse : colors.text} />,
+    },
+  ];
+
+  const colorThemeOptions: { value: ColorThemeName; label: string; icon: JSX.Element }[] = [
+    {
+      value: "sepia",
+      label: "Sepia",
+      icon: <BookOpen size={20} color={colorTheme === "sepia" ? colors.textInverse : colors.text} />,
+    },
+    {
+      value: "clear",
+      label: "Clear",
+      icon: <Droplets size={20} color={colorTheme === "clear" ? colors.textInverse : colors.text} />,
+    },
+    {
+      value: "oled",
+      label: "OLED",
+      icon: <Monitor size={20} color={colorTheme === "oled" ? colors.textInverse : colors.text} />,
     },
   ];
 
@@ -60,6 +79,37 @@ export default function ThemeToggle() {
           </TouchableOpacity>
         ))}
       </View>
+
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Color Theme</Text>
+      <View style={styles.optionsContainer}>
+        {colorThemeOptions.map((option) => (
+          <TouchableOpacity
+            key={option.value}
+            style={[
+              styles.option,
+              {
+                backgroundColor: option.value === colorTheme ? colors.primary : colors.input,
+              },
+            ]}
+            onPress={() => {
+              setColorTheme(option.value);
+            }}
+          >
+            {option.icon}
+            <Text
+              style={[
+                styles.optionText,
+                {
+                  color: option.value === colorTheme ? colors.textInverse : colors.text,
+                  marginLeft: 8,
+                },
+              ]}
+            >
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 }
@@ -86,6 +136,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    marginTop: 16,
+    marginBottom: 12,
   },
   optionsContainer: {
     flexDirection: "row",

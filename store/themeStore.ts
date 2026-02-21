@@ -3,7 +3,7 @@ import { AppState, type AppStateStatus } from "react-native";
 import { Appearance } from "react-native";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type ColorTheme, Colors } from "../constants/Colors";
+import { type ColorTheme, type ColorThemeName, Colors } from "../constants/Colors";
 import { mmkvStorage } from "../utils/storage";
 
 export type ThemeMode = "light" | "dark" | "system";
@@ -12,7 +12,9 @@ export type WeekStartDay = 0 | 1;
 interface ThemeState {
   mode: ThemeMode;
   colorScheme: ColorSchemeName;
+  colorTheme: ColorThemeName;
   setMode: (mode: ThemeMode) => void;
+  setColorTheme: (theme: ColorThemeName) => void;
   colors: ColorTheme;
   setupSystemThemeListener: (onThemeSync?: () => void) => () => void;
   weekStartDay: WeekStartDay;
@@ -24,40 +26,55 @@ interface ThemeState {
 const isDarkModeActive = (mode: ThemeMode, colorScheme: ColorSchemeName): boolean =>
   mode === "dark" || (mode === "system" && colorScheme === "dark");
 
+// Helper to resolve the full color palette from the two dimensions
+const resolveColors = (colorTheme: ColorThemeName, lightness: "light" | "dark"): ColorTheme =>
+  Colors[colorTheme][lightness];
+
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       // State
       mode: "system",
       colorScheme: "light",
+      colorTheme: "sepia",
       weekStartDay: 1,
-      colors: Colors.light,
+      colors: Colors.sepia.light,
 
       // Actions
       setMode: (newMode: ThemeMode) => {
-        const { mode } = get();
+        const { mode, colorTheme } = get();
         if (newMode === mode) return;
 
         const systemColorScheme = Appearance.getColorScheme();
-        const newIsDarkMode = isDarkModeActive(newMode, systemColorScheme);
+        const darkActive = isDarkModeActive(newMode, systemColorScheme);
         set({
           mode: newMode,
-          colors: newIsDarkMode ? Colors.dark : Colors.light,
+          colors: resolveColors(colorTheme, darkActive ? "dark" : "light"),
           colorScheme: newMode === "system" ? systemColorScheme : newMode,
+        });
+      },
+      setColorTheme: (theme: ColorThemeName) => {
+        const { colorTheme, mode, colorScheme } = get();
+        if (theme === colorTheme) return;
+
+        const darkActive = isDarkModeActive(mode, colorScheme);
+        set({
+          colorTheme: theme,
+          colors: resolveColors(theme, darkActive ? "dark" : "light"),
         });
       },
       setWeekStartDay: (day: WeekStartDay) => {
         set({ weekStartDay: day });
       },
       updateSystemTheme: () => {
-        const { mode, colorScheme } = get();
+        const { mode, colorScheme, colorTheme } = get();
         if (mode !== "system") return;
         const currentSystemTheme = Appearance.getColorScheme();
 
         if (currentSystemTheme && currentSystemTheme !== colorScheme) {
           set({
             colorScheme: currentSystemTheme,
-            colors: isDarkModeActive(mode, currentSystemTheme) ? Colors.dark : Colors.light,
+            colors: resolveColors(colorTheme, isDarkModeActive(mode, currentSystemTheme) ? "dark" : "light"),
           });
         }
       },
@@ -84,6 +101,7 @@ export const useThemeStore = create<ThemeState>()(
       storage: mmkvStorage,
       partialize: (state) => ({
         mode: state.mode,
+        colorTheme: state.colorTheme,
         weekStartDay: state.weekStartDay,
       }),
     }
