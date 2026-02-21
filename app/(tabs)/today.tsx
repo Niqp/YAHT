@@ -1,14 +1,14 @@
 import HabitList from "@/components/HabitList/HabitList";
 import { FloatingButton } from "@/components/buttons/FloatingButton";
-import { router } from "expo-router";
+import DateSlider from "@/components/dateSlider/DateSlider";
+import HabitBottomSheet from "@/components/habit/HabitBottomSheet/HabitBottomSheet";
+import { useTheme } from "@/hooks/useTheme";
+import { useHabitStore } from "@/store/habitStore";
+import type { Habit } from "@/types/habit";
+import { getCurrentDateStamp } from "@/utils/date";
+import { router, useFocusEffect } from "expo-router";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import DateSlider from "../../components/dateSlider/DateSlider";
-import HabitBottomSheet from "../../components/habit/HabitBottomSheet/HabitBottomSheet";
-import { useTheme } from "../../hooks/useTheme";
-import { useHabitStore } from "../../store/habitStore";
-import type { Habit } from "../../types/habit";
-import { getCurrentDateStamp } from "@/utils/date";
 
 // Minimum time (ms) to show the loading indicator to prevent a jarring flash
 const MIN_LOADING_MS = 300;
@@ -21,6 +21,7 @@ export default function TodayScreen() {
 
   const isHydrated = useHabitStore((state) => state._hasHydrated);
   const selectedDate = useHabitStore((state) => state.selectedDate);
+  const setSelectedDate = useHabitStore((state) => state.setSelectedDate);
 
   // Prevent loading flash: only hide the spinner after MIN_LOADING_MS has passed
   const [showContent, setShowContent] = useState(false);
@@ -46,12 +47,14 @@ export default function TodayScreen() {
     }
   }, [isHydrated]);
 
-  useEffect(() => {
-    const currentDate = getCurrentDateStamp();
-    if (selectedDate !== currentDate) {
-      useHabitStore.setState({ selectedDate: currentDate });
-    }
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const currentDate = getCurrentDateStamp();
+      if (selectedDate !== currentDate) {
+        setSelectedDate(currentDate);
+      }
+    }, [selectedDate, setSelectedDate])
+  );
 
   const navigateToAddHabit = useCallback(() => {
     router.push("/add");

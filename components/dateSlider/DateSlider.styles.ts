@@ -4,6 +4,7 @@ import { Spacing, BorderRadius } from "@/constants/Spacing";
 const styles = StyleSheet.create({
   container: {
     paddingVertical: Spacing.sm,
+    width: "100%",
   },
   headerContainer: {
     height: 40,
@@ -52,6 +53,14 @@ const styles = StyleSheet.create({
   },
   flatListContent: {
     paddingHorizontal: Spacing.sm,
+  },
+  recyclerContainer: {
+    width: "100%",
+    height: 70,
+  },
+  recyclerList: {
+    width: "100%",
+    height: 70,
   },
   dateItem: {
     alignItems: "center",

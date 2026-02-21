@@ -1,30 +1,30 @@
-import { ChevronLeft } from "lucide-react-native";
-import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
-import { Dimensions, Text, TouchableOpacity, View } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  useReducedMotion,
-} from "react-native-reanimated";
 import { TimingConfig } from "@/constants/Animation";
-import type { ConfigType as DayjsConfigType } from "dayjs";
-import { useTheme } from "../../hooks/useTheme";
-import { useHabitStore } from "../../store/habitStore";
 import { useAllHabitsStreak } from "@/hooks/useAllHabitsStreak";
-import styles from "./DateSlider.styles";
+import { useTheme } from "@/hooks/useTheme";
+import { useHabitStore } from "@/store/habitStore";
 import {
   addDays,
   formatDate,
+  getCurrentDateDayjs,
+  getDay,
+  getEpochMilliseconds,
   getMonthName,
   getShortDayName,
-  getDay,
   getYear,
-  getEpochMilliseconds,
-  getCurrentDateDayjs,
-} from "../../utils/date";
-import { RecyclerListView, DataProvider, LayoutProvider } from "recyclerlistview";
+} from "@/utils/date";
+import type { ConfigType as DayjsConfigType } from "dayjs";
+import { ChevronLeft } from "lucide-react-native";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Text, TouchableOpacity, useWindowDimensions, type LayoutChangeEvent, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { DataProvider, LayoutProvider, RecyclerListView } from "recyclerlistview";
+import styles from "./DateSlider.styles";
 
 interface DateInfo {
   date: string;
@@ -42,9 +42,8 @@ interface DateItemProps {
   onPress: (date: string) => void;
 }
 
-const windowWidth = Dimensions.get("window").width;
 const ITEM_WIDTH = 57; // Width of each date item including margins
-const VISIBLE_ITEMS = Math.ceil(windowWidth / ITEM_WIDTH);
+const ITEM_HEIGHT = 70;
 const BUFFER_ITEMS = 15; // Number of items to load before/after visible range
 
 // Memoize the DateItem component to prevent unnecessary re-renders
@@ -118,11 +117,18 @@ const generateDateRange = (startDate: DayjsConfigType, numDays: number): DateInf
 
 export default function DateSlider() {
   const { colors } = useTheme();
-  const { selectedDate, setSelectedDate } = useHabitStore();
-  const recyclerListRef = useRef<RecyclerListView<any, any>>(null);
+  const selectedDate = useHabitStore((state) => state.selectedDate);
+  const setSelectedDate = useHabitStore((state) => state.setSelectedDate);
+  const { width: viewportWidth } = useWindowDimensions();
+  const recyclerListRef = useRef<React.ElementRef<typeof RecyclerListView> | null>(null);
+  const initialScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastRangeExtensionAtRef = useRef<string | null>(null);
+
+  const [listWidth, setListWidth] = useState(() => Math.max(1, Math.round(viewportWidth)));
   const today = useMemo(() => formatDate(getCurrentDateDayjs()), []);
   const streak = useAllHabitsStreak();
   const reducedMotion = useReducedMotion();
+  const visibleItems = useMemo(() => Math.ceil(listWidth / ITEM_WIDTH), [listWidth]);
 
   // Track whether the today pill is visible in the scroll viewport
   const [isTodayPillVisible, setIsTodayPillVisible] = useState(true);
@@ -132,6 +138,10 @@ export default function DateSlider() {
 
   // Animated expand/collapse for the Today pill
   const todayPillAnim = useSharedValue(0);
+
+  useEffect(() => {
+    setListWidth(Math.max(1, Math.round(viewportWidth)));
+  }, [viewportWidth]);
 
   useEffect(() => {
     if (showTodayButton) {
@@ -176,20 +186,22 @@ export default function DateSlider() {
     }).cloneWithRows(dateRange);
   }, [dateRange]);
 
+  const extendedState = useMemo(() => ({ selectedDate, today }), [selectedDate, today]);
+
   // Create layout provider
   const layoutProvider = useMemo(() => {
     return new LayoutProvider(
       () => 0, // Only one type of layout
       (_, dim) => {
         dim.width = ITEM_WIDTH;
-        dim.height = 70; // Adjust based on your date item height
+        dim.height = ITEM_HEIGHT;
       }
     );
   }, []);
 
   // Row renderer (replaces renderItem)
   const rowRenderer = useCallback(
-    (type: any, item: DateInfo) => (
+    (_type: string | number, item: DateInfo) => (
       <DateItem
         item={item}
         isSelected={item.date === selectedDate}
@@ -203,7 +215,7 @@ export default function DateSlider() {
   // Initialize scroll position to today and set initial visible month
   useEffect(() => {
     if (recyclerListRef.current && todayIndex >= 0) {
-      setTimeout(() => {
+      initialScrollTimeoutRef.current = setTimeout(() => {
         recyclerListRef.current?.scrollToIndex(todayIndex, true);
 
         // Set initial visible month/year based on today
@@ -213,17 +225,29 @@ export default function DateSlider() {
         }
       }, 100);
     }
-  }, [todayIndex, dateRange]);
+    return () => {
+      if (initialScrollTimeoutRef.current) {
+        clearTimeout(initialScrollTimeoutRef.current);
+        initialScrollTimeoutRef.current = null;
+      }
+    };
+  }, [todayIndex]);
+
+  const handleListLayout = useCallback((event: LayoutChangeEvent) => {
+    const measuredWidth = Math.max(1, Math.round(event.nativeEvent.layout.width));
+    setListWidth((currentWidth) => (currentWidth === measuredWidth ? currentWidth : measuredWidth));
+  }, []);
 
   // Handle scrolling, track visible month/year, and decide whether today pill is visible
   const handleScroll = useCallback(
-    (_rawEvent: any, offsetX: number, _offsetY: number) => {
+    (_rawEvent: unknown, offsetX: number, _offsetY: number) => {
       // Determine the range of visible item indices
-      const firstVisibleIndex = Math.floor(offsetX / ITEM_WIDTH);
-      const lastVisibleIndex = firstVisibleIndex + VISIBLE_ITEMS;
+      const firstVisibleIndex = Math.max(0, Math.floor(offsetX / ITEM_WIDTH));
+      const lastVisibleIndex = firstVisibleIndex + visibleItems;
 
       // Check if the today index falls within the visible range
-      setIsTodayPillVisible(todayIndex >= firstVisibleIndex && todayIndex <= lastVisibleIndex);
+      const todayIsVisible = todayIndex >= firstVisibleIndex && todayIndex <= lastVisibleIndex;
+      setIsTodayPillVisible((currentValue) => (currentValue === todayIsVisible ? currentValue : todayIsVisible));
 
       // Track visible month/year from first visible item
       if (dateRange[firstVisibleIndex]) {
@@ -231,22 +255,23 @@ export default function DateSlider() {
         const monthYearString = `${item.month} ${item.year}`;
 
         // Only update if changed
-        if (monthYearString !== visibleMonthYear) {
-          setVisibleMonthYear(monthYearString);
-        }
+        setVisibleMonthYear((currentValue) => (currentValue === monthYearString ? currentValue : monthYearString));
       }
 
       // Dynamically extend the date range if we're nearing the end
-      const centerIndex = Math.floor(offsetX / ITEM_WIDTH) + Math.floor(VISIBLE_ITEMS / 2);
+      const centerIndex = firstVisibleIndex + Math.floor(visibleItems / 2);
       const remainingItems = dateRange.length - centerIndex;
       if (remainingItems < BUFFER_ITEMS * 2) {
         const lastDate = dateRange[dateRange.length - 1];
-        const nextDay = addDays(lastDate.date, 1);
-        const newDates = generateDateRange(nextDay, BUFFER_ITEMS * 2);
-        setDateRange((prevDates) => [...prevDates, ...newDates]);
+        if (lastDate && lastRangeExtensionAtRef.current !== lastDate.date) {
+          lastRangeExtensionAtRef.current = lastDate.date;
+          const nextDay = addDays(lastDate.date, 1);
+          const newDates = generateDateRange(nextDay, BUFFER_ITEMS * 2);
+          setDateRange((prevDates) => [...prevDates, ...newDates]);
+        }
       }
     },
-    [dateRange, todayIndex, visibleMonthYear]
+    [dateRange, todayIndex, visibleItems]
   );
 
   // Scroll to today when the Today button is pressed
@@ -288,35 +313,30 @@ export default function DateSlider() {
           </View>
         </View>
       </View>
-      <RecyclerListView
-        ref={recyclerListRef}
-        isHorizontal={true}
-        showsHorizontalScrollIndicator={false}
-        dataProvider={dataProvider}
-        layoutProvider={layoutProvider}
-        rowRenderer={rowRenderer}
-        initialRenderIndex={todayIndex}
-        renderAheadOffset={BUFFER_ITEMS * ITEM_WIDTH}
-        onScroll={handleScroll}
-        scrollViewProps={{
-          contentContainerStyle: styles.flatListContent,
-        }}
-        onMomentumScrollEnd={() => {
-          // Optional: handle momentum scroll ending
-        }}
-        extendedState={{ selectedDate, today }}
-        scrollThrottle={16}
-        renderAheadStep={BUFFER_ITEMS}
-        layoutSize={{
-          width: windowWidth,
-          height: 70, // Adjust to match your item height
-        }}
-        onEndReached={() => {
-          // Alternative approach to extending the list
-          // This gets called when the user scrolls near the end
-        }}
-        onEndReachedThreshold={BUFFER_ITEMS}
-      />
+      <View style={styles.recyclerContainer} onLayout={handleListLayout}>
+        <RecyclerListView
+          ref={recyclerListRef}
+          style={styles.recyclerList}
+          canChangeSize={true}
+          isHorizontal={true}
+          dataProvider={dataProvider}
+          layoutProvider={layoutProvider}
+          rowRenderer={rowRenderer}
+          initialRenderIndex={todayIndex}
+          renderAheadOffset={BUFFER_ITEMS * ITEM_WIDTH}
+          onScroll={handleScroll}
+          scrollViewProps={{
+            contentContainerStyle: styles.flatListContent,
+          }}
+          extendedState={extendedState}
+          scrollThrottle={16}
+          layoutSize={{
+            width: listWidth,
+            height: ITEM_HEIGHT,
+          }}
+          onEndReachedThreshold={BUFFER_ITEMS}
+        />
+      </View>
     </View>
   );
 }

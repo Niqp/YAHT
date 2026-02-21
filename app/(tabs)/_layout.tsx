@@ -1,76 +1,83 @@
-import React from "react";
+import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
 import { Home, BarChart2, Settings } from "lucide-react-native";
-import { SafeAreaView, Platform } from "react-native";
-import { StyleSheet } from "react-native";
+import React, { useMemo } from "react";
+import { Platform } from "react-native";
+
+import { Spacing } from "@/constants/Spacing";
+import { Typography } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
+
+const TAB_SCREENS = [
+  {
+    name: "today",
+    title: "Today",
+    renderIcon: (color: string, size: number) => <Home color={color} size={size} />,
+  },
+  {
+    name: "stats",
+    title: "Stats",
+    renderIcon: (color: string, size: number) => <BarChart2 color={color} size={size} />,
+  },
+  {
+    name: "settings",
+    title: "Settings",
+    renderIcon: (color: string, size: number) => <Settings color={color} size={size} />,
+  },
+] as const;
 
 export default function TabsLayout() {
   const { colors } = useTheme();
 
-  // Platform-specific shadow styles that ensure visibility
-  const tabBarShadow = Platform.select({
-    ios: {
-      shadowColor: colors.shadow,
-      shadowOffset: { width: 0, height: -3 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      borderTopWidth: 0,
-    },
-    android: {
-      elevation: 8, // Higher elevation to ensure visibility
-      borderTopWidth: 1, // Subtle border for Android
-      borderColor: colors.border,
-    },
-  });
+  const tabBarShadow = useMemo(
+    () =>
+      Platform.select({
+        ios: {
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          borderTopWidth: 0,
+        },
+        android: {
+          elevation: 8,
+          borderTopWidth: 1,
+          borderColor: colors.border,
+        },
+      }) ?? {},
+    [colors.border, colors.shadow]
+  );
+
+  const screenOptions = useMemo<BottomTabNavigationOptions>(
+    () => ({
+      headerShown: false,
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.tabIconDefault,
+      tabBarStyle: {
+        backgroundColor: colors.tabBackground,
+        ...tabBarShadow,
+        minHeight: 60,
+      },
+      tabBarLabelStyle: {
+        ...Typography.small,
+        paddingBottom: Spacing.xs,
+      },
+    }),
+    [colors.primary, colors.tabBackground, colors.tabIconDefault, tabBarShadow]
+  );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.tabIconDefault,
-          tabBarStyle: {
-            backgroundColor: colors.tabBackground,
-            ...tabBarShadow,
-            height: 60, // Slightly taller for better touch targets
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: "500",
-            paddingBottom: 4,
-          },
-        }}
-      >
+    <Tabs screenOptions={screenOptions}>
+      {TAB_SCREENS.map((tab) => (
         <Tabs.Screen
-          name="today"
+          key={tab.name}
+          name={tab.name}
           options={{
-            title: "Today",
-            tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+            title: tab.title,
+            tabBarIcon: ({ color, size }) => tab.renderIcon(color, size),
           }}
         />
-        <Tabs.Screen
-          name="stats"
-          options={{
-            title: "Stats",
-            tabBarIcon: ({ color, size }) => <BarChart2 color={color} size={size} />,
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: "Settings",
-            tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
-          }}
-        />
-      </Tabs>
-    </SafeAreaView>
+      ))}
+    </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
