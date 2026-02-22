@@ -1,7 +1,10 @@
-import type React from "react";
-import { Text, TextInput, View } from "react-native";
-import { useTheme } from "../../../hooks/useTheme";
-import { styles } from "./BasicInfoSection.styles";
+import React from "react";
+import { StyleSheet, TextInput, View } from "react-native";
+
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { useTheme } from "@/hooks/useTheme";
+
+import { FormInput, FormSection } from "@/components/ui/form";
 
 interface BasicInfoSectionProps {
   title: string;
@@ -14,54 +17,70 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
   const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>BASIC INFO</Text>
-      <View
-        style={[
-          styles.surface,
-          {
-            backgroundColor: colors.surface,
-          },
-        ]}
-      >
-        <View style={styles.row}>
-          <View
-            style={[
-              styles.iconContainer,
-              {
-                backgroundColor: colors.input,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <TextInput
-              style={[
-                styles.emojiInput,
-                {
-                  color: colors.text,
-                },
-              ]}
-              value={icon}
-              onChangeText={setIcon}
-              maxLength={2}
-            />
-          </View>
+    <FormSection label="Basic info">
+      <View style={styles.row}>
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: colors.input,
+              borderColor: colors.inputBorder,
+            },
+          ]}
+        >
           <TextInput
-            style={[
-              styles.titleInput,
-              {
-                color: colors.text,
-              },
-            ]}
+            style={[styles.emojiInput, { color: colors.text }]}
+            value={icon}
+            onChangeText={setIcon}
+            maxLength={2}
+            placeholder="✨"
+            placeholderTextColor={colors.textTertiary}
+            accessibilityLabel="Habit emoji"
+            accessibilityHint="Enter a one-emoji icon for this habit"
+            selectionColor={colors.primary}
+          />
+        </View>
+
+        <View style={styles.titleField}>
+          <FormInput
+            label="Habit title"
+            hideLabel
             value={title}
             onChangeText={setTitle}
             placeholder="Habit title..."
-            placeholderTextColor={colors.textTertiary}
+            accessibilityLabel="Habit title"
+            accessibilityHint="Enter a clear habit title"
           />
         </View>
       </View>
-    </View>
+    </FormSection>
   );
 };
 
 export default BasicInfoSection;
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emojiInput: {
+    width: "100%",
+    height: "100%",
+    textAlign: "center",
+    fontSize: 22,
+    lineHeight: 26,
+  },
+  titleField: {
+    flex: 1,
+  },
+});

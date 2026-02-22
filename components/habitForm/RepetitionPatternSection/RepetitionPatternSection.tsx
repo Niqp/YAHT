@@ -1,9 +1,14 @@
+import { CalendarDays } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { RepetitionType } from "@/types/habit";
 import { getOrderedWeekDays } from "@/utils/date";
+import { haptic } from "@/utils/haptics";
 import type React from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import { styles } from "./RepetitionPatternSection.styles";
+import { StyleSheet, View } from "react-native";
+
+import AppText from "@/components/ui/AppText";
+import { DaySelector, FormSection, NumberStepperInput, SegmentedControl } from "@/components/ui/form";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
 
 interface RepetitionPatternSectionProps {
   repetitionType: RepetitionType;
@@ -26,7 +31,6 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 }) => {
   const { colors } = useTheme();
 
-  // Get weekdays ordered according to the weekStartDay preference
   const WEEKDAYS = getOrderedWeekDays(weekStartDay);
 
   const handleDayToggle = (day: number) => {
@@ -37,186 +41,125 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     }
   };
 
-  // Helper to check if a day is selected by its displayed index
-  const isDaySelected = (displayIndex: number) => {
-    return selectedDays.includes(displayIndex);
-  };
-
   const renderRepetitionOptions = () => {
     switch (repetitionType) {
       case RepetitionType.DAILY:
         return (
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              This habit will repeat every single day.
-            </Text>
+          <View style={styles.infoBlock}>
+            <View style={styles.infoRow}>
+              <CalendarDays size={24} color={colors.primary} />
+              <AppText variant="body" color={colors.textSecondary} style={styles.infoText}>
+                This habit will repeat every single day.
+              </AppText>
+            </View>
           </View>
         );
       case RepetitionType.WEEKDAYS:
         return (
-          <View style={styles.daysContainer}>
-            {WEEKDAYS.map((day: { dayIndex: number; name: string }) => {
-              const selected = isDaySelected(day.dayIndex);
-              return (
-                <TouchableOpacity
-                  key={day.dayIndex}
-                  style={[
-                    styles.dayChip,
-                    {
-                      backgroundColor: selected ? colors.primary : colors.input,
-                      borderColor: selected ? colors.primary : colors.border,
-                    },
-                  ]}
-                  onPress={() => handleDayToggle(day.dayIndex)}
-                >
-                  <Text
-                    style={[
-                      styles.dayChipText,
-                      { color: selected ? colors.textInverse : colors.text },
-                    ]}
-                  >
-                    {day.name.substring(0, 1)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={styles.scheduleControlBlock}>
+            <AppText variant="label" color={colors.textSecondary}>
+              Weekdays
+            </AppText>
+            <DaySelector days={WEEKDAYS} selectedDays={selectedDays} onToggleDay={handleDayToggle} />
           </View>
         );
       case RepetitionType.INTERVAL:
         return (
-          <View style={styles.customDaysContainer}>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>Repeat every</Text>
-            <View
-              style={[
-                styles.customDaysInputContainer,
-                {
-                  backgroundColor: colors.input,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <TextInput
-                style={[
-                  styles.customDaysInput,
-                  { color: colors.primary },
-                ]}
-                value={customDays.toString()}
-                onChangeText={(text) => {
-                  const value = Number.parseInt(text);
-                  if (!Number.isNaN(value) && value > 0) {
-                    setCustomDays(value);
-                  }
-                }}
-                keyboardType="number-pad"
-                placeholderTextColor={colors.textTertiary}
-              />
-            </View>
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>days</Text>
-          </View>
+          <NumberStepperInput
+            label="Interval"
+            value={customDays}
+            onChange={setCustomDays}
+            min={1}
+            max={365}
+            unit="d"
+            presets={[2, 3, 7, 14, 30]}
+          />
         );
       default:
         return null;
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>SCHEDULE</Text>
-      <View
-        style={[
-          styles.surface,
-          {
-            backgroundColor: colors.surface,
-          },
-        ]}
-      >
-        <View style={styles.segmentedControlContainer}>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              repetitionType === RepetitionType.DAILY && {
-                backgroundColor: colors.primary,
-              },
-            ]}
-            onPress={() => setRepetitionType(RepetitionType.DAILY)}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                {
-                  color:
-                    repetitionType === RepetitionType.DAILY
-                      ? colors.textInverse
-                      : colors.textSecondary,
-                },
-              ]}
-            >
-              Daily
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              styles.segmentMiddle,
-              { borderLeftColor: colors.divider, borderRightColor: colors.divider },
-              repetitionType === RepetitionType.WEEKDAYS && {
-                backgroundColor: colors.primary,
-                borderLeftColor: colors.primary,
-                borderRightColor: colors.primary,
-              },
-            ]}
-            onPress={() => setRepetitionType(RepetitionType.WEEKDAYS)}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                {
-                  color:
-                    repetitionType === RepetitionType.WEEKDAYS
-                      ? colors.textInverse
-                      : colors.textSecondary,
-                },
-              ]}
-            >
-              Weekly
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              repetitionType === RepetitionType.INTERVAL && {
-                backgroundColor: colors.primary,
-              },
-            ]}
-            onPress={() => setRepetitionType(RepetitionType.INTERVAL)}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                {
-                  color:
-                    repetitionType === RepetitionType.INTERVAL
-                      ? colors.textInverse
-                      : colors.textSecondary,
-                },
-              ]}
-            >
-              Interval
-            </Text>
-          </TouchableOpacity>
-        </View>
+  const helperText =
+    repetitionType === RepetitionType.INTERVAL
+      ? `Habit becomes due ${customDays === 1 ? "every day" : `every ${customDays} days`}.`
+      : repetitionType === RepetitionType.WEEKDAYS
+        ? "Select the weekdays when this habit should appear."
+        : null;
 
-        <View
-          style={[
-            styles.optionsWrapper,
-            { borderTopColor: colors.divider },
-          ]}
-        >
-          {renderRepetitionOptions()}
-        </View>
+  return (
+    <FormSection label="Schedule">
+      <SegmentedControl
+        options={[
+          { label: "Daily", value: RepetitionType.DAILY },
+          { label: "Weekly", value: RepetitionType.WEEKDAYS },
+          { label: "Interval", value: RepetitionType.INTERVAL },
+        ]}
+        value={repetitionType}
+        accessibilityLabel="Schedule type"
+        onChange={(next) => {
+          if (next !== repetitionType) {
+            void haptic.medium();
+          }
+          setRepetitionType(next as RepetitionType);
+        }}
+      />
+
+      <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>
+        {repetitionType === RepetitionType.WEEKDAYS || repetitionType === RepetitionType.INTERVAL ? (
+          <View
+            style={[styles.scheduleInputContainer, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}
+          >
+            {renderRepetitionOptions()}
+            {helperText ? (
+              <AppText variant="small" color={colors.textTertiary} style={styles.sharedHelperText}>
+                {helperText}
+              </AppText>
+            ) : null}
+          </View>
+        ) : (
+          renderRepetitionOptions()
+        )}
       </View>
-    </View>
+    </FormSection>
   );
 };
 
 export default RepetitionPatternSection;
+
+const styles = StyleSheet.create({
+  optionsWrapper: {
+    borderTopWidth: 1,
+    marginTop: Spacing.base,
+    paddingTop: Spacing.base,
+    minHeight: 80,
+    justifyContent: "center",
+  },
+  infoBlock: {
+    paddingVertical: Spacing.xs,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 28,
+  },
+  infoText: {
+    marginLeft: Spacing.md,
+    flex: 1,
+  },
+  scheduleInputContainer: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  sharedHelperText: {
+    minHeight: 18,
+  },
+  scheduleControlBlock: {
+    gap: Spacing.sm,
+  },
+});

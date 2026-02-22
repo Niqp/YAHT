@@ -1,11 +1,12 @@
 import { CheckSquare, Clock, RotateCcw } from "lucide-react-native";
 import type React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "../../../hooks/useTheme";
-import { CompletionType } from "../../../types/habit";
-import RepetitionControls from "../../controls/RepetitionControls";
-import TimedControls from "../../controls/TimedControls";
-import { styles } from "./CompletionTypeSection.styles";
+import { StyleSheet, View } from "react-native";
+
+import AppText from "@/components/ui/AppText";
+import { FormSection, GoalStepperInput, SegmentedControl } from "@/components/ui/form";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { useTheme } from "@/hooks/useTheme";
+import { CompletionType } from "@/types/habit";
 
 interface CompletionTypeSectionProps {
   completionType: CompletionType;
@@ -28,11 +29,13 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
     switch (completionType) {
       case "simple":
         return (
-          <View style={styles.completionTypeDescription}>
-            <CheckSquare size={24} color={colors.primary} />
-            <Text style={[styles.completionDescription, { color: colors.textSecondary }]}>
-              Simple completion (done or not done)
-            </Text>
+          <View style={styles.infoBlock}>
+            <View style={styles.completionTypeDescription}>
+              <CheckSquare size={24} color={colors.primary} />
+              <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
+                Simple completion (done or not done)
+              </AppText>
+            </View>
           </View>
         );
       case "repetitions":
@@ -40,12 +43,21 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
           <View style={styles.completionTypeContainer}>
             <View style={styles.completionTypeDescription}>
               <RotateCcw size={24} color={colors.primary} />
-              <Text style={[styles.completionDescription, { color: colors.textSecondary }]}>
+              <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
                 Track repetitions (e.g., number of exercises)
-              </Text>
+              </AppText>
             </View>
-            <View style={styles.goalContainer}>
-              <RepetitionControls value={completionGoal} onChange={setCompletionGoal} min={1} max={100} />
+            <View
+              style={[styles.goalControlContainer, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}
+            >
+              <GoalStepperInput
+                label="Target repetitions"
+                value={completionGoal}
+                onChange={setCompletionGoal}
+                min={1}
+                max={100}
+                presets={[5, 10, 20, 50]}
+              />
             </View>
           </View>
         );
@@ -54,16 +66,21 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
           <View style={styles.completionTypeContainer}>
             <View style={styles.completionTypeDescription}>
               <Clock size={24} color={colors.primary} />
-              <Text style={[styles.completionDescription, { color: colors.textSecondary }]}>
+              <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
                 Track time (e.g., minutes of exercise)
-              </Text>
+              </AppText>
             </View>
-            <View style={styles.goalContainer}>
-              <TimedControls
-                value={completionGoal}
-                onChange={setCompletionGoal}
-                min={60} // 1 minute minimum
-                max={7200} // 2 hours maximum
+            <View
+              style={[styles.goalControlContainer, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}
+            >
+              <GoalStepperInput
+                label="Target duration"
+                value={Math.max(1, Math.floor(completionGoal / 60000))}
+                onChange={(minutes: number) => setCompletionGoal(minutes * 60000)}
+                min={1}
+                max={120}
+                unit="m"
+                presets={[5, 10, 15, 30, 60, 90]}
               />
             </View>
           </View>
@@ -74,132 +91,85 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>COMPLETION GOAL</Text>
-      <View
-        style={[
-          styles.surface,
+    <FormSection label="Completion goal">
+      <SegmentedControl
+        options={[
           {
-            backgroundColor: colors.surface,
+            label: "Simple",
+            value: CompletionType.SIMPLE,
+            disabled: isEditMode && completionType !== CompletionType.SIMPLE,
+          },
+          {
+            label: "Repetitions",
+            value: CompletionType.REPETITIONS,
+            disabled: isEditMode && completionType !== CompletionType.REPETITIONS,
+          },
+          {
+            label: "Timed",
+            value: CompletionType.TIMED,
+            disabled: isEditMode && completionType !== CompletionType.TIMED,
           },
         ]}
-      >
-        <View style={styles.segmentedControlContainer}>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              completionType === "simple" && {
-                backgroundColor: colors.primary,
-              },
-              isEditMode &&
-              completionType !== "simple" && {
-                backgroundColor: colors.buttonDisabled,
-              },
-            ]}
-            onPress={() => !isEditMode && setCompletionType(CompletionType.SIMPLE)}
-            disabled={isEditMode}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                { color: colors.textSecondary },
-                completionType === "simple" && {
-                  color: colors.textInverse,
-                },
-                isEditMode &&
-                completionType !== "simple" && {
-                  color: colors.buttonDisabledText,
-                },
-              ]}
-            >
-              Simple
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              styles.segmentMiddle,
-              { borderLeftColor: colors.divider, borderRightColor: colors.divider },
-              completionType === "repetitions" && {
-                backgroundColor: colors.primary,
-                borderLeftColor: colors.primary,
-                borderRightColor: colors.primary,
-              },
-              isEditMode &&
-              completionType !== "repetitions" && {
-                backgroundColor: colors.buttonDisabled,
-                borderLeftColor: colors.border,
-                borderRightColor: colors.border,
-              },
-            ]}
-            onPress={() => !isEditMode && setCompletionType(CompletionType.REPETITIONS)}
-            disabled={isEditMode}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                { color: colors.textSecondary },
-                completionType === "repetitions" && {
-                  color: colors.textInverse,
-                },
-                isEditMode &&
-                completionType !== "repetitions" && {
-                  color: colors.buttonDisabledText,
-                },
-              ]}
-            >
-              Repetitions
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.segmentButton,
-              completionType === "timed" && {
-                backgroundColor: colors.primary,
-              },
-              isEditMode &&
-              completionType !== "timed" && {
-                backgroundColor: colors.buttonDisabled,
-              },
-            ]}
-            onPress={() => !isEditMode && setCompletionType(CompletionType.TIMED)}
-            disabled={isEditMode}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                { color: colors.textSecondary },
-                completionType === "timed" && { color: colors.textInverse },
-                isEditMode &&
-                completionType !== "timed" && {
-                  color: colors.buttonDisabledText,
-                },
-              ]}
-            >
-              Timed
-            </Text>
-          </TouchableOpacity>
-        </View>
+        value={completionType}
+        onChange={(next) => setCompletionType(next as CompletionType)}
+        disabled={false}
+      />
 
-        <View
-          style={[
-            styles.optionsWrapper,
-            { borderTopColor: colors.divider },
-          ]}
-        >
-          {renderCompletionOptions()}
-        </View>
+      <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>{renderCompletionOptions()}</View>
 
-        {isEditMode && (
-          <View style={styles.editNoticeContainer}>
-            <Text style={[styles.editNotice, { color: colors.error }]}>
-              Note: Completion type cannot be changed after a habit is created.
-            </Text>
-          </View>
-        )}
-      </View>
-    </View>
+      {isEditMode ? (
+        <View style={[styles.editNoticeContainer, { backgroundColor: colors.errorSubtle, borderColor: colors.error }]}>
+          <AppText variant="label" color={colors.error} style={styles.editNotice}>
+            Completion type is locked after creation.
+          </AppText>
+        </View>
+      ) : null}
+    </FormSection>
   );
 };
 
 export default CompletionTypeSection;
+
+const styles = StyleSheet.create({
+  optionsWrapper: {
+    borderTopWidth: 1,
+    marginTop: Spacing.base,
+    paddingTop: Spacing.base,
+    minHeight: 80,
+    justifyContent: "center",
+  },
+  completionTypeContainer: {
+    gap: Spacing.md,
+  },
+  infoBlock: {
+    paddingVertical: Spacing.xs,
+  },
+  completionTypeDescription: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 28,
+  },
+  completionDescription: {
+    marginLeft: Spacing.md,
+    flex: 1,
+  },
+  goalControlContainer: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  editNoticeContainer: {
+    marginTop: Spacing.base,
+    borderWidth: 1,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  editNotice: {
+    textAlign: "center",
+  },
+});

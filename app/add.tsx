@@ -1,5 +1,4 @@
 import { BasicInfoSection, CompletionTypeSection, RepetitionPatternSection, DiscardChangesSheet } from "@/components/habitForm";
-import type BottomSheet from "@gorhom/bottom-sheet";
 import { AppText, ScaleButton } from "@/components/ui";
 import { Elevation } from "@/constants/Elevation";
 import { Spacing } from "@/constants/Spacing";
@@ -13,7 +12,8 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } f
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const DEFAULT_ICON = "🌟";
-const DEFAULT_COMPLETION_GOAL = 5;
+const DEFAULT_REPETITION_GOAL = 5;
+const DEFAULT_TIMED_GOAL_MS = 5 * 60 * 1000;
 
 const normalizeDays = (days: number[]) => {
   return [...new Set(days)].filter((day) => day >= 0 && day <= 6).sort((a, b) => a - b);
@@ -98,7 +98,8 @@ export default function AddEditHabitScreen() {
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [customDays, setCustomDays] = useState<number>(1);
   const [completionType, setCompletionType] = useState<CompletionType>(CompletionType.SIMPLE);
-  const [completionGoal, setCompletionGoal] = useState<number>(DEFAULT_COMPLETION_GOAL);
+  const [repetitionGoal, setRepetitionGoal] = useState<number>(DEFAULT_REPETITION_GOAL);
+  const [timedGoalMs, setTimedGoalMs] = useState<number>(DEFAULT_TIMED_GOAL_MS);
   const [isDirty, setIsDirty] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -117,7 +118,8 @@ export default function AddEditHabitScreen() {
       setSelectedDays([]);
       setCustomDays(1);
       setCompletionType(CompletionType.SIMPLE);
-      setCompletionGoal(DEFAULT_COMPLETION_GOAL);
+      setRepetitionGoal(DEFAULT_REPETITION_GOAL);
+      setTimedGoalMs(DEFAULT_TIMED_GOAL_MS);
       setIsDirty(false);
     }
   }, [habitId]);
@@ -144,10 +146,14 @@ export default function AddEditHabitScreen() {
 
     const nextSelectedDays = habit.repetition.type === RepetitionType.WEEKDAYS ? habit.repetition.days : [];
     const nextCustomDays = habit.repetition.type === RepetitionType.INTERVAL ? habit.repetition.days : 1;
-    const nextCompletionGoal =
-      habit.completion.type !== CompletionType.SIMPLE && typeof habit.completion.goal === "number"
+    const nextRepetitionGoal =
+      habit.completion.type === CompletionType.REPETITIONS && typeof habit.completion.goal === "number"
         ? habit.completion.goal
-        : DEFAULT_COMPLETION_GOAL;
+        : DEFAULT_REPETITION_GOAL;
+    const nextTimedGoalMs =
+      habit.completion.type === CompletionType.TIMED && typeof habit.completion.goal === "number"
+        ? habit.completion.goal
+        : DEFAULT_TIMED_GOAL_MS;
 
     setTitle(habit.title);
     setIcon(habit.icon);
@@ -155,7 +161,8 @@ export default function AddEditHabitScreen() {
     setSelectedDays(nextSelectedDays);
     setCustomDays(nextCustomDays);
     setCompletionType(habit.completion.type);
-    setCompletionGoal(nextCompletionGoal);
+    setRepetitionGoal(nextRepetitionGoal);
+    setTimedGoalMs(nextTimedGoalMs);
     setIsDirty(false);
 
     hasInitializedFormRef.current = true;
@@ -194,9 +201,23 @@ export default function AddEditHabitScreen() {
   };
 
   const handleCompletionGoalChange = (nextGoal: number) => {
-    setCompletionGoal(nextGoal);
+    if (completionType === CompletionType.TIMED) {
+      setTimedGoalMs(nextGoal);
+    }
+
+    if (completionType === CompletionType.REPETITIONS) {
+      setRepetitionGoal(nextGoal);
+    }
+
     setIsDirty(true);
   };
+
+  const resolvedCompletionGoal =
+    completionType === CompletionType.TIMED
+      ? timedGoalMs
+      : completionType === CompletionType.REPETITIONS
+        ? repetitionGoal
+        : DEFAULT_REPETITION_GOAL;
 
   const navigateBack = () => {
     if (router.canGoBack()) {
@@ -231,7 +252,7 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      if (completionType !== CompletionType.SIMPLE && (!Number.isFinite(completionGoal) || completionGoal <= 0)) {
+      if (completionType !== CompletionType.SIMPLE && (!Number.isFinite(resolvedCompletionGoal) || resolvedCompletionGoal <= 0)) {
         Alert.alert("Error", "Please enter a valid completion goal");
         return;
       }
@@ -242,7 +263,7 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      const completion = buildCompletionConfig(completionType, completionGoal);
+      const completion = buildCompletionConfig(completionType, resolvedCompletionGoal);
 
       if (isEditMode && habitId) {
         await updateHabit(habitId, {
@@ -366,7 +387,7 @@ export default function AddEditHabitScreen() {
           <CompletionTypeSection
             completionType={completionType}
             setCompletionType={handleCompletionTypeChange}
-            completionGoal={completionGoal}
+            completionGoal={resolvedCompletionGoal}
             setCompletionGoal={handleCompletionGoalChange}
             isEditMode={isEditMode}
           />
