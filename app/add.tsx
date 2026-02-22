@@ -104,7 +104,7 @@ export default function AddEditHabitScreen() {
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
-  const discardSheetRef = useRef<BottomSheet>(null);
+  const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
 
   useEffect(() => {
     hasInitializedFormRef.current = false;
@@ -213,7 +213,7 @@ export default function AddEditHabitScreen() {
       return;
     }
 
-    discardSheetRef.current?.expand();
+    setIsDiscardSheetOpen(true);
   };
 
   const handleSave = async () => {
@@ -416,14 +416,12 @@ export default function AddEditHabitScreen() {
       </KeyboardAvoidingView>
 
       <DiscardChangesSheet
-        ref={discardSheetRef}
+        isOpen={isDiscardSheetOpen}
         isEditMode={isEditMode}
+        onClose={() => setIsDiscardSheetOpen(false)}
         onDiscard={() => {
-          discardSheetRef.current?.close();
+          setIsDiscardSheetOpen(false);
           navigateBack();
-        }}
-        onKeepEditing={() => {
-          discardSheetRef.current?.close();
         }}
       />
     </SafeAreaView>
