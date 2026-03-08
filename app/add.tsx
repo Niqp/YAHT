@@ -1,7 +1,12 @@
-import { BasicInfoSection, CompletionTypeSection, RepetitionPatternSection, DiscardChangesSheet } from "@/components/habitForm";
+import {
+  BasicInfoSection,
+  CompletionTypeSection,
+  RepetitionPatternSection,
+  DiscardChangesSheet,
+} from "@/components/habitForm";
 import { AppText, ScaleButton } from "@/components/ui";
 import { Elevation } from "@/constants/Elevation";
-import { Spacing } from "@/constants/Spacing";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import { CompletionType, Habit, RepetitionConfig, RepetitionType } from "@/types/habit";
@@ -102,6 +107,9 @@ export default function AddEditHabitScreen() {
   const [timedGoalMs, setTimedGoalMs] = useState<number>(DEFAULT_TIMED_GOAL_MS);
   const [isDirty, setIsDirty] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [completionError, setCompletionError] = useState<string | null>(null);
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
@@ -121,6 +129,9 @@ export default function AddEditHabitScreen() {
       setRepetitionGoal(DEFAULT_REPETITION_GOAL);
       setTimedGoalMs(DEFAULT_TIMED_GOAL_MS);
       setIsDirty(false);
+      setTitleError(null);
+      setScheduleError(null);
+      setCompletionError(null);
     }
   }, [habitId]);
 
@@ -164,6 +175,9 @@ export default function AddEditHabitScreen() {
     setRepetitionGoal(nextRepetitionGoal);
     setTimedGoalMs(nextTimedGoalMs);
     setIsDirty(false);
+    setTitleError(null);
+    setScheduleError(null);
+    setCompletionError(null);
 
     hasInitializedFormRef.current = true;
   }, [habit, habitId, isHydrated]);
@@ -172,6 +186,9 @@ export default function AddEditHabitScreen() {
 
   const handleTitleChange = (nextTitle: string) => {
     setTitle(nextTitle);
+    if (nextTitle.trim()) {
+      setTitleError(null);
+    }
     setIsDirty(true);
   };
 
@@ -182,21 +199,29 @@ export default function AddEditHabitScreen() {
 
   const handleRepetitionTypeChange = (nextType: RepetitionType) => {
     setRepetitionType(nextType);
+    setScheduleError(null);
     setIsDirty(true);
   };
 
   const handleSelectedDaysChange = (nextDays: number[]) => {
     setSelectedDays(nextDays);
+    if (nextDays.length > 0) {
+      setScheduleError(null);
+    }
     setIsDirty(true);
   };
 
   const handleCustomDaysChange = (nextDays: number) => {
     setCustomDays(nextDays);
+    if (nextDays >= 1) {
+      setScheduleError(null);
+    }
     setIsDirty(true);
   };
 
   const handleCompletionTypeChange = (nextType: CompletionType) => {
     setCompletionType(nextType);
+    setCompletionError(null);
     setIsDirty(true);
   };
 
@@ -210,6 +235,7 @@ export default function AddEditHabitScreen() {
     }
 
     setIsDirty(true);
+    setCompletionError(null);
   };
 
   const resolvedCompletionGoal =
@@ -248,20 +274,29 @@ export default function AddEditHabitScreen() {
       const normalizedTitle = title.trim();
 
       if (!normalizedTitle) {
-        Alert.alert("Error", "Please enter a title for your habit");
+        setTitleError("Give this habit a short, clear name.");
         return;
       }
 
-      if (completionType !== CompletionType.SIMPLE && (!Number.isFinite(resolvedCompletionGoal) || resolvedCompletionGoal <= 0)) {
-        Alert.alert("Error", "Please enter a valid completion goal");
+      setTitleError(null);
+
+      if (
+        completionType !== CompletionType.SIMPLE &&
+        (!Number.isFinite(resolvedCompletionGoal) || resolvedCompletionGoal <= 0)
+      ) {
+        setCompletionError("Choose a valid completion goal.");
         return;
       }
+
+      setCompletionError(null);
 
       const { repetition, errorMessage } = buildRepetitionConfig(repetitionType, selectedDays, customDays);
       if (!repetition) {
-        Alert.alert("Error", errorMessage || "Please enter a valid repetition pattern");
+        setScheduleError(errorMessage || "Please enter a valid repetition pattern");
         return;
       }
+
+      setScheduleError(null);
 
       const completion = buildCompletionConfig(completionType, resolvedCompletionGoal);
 
@@ -343,9 +378,9 @@ export default function AddEditHabitScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen
         options={{
-          title: isEditMode ? "Edit Habit" : "Add New Habit",
+          title: isEditMode ? "Edit Habit" : "New Habit",
           headerStyle: {
-            backgroundColor: colors.cardBackground,
+            backgroundColor: colors.background,
           },
           headerTitleStyle: {
             color: colors.text,
@@ -361,18 +396,31 @@ export default function AddEditHabitScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.introBlock}>
-            <AppText variant="title" color={colors.text}>
-              {isEditMode ? "Edit habit" : "Create habit"}
-            </AppText>
-            <AppText variant="caption" color={colors.textSecondary} style={styles.introText}>
+          <View
+            style={[
+              styles.introCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+                shadowColor: colors.shadow,
+              },
+              Elevation[1],
+            ]}
+          >
+            <AppText variant="body" color={colors.textSecondary} style={styles.introText}>
               {isEditMode
                 ? "Update details and schedule. Existing completion history stays intact."
                 : "Set a clear title, repetition pattern, and completion type."}
             </AppText>
           </View>
 
-          <BasicInfoSection title={title} setTitle={handleTitleChange} icon={icon} setIcon={handleIconChange} />
+          <BasicInfoSection
+            title={title}
+            setTitle={handleTitleChange}
+            icon={icon}
+            setIcon={handleIconChange}
+            errorMessage={titleError}
+          />
 
           <RepetitionPatternSection
             repetitionType={repetitionType}
@@ -382,6 +430,7 @@ export default function AddEditHabitScreen() {
             customDays={customDays}
             setCustomDays={handleCustomDaysChange}
             weekStartDay={weekStartDay}
+            errorMessage={scheduleError}
           />
 
           <CompletionTypeSection
@@ -390,7 +439,24 @@ export default function AddEditHabitScreen() {
             completionGoal={resolvedCompletionGoal}
             setCompletionGoal={handleCompletionGoalChange}
             isEditMode={isEditMode}
+            errorMessage={completionError}
           />
+
+          {isEditMode && (
+            <View style={styles.dangerZone}>
+              <AppText variant="label" color={colors.textSecondary} style={styles.dangerLabel}>
+                Danger zone
+              </AppText>
+              <ScaleButton
+                label="Delete Habit"
+                variant="destructive"
+                onPress={handleDelete}
+                style={styles.deleteButton}
+                disabled={isSubmitting}
+                accessibilityHint="Delete this habit permanently"
+              />
+            </View>
+          )}
         </ScrollView>
 
         <View
@@ -422,17 +488,6 @@ export default function AddEditHabitScreen() {
               accessibilityHint="Save this habit and return to today"
             />
           </View>
-
-          {isEditMode && (
-            <ScaleButton
-              label="Delete Habit"
-              variant="destructive"
-              onPress={handleDelete}
-              style={styles.deleteButton}
-              disabled={isSubmitting}
-              accessibilityHint="Delete this habit permanently"
-            />
-          )}
         </View>
       </KeyboardAvoidingView>
 
@@ -462,13 +517,25 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.base,
-    paddingBottom: Spacing.xxxl,
+    paddingBottom: Spacing.xxxl + 72,
   },
-  introBlock: {
+  introCard: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
     marginBottom: Spacing.lg,
   },
   introText: {
+    textAlign: "left",
+  },
+  dangerZone: {
     marginTop: Spacing.xs,
+    marginBottom: Spacing.base,
+  },
+  dangerLabel: {
+    marginBottom: Spacing.sm,
+    marginLeft: Spacing.xs,
   },
   actionBar: {
     borderTopWidth: 1,
@@ -487,6 +554,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   deleteButton: {
-    marginTop: Spacing.sm,
+    width: "100%",
   },
 });

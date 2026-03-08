@@ -2,11 +2,11 @@ import { CompletionType, RepetitionType, type Habit, type HabitMap } from "@/typ
 import { createTimerSlice } from "@/store/habit/timerSlice";
 import type { HabitState } from "@/store/habitStore";
 import type { CompletionData } from "@/store/habit/completionSlice";
-import { setNotification, cancelNotification } from "@/utils/notifications";
+import { prepareTimerNotifications, cancelTimerNotification } from "@/utils/notifications";
 
 jest.mock("@/utils/notifications", () => ({
-  setNotification: jest.fn(),
-  cancelNotification: jest.fn(),
+  prepareTimerNotifications: jest.fn(),
+  cancelTimerNotification: jest.fn(),
 }));
 
 jest.mock("expo-crypto", () => ({
@@ -107,14 +107,14 @@ describe("createTimerSlice behavior", () => {
     jest.clearAllMocks();
   });
 
-  it("activates timer and schedules notification", () => {
+  it("activates timer and primes timer notifications", () => {
     const harness = createHarness({ h1: makeHabit({ id: "h1" }) });
     const resumedAt = harness.slice.activateTimer("h1", DATE);
     const timer = harness.getState().activeTimers.h1[DATE];
 
     expect(timer.id).toBe("timer-1");
     expect(timer.lastResumedAt).toBe(resumedAt);
-    expect(setNotification).toHaveBeenCalledTimes(1);
+    expect(prepareTimerNotifications).toHaveBeenCalledTimes(1);
   });
 
   it("removes timer, applies final completion, and cancels notification", async () => {
@@ -137,7 +137,7 @@ describe("createTimerSlice behavior", () => {
     await harness.slice.removeTimer("h1", DATE, DEFAULT_NOW);
 
     expect(harness.updateCompletion).toHaveBeenCalledWith({ id: "h1", date: DATE, value: 7_000 });
-    expect(cancelNotification).toHaveBeenCalledWith("timer-1");
+    expect(cancelTimerNotification).toHaveBeenCalledWith("timer-1");
     expect(harness.getState().activeTimers.h1).toBeUndefined();
   });
 

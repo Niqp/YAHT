@@ -1,40 +1,45 @@
-/**
- * Tests for utils/notifications.ts
- *
- * All @notifee/react-native calls are mocked so no native runtime is needed.
- */
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 
-import dayjs from "dayjs";
-import { AuthorizationStatus, AndroidNotificationSetting, TriggerType, RepeatFrequency } from "@notifee/react-native";
+import {
+  cancelAllTimerNotifications,
+  cancelTimerNotification,
+  prepareTimerNotifications,
+  scheduleTimerNotification,
+} from "@/utils/notifications";
 
-// ── Mock notifee ──────────────────────────────────────────────────────────────
+const mockGetPermissionsAsync = jest.fn();
+const mockRequestPermissionsAsync = jest.fn();
+const mockSetNotificationChannelAsync = jest.fn();
+const mockScheduleNotificationAsync = jest.fn();
+const mockCancelScheduledNotificationAsync = jest.fn();
+const mockDismissNotificationAsync = jest.fn();
+const mockCancelAllScheduledNotificationsAsync = jest.fn();
+const mockDismissAllNotificationsAsync = jest.fn();
 
-const mockGetNotificationSettings = jest.fn();
-const mockRequestPermission = jest.fn();
-const mockOpenAlarmPermissionSettings = jest.fn();
-const mockCreateChannel = jest.fn();
-const mockCreateTriggerNotification = jest.fn();
-const mockCancelNotification = jest.fn();
-const mockCancelAllNotifications = jest.fn();
-
-jest.mock("@notifee/react-native", () => ({
+jest.mock("expo-notifications", () => ({
   __esModule: true,
-  default: {
-    getNotificationSettings: (...args: unknown[]) => mockGetNotificationSettings(...args),
-    requestPermission: (...args: unknown[]) => mockRequestPermission(...args),
-    openAlarmPermissionSettings: (...args: unknown[]) => mockOpenAlarmPermissionSettings(...args),
-    createChannel: (...args: unknown[]) => mockCreateChannel(...args),
-    createTriggerNotification: (...args: unknown[]) => mockCreateTriggerNotification(...args),
-    cancelNotification: (...args: unknown[]) => mockCancelNotification(...args),
-    cancelAllNotifications: (...args: unknown[]) => mockCancelAllNotifications(...args),
-  },
-  TriggerType: { TIMESTAMP: "TIMESTAMP" },
-  RepeatFrequency: { WEEKLY: "WEEKLY" },
-  AndroidNotificationSetting: { ENABLED: "ENABLED" },
-  AuthorizationStatus: { AUTHORIZED: "AUTHORIZED" },
+  AndroidImportance: { MAX: "max" },
+  AndroidNotificationPriority: { MAX: "max" },
+  SchedulableTriggerInputTypes: { DATE: "date" },
+  getPermissionsAsync: (...args: unknown[]) => mockGetPermissionsAsync(...args),
+  requestPermissionsAsync: (...args: unknown[]) => mockRequestPermissionsAsync(...args),
+  setNotificationChannelAsync: (...args: unknown[]) => mockSetNotificationChannelAsync(...args),
+  scheduleNotificationAsync: (...args: unknown[]) => mockScheduleNotificationAsync(...args),
+  cancelScheduledNotificationAsync: (...args: unknown[]) => mockCancelScheduledNotificationAsync(...args),
+  dismissNotificationAsync: (...args: unknown[]) => mockDismissNotificationAsync(...args),
+  cancelAllScheduledNotificationsAsync: (...args: unknown[]) => mockCancelAllScheduledNotificationsAsync(...args),
+  dismissAllNotificationsAsync: (...args: unknown[]) => mockDismissAllNotificationsAsync(...args),
 }));
 
-// ── Mock Platform ─────────────────────────────────────────────────────────────
+const mockCanScheduleExactAlarms = jest.fn();
+const mockOpenSettings = jest.fn();
+
+jest.mock("react-native-permissions", () => ({
+  __esModule: true,
+  canScheduleExactAlarms: (...args: unknown[]) => mockCanScheduleExactAlarms(...args),
+  openSettings: (...args: unknown[]) => mockOpenSettings(...args),
+}));
 
 jest.mock("react-native", () => ({
   Platform: {
@@ -43,104 +48,133 @@ jest.mock("react-native", () => ({
   },
 }));
 
-import { setNotification, cancelNotification, cancelAllNotifications } from "@/utils/notifications";
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const authorizedSettings = {
-  authorizationStatus: AuthorizationStatus.AUTHORIZED,
-  android: { alarm: AndroidNotificationSetting.ENABLED },
-};
-
-const futureDate = dayjs().add(1, "hour");
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
-describe("setNotification", () => {
+describe("prepareTimerNotifications", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetNotificationSettings.mockResolvedValue(authorizedSettings);
-    mockCreateChannel.mockResolvedValue("default");
-    mockCreateTriggerNotification.mockResolvedValue("notif-id-123");
+    mockGetPermissionsAsync.mockResolvedValue({ granted: true });
+    mockRequestPermissionsAsync.mockResolvedValue({ granted: true });
+    mockSetNotificationChannelAsync.mockResolvedValue(undefined);
+    mockCanScheduleExactAlarms.mockResolvedValue(true);
   });
 
-  it("creates a trigger notification and returns its id", async () => {
-    const result = await setNotification("timer-1", "Morning Run", futureDate);
-    expect(mockCreateTriggerNotification).toHaveBeenCalledTimes(1);
-    expect(result).toBe("notif-id-123");
-  });
-
-  it("passes the correct notification id and body", async () => {
-    await setNotification("timer-abc", "Meditation", futureDate);
-    const [notification] = mockCreateTriggerNotification.mock.calls[0];
-    expect(notification.id).toBe("timer-abc");
-    expect(notification.body).toContain("Meditation");
-  });
-
-  it("uses a TIMESTAMP trigger with WEEKLY repeat", async () => {
-    await setNotification("t1", "Habit", futureDate);
-    const [, trigger] = mockCreateTriggerNotification.mock.calls[0];
-    expect(trigger.type).toBe(TriggerType.TIMESTAMP);
-    expect(trigger.repeatFrequency).toBe(RepeatFrequency.WEEKLY);
-    expect(trigger.timestamp).toBe(futureDate.valueOf());
-  });
-
-  it("does not request permission when already authorized", async () => {
-    await setNotification("t1", "Habit", futureDate);
-    expect(mockRequestPermission).not.toHaveBeenCalled();
-  });
-
-  it("requests permission when not authorized", async () => {
-    mockGetNotificationSettings.mockResolvedValue({
-      authorizationStatus: "denied",
-      android: { alarm: AndroidNotificationSetting.ENABLED },
+  it("returns true when notification and exact alarm access are available", async () => {
+    await expect(prepareTimerNotifications()).resolves.toBe(true);
+    expect(mockSetNotificationChannelAsync).toHaveBeenCalledWith("timers", {
+      name: "Timers",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
     });
-    await setNotification("t1", "Habit", futureDate);
-    expect(mockRequestPermission).toHaveBeenCalledTimes(1);
+    expect(mockCanScheduleExactAlarms).toHaveBeenCalledTimes(1);
   });
 
-  it("opens alarm settings when alarm permission is not enabled (Android)", async () => {
-    mockGetNotificationSettings.mockResolvedValue({
-      authorizationStatus: AuthorizationStatus.AUTHORIZED,
-      android: { alarm: "disabled" },
-    });
-    await setNotification("t1", "Habit", futureDate);
-    expect(mockOpenAlarmPermissionSettings).toHaveBeenCalledTimes(1);
+  it("requests notification permissions when needed", async () => {
+    mockGetPermissionsAsync.mockResolvedValue({ granted: false });
+
+    await prepareTimerNotifications();
+
+    expect(mockRequestPermissionsAsync).toHaveBeenCalledTimes(1);
   });
 
-  it("returns undefined and does not throw when notifee throws", async () => {
-    mockCreateTriggerNotification.mockRejectedValue(new Error("native error"));
-    const result = await setNotification("t1", "Habit", futureDate);
-    expect(result).toBeUndefined();
+  it("opens exact alarm settings when requested and unavailable", async () => {
+    mockCanScheduleExactAlarms.mockResolvedValue(false);
+
+    await expect(prepareTimerNotifications()).resolves.toBe(false);
+    expect(mockOpenSettings).toHaveBeenCalledWith("alarms");
+  });
+
+  it("does not open alarm settings when disabled by caller", async () => {
+    mockCanScheduleExactAlarms.mockResolvedValue(false);
+
+    await expect(prepareTimerNotifications({ openAlarmSettings: false })).resolves.toBe(false);
+    expect(mockOpenSettings).not.toHaveBeenCalled();
   });
 });
 
-describe("cancelNotification", () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it("calls notifee.cancelNotification with the correct id", async () => {
-    mockCancelNotification.mockResolvedValue(undefined);
-    await cancelNotification("notif-xyz");
-    expect(mockCancelNotification).toHaveBeenCalledWith("notif-xyz");
+describe("scheduleTimerNotification", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetPermissionsAsync.mockResolvedValue({ granted: true });
+    mockSetNotificationChannelAsync.mockResolvedValue(undefined);
+    mockCanScheduleExactAlarms.mockResolvedValue(true);
+    mockScheduleNotificationAsync.mockResolvedValue("timer-timer-1");
+    jest.spyOn(Date, "now").mockReturnValue(1_000);
   });
 
-  it("does not throw when notifee throws", async () => {
-    mockCancelNotification.mockRejectedValue(new Error("fail"));
-    await expect(cancelNotification("notif-xyz")).resolves.toBeUndefined();
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("schedules a date-based timer notification with a stable identifier", async () => {
+    const result = await scheduleTimerNotification("timer-1", "Deep Work", 5_000);
+
+    expect(result).toBe("timer-timer-1");
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
+      identifier: "timer-timer-1",
+      content: {
+        title: "Timer Reached its goal!",
+        body: "Deep Work timer has reached its goal, but is still running.",
+        sound: "default",
+        color: "#023c69",
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(6_000),
+        channelId: "timers",
+      },
+    });
+  });
+
+  it("uses an immediate trigger when the timer has no remaining time", async () => {
+    await scheduleTimerNotification("timer-1", "Deep Work", 0);
+
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
+      identifier: "timer-timer-1",
+      content: {
+        title: "Timer Reached its goal!",
+        body: "Deep Work timer has reached its goal, but is still running.",
+        sound: "default",
+        color: "#023c69",
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      },
+      trigger: null,
+    });
+  });
+
+  it("returns undefined when exact alarms are unavailable", async () => {
+    mockCanScheduleExactAlarms.mockResolvedValue(false);
+
+    await expect(scheduleTimerNotification("timer-1", "Deep Work", 5_000)).resolves.toBeUndefined();
+    expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  it("skips exact alarm checks on iOS", async () => {
+    const originalPlatform = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "ios" });
+
+    await scheduleTimerNotification("timer-1", "Deep Work", 5_000);
+
+    expect(mockCanScheduleExactAlarms).not.toHaveBeenCalled();
+    Object.defineProperty(Platform, "OS", { value: originalPlatform });
   });
 });
 
-describe("cancelAllNotifications", () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it("calls notifee.cancelAllNotifications", async () => {
-    mockCancelAllNotifications.mockResolvedValue(undefined);
-    await cancelAllNotifications();
-    expect(mockCancelAllNotifications).toHaveBeenCalledTimes(1);
+describe("timer notification cancellation", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it("does not throw when notifee throws", async () => {
-    mockCancelAllNotifications.mockRejectedValue(new Error("fail"));
-    await expect(cancelAllNotifications()).resolves.toBeUndefined();
+  it("cancels and dismisses a single timer notification", async () => {
+    await cancelTimerNotification("timer-1");
+
+    expect(mockCancelScheduledNotificationAsync).toHaveBeenCalledWith("timer-timer-1");
+    expect(mockDismissNotificationAsync).toHaveBeenCalledWith("timer-timer-1");
+  });
+
+  it("cancels and dismisses all timer notifications", async () => {
+    await cancelAllTimerNotifications();
+
+    expect(mockCancelAllScheduledNotificationsAsync).toHaveBeenCalledTimes(1);
+    expect(mockDismissAllNotificationsAsync).toHaveBeenCalledTimes(1);
   });
 });

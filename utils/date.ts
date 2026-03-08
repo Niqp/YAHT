@@ -26,11 +26,6 @@ export const getCurrentDateStamp = () => getDateStamp(getCurrentDateDayjs());
 export const getCurrentIsoString = () => getDateTimeStamp(getCurrentDateTimeDayjs());
 export const getIsoString = (date: dayjs.ConfigType) => getDateTimeStamp(date);
 
-export const calculateGoalCompletionDate = (habitGoal: timeMs, storedValue: timeMs) => {
-  const now = getCurrentDateTimeDayjs();
-  return now.add(habitGoal - storedValue, "milliseconds");
-};
-
 /**
  * Determine if a habit should be shown on a specific date
  */

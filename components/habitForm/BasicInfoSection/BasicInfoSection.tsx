@@ -4,6 +4,7 @@ import { StyleSheet, TextInput, View } from "react-native";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 
+import { AppText } from "@/components/ui";
 import { FormInput, FormSection } from "@/components/ui/form";
 
 interface BasicInfoSectionProps {
@@ -11,20 +12,20 @@ interface BasicInfoSectionProps {
   setTitle: (title: string) => void;
   icon: string;
   setIcon: (icon: string) => void;
+  errorMessage?: string | null;
 }
 
-const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, icon, setIcon }) => {
+const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, icon, setIcon, errorMessage }) => {
   const { colors } = useTheme();
 
   return (
-    <FormSection label="Basic info">
+    <FormSection label="Basic info" description="Name your habit and give it an icon.">
       <View style={styles.row}>
         <View
           style={[
             styles.iconContainer,
             {
-              backgroundColor: colors.input,
-              borderColor: colors.inputBorder,
+              backgroundColor: colors.primarySubtle,
             },
           ]}
         >
@@ -53,6 +54,16 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
           />
         </View>
       </View>
+
+      {errorMessage ? (
+        <AppText variant="small" color={colors.error} style={styles.feedbackText}>
+          {errorMessage}
+        </AppText>
+      ) : (
+        <AppText variant="small" color={colors.textTertiary} style={styles.feedbackText}>
+          Keep it short enough to scan at a glance.
+        </AppText>
+      )}
     </FormSection>
   );
 };
@@ -66,10 +77,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -82,5 +92,8 @@ const styles = StyleSheet.create({
   },
   titleField: {
     flex: 1,
+  },
+  feedbackText: {
+    marginTop: Spacing.sm,
   },
 });

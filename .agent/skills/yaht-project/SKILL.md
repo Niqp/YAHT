@@ -216,6 +216,8 @@ All visual constants live in `constants/`. Import from there — never hardcode 
 | `npm run android`      | Run on Android                         |
 | `npm run ios`          | Run on iOS                             |
 | `npm run web`          | Start web version                      |
+| `npm run build:android:debug`| Prebuild and assemble debug APK        |
+| `npm run build:android:prod` | Prebuild and assemble production APK   |
 | `npm run cleanRun`     | Clean prebuild + run Android           |
 | `npm run prod`         | Release build for Android              |
 | `npm test`             | Run Jest test suite                    |

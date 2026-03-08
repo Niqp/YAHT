@@ -2,8 +2,9 @@ import type { StateCreator } from "zustand";
 import type { HabitState } from "../habitStore";
 import { TimerMap } from "@/types/timer";
 import * as Crypto from "expo-crypto";
-import { calculateGoalCompletionDate, getCurrentIsoString, getDayjs } from "@/utils/date";
-import { cancelNotification, setNotification } from "@/utils/notifications";
+import { getCurrentIsoString } from "@/utils/date";
+import { cancelTimerNotification, prepareTimerNotifications } from "@/utils/notifications";
+import { getElapsedTimerMs } from "@/utils/timer";
 import { DateStamp } from "@/types/date";
 import { CompletionData } from "./completionSlice";
 
@@ -15,12 +16,6 @@ export interface TimerSlice {
   activateTimer: (habitId: string, date: DateStamp) => void;
   removeTimer: (habitId: string, date: DateStamp, nowIso?: string) => Promise<void>;
 }
-
-const getElapsedSince = (lastResumedAt: string | null, nowIso: string): number => {
-  if (!lastResumedAt) return 0;
-  const elapsed = getDayjs(nowIso).diff(getDayjs(lastResumedAt), "milliseconds");
-  return Math.max(0, elapsed);
-};
 
 export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (set, get) => ({
   activeTimers: {},
@@ -41,7 +36,7 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
         const habit = habits[habitId];
         if (!habit) continue;
 
-        const elapsedTime = getElapsedSince(timer.lastResumedAt, resolvedNowIso);
+        const elapsedTime = getElapsedTimerMs(timer.lastResumedAt, resolvedNowIso);
         const storedTime = habit.completionHistory[date]?.value || 0;
         const combinedTime = storedTime + elapsedTime;
 
@@ -75,16 +70,14 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
 
   activateTimer: (habitId, date) => {
     const newLastResumedAt = getCurrentIsoString();
+    const timerId = Crypto.randomUUID();
+    const habit = get().habits[habitId];
+
+    if (habit?.completion.type === "timed" && !habit.completionHistory[date]?.isCompleted) {
+      void prepareTimerNotifications();
+    }
+
     set((state) => {
-      const timerId = Crypto.randomUUID();
-      const habit = state.habits[habitId];
-      const habitGoal = habit?.completion?.goal || 0;
-      const habitTitle = habit?.title || "Habit";
-      const storeValue = habit?.completionHistory[date]?.value || 0;
-      const completionDate = calculateGoalCompletionDate(habitGoal, storeValue);
-      if (!habit?.completionHistory[date]?.isCompleted) {
-        setNotification(timerId, habitTitle, completionDate);
-      }
       return {
         activeTimers: {
           ...state.activeTimers,
@@ -107,10 +100,10 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
     const timerToRemove = state.activeTimers[habitId]?.[date];
     if (!timerToRemove) return;
 
-    cancelNotification(timerToRemove.id);
+    await cancelTimerNotification(timerToRemove.id);
 
     const storedTime = state.habits[habitId]?.completionHistory[date]?.value || 0;
-    const elapsedTime = getElapsedSince(timerToRemove.lastResumedAt, resolvedNowIso);
+    const elapsedTime = getElapsedTimerMs(timerToRemove.lastResumedAt, resolvedNowIso);
     const combinedTime = storedTime + elapsedTime;
 
     await get().updateCompletion({ id: habitId, date, value: combinedTime });

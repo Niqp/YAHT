@@ -1,5 +1,6 @@
 import { AppText, ScaleButton } from "@/components/ui";
-import { Spacing } from "@/constants/Spacing";
+import { Elevation } from "@/constants/Elevation";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import {
   BottomSheetBackdrop,
@@ -20,7 +21,7 @@ interface DiscardChangesSheetProps {
 export default function DiscardChangesSheet({ isEditMode, isOpen, onClose, onDiscard }: DiscardChangesSheetProps) {
   const { colors } = useTheme();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["32%"], []);
+  const snapPoints = useMemo(() => ["36%"], []);
 
   useEffect(() => {
     if (isOpen) {
@@ -53,6 +54,8 @@ export default function DiscardChangesSheet({ isEditMode, isOpen, onClose, onDis
         styles.background,
         {
           backgroundColor: colors.cardBackground,
+          ...Elevation[2],
+          shadowColor: colors.shadow,
         },
       ]}
       handleIndicatorStyle={[styles.handle, { backgroundColor: colors.border }]}
@@ -76,13 +79,13 @@ export default function DiscardChangesSheet({ isEditMode, isOpen, onClose, onDis
 
 const styles = StyleSheet.create({
   background: {
-    borderTopLeftRadius: Spacing.lg,
-    borderTopRightRadius: Spacing.lg,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
   },
   handle: {
     width: 40,
     height: 4,
-    borderRadius: 999,
+    borderRadius: BorderRadius.full,
   },
   container: {
     padding: Spacing.xl,

@@ -3,7 +3,9 @@ import type React from "react";
 import { StyleSheet, View } from "react-native";
 
 import AppText from "@/components/ui/AppText";
-import { FormSection, GoalStepperInput, SegmentedControl } from "@/components/ui/form";
+import { DurationInput, FormSection } from "@/components/ui/form";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import WheelPicker from "@quidone/react-native-wheel-picker";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { CompletionType } from "@/types/habit";
@@ -14,6 +16,7 @@ interface CompletionTypeSectionProps {
   completionGoal: number;
   setCompletionGoal: (goal: number) => void;
   isEditMode: boolean;
+  errorMessage?: string | null;
 }
 
 const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
@@ -22,6 +25,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   completionGoal,
   setCompletionGoal,
   isEditMode,
+  errorMessage,
 }) => {
   const { colors } = useTheme();
 
@@ -50,18 +54,19 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
             <View
               style={[styles.goalControlContainer, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}
             >
-              <GoalStepperInput
-                label="Target repetitions"
+              <WheelPicker
+                data={Array.from({ length: 100 }, (_, i) => ({ value: i + 1, label: `${i + 1} reps` }))}
                 value={completionGoal}
-                onChange={setCompletionGoal}
-                min={1}
-                max={100}
-                presets={[5, 10, 20, 50]}
+                onValueChanged={({ item }: { item: { value: number; label: string } }) => setCompletionGoal(item.value)}
+                style={{ height: 150, width: "100%" }}
+                itemHeight={40}
+                itemTextStyle={{ color: colors.text, fontSize: 18 }}
+                overlayItemStyle={{ backgroundColor: colors.primarySubtle, borderRadius: BorderRadius.md }}
               />
             </View>
           </View>
         );
-      case "timed":
+      case CompletionType.TIMED:
         return (
           <View style={styles.completionTypeContainer}>
             <View style={styles.completionTypeDescription}>
@@ -70,19 +75,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
                 Track time (e.g., minutes of exercise)
               </AppText>
             </View>
-            <View
-              style={[styles.goalControlContainer, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}
-            >
-              <GoalStepperInput
-                label="Target duration"
-                value={Math.max(1, Math.floor(completionGoal / 60000))}
-                onChange={(minutes: number) => setCompletionGoal(minutes * 60000)}
-                min={1}
-                max={120}
-                unit="m"
-                presets={[5, 10, 15, 30, 60, 90]}
-              />
-            </View>
+            <DurationInput label="Duration goal" valueMs={completionGoal} onChangeMs={setCompletionGoal} />
           </View>
         );
       default:
@@ -91,31 +84,31 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   };
 
   return (
-    <FormSection label="Completion goal">
+    <FormSection label="Completion goal" description="Decide how this habit should be marked complete.">
       <SegmentedControl
-        options={[
-          {
-            label: "Simple",
-            value: CompletionType.SIMPLE,
-            disabled: isEditMode && completionType !== CompletionType.SIMPLE,
-          },
-          {
-            label: "Repetitions",
-            value: CompletionType.REPETITIONS,
-            disabled: isEditMode && completionType !== CompletionType.REPETITIONS,
-          },
-          {
-            label: "Timed",
-            value: CompletionType.TIMED,
-            disabled: isEditMode && completionType !== CompletionType.TIMED,
-          },
-        ]}
-        value={completionType}
-        onChange={(next) => setCompletionType(next as CompletionType)}
-        disabled={false}
+        values={["Simple", "Repetitions", "Timed"]}
+        selectedIndex={
+          completionType === CompletionType.SIMPLE ? 0 : completionType === CompletionType.REPETITIONS ? 1 : 2
+        }
+        onChange={(event) => {
+          const index = event.nativeEvent.selectedSegmentIndex;
+          if (index === 0) setCompletionType(CompletionType.SIMPLE);
+          else if (index === 1) setCompletionType(CompletionType.REPETITIONS);
+          else if (index === 2) setCompletionType(CompletionType.TIMED);
+        }}
+        enabled={!isEditMode}
+        tintColor={colors.primary}
+        backgroundColor={colors.cardBackground}
+        style={styles.segmentedControl}
       />
 
       <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>{renderCompletionOptions()}</View>
+
+      {errorMessage ? (
+        <AppText variant="small" color={colors.error} style={styles.errorText}>
+          {errorMessage}
+        </AppText>
+      ) : null}
 
       {isEditMode ? (
         <View style={[styles.editNoticeContainer, { backgroundColor: colors.errorSubtle, borderColor: colors.error }]}>
@@ -137,6 +130,9 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.base,
     minHeight: 80,
     justifyContent: "center",
+  },
+  segmentedControl: {
+    marginBottom: Spacing.base,
   },
   completionTypeContainer: {
     gap: Spacing.md,
@@ -171,5 +167,8 @@ const styles = StyleSheet.create({
   },
   editNotice: {
     textAlign: "center",
+  },
+  errorText: {
+    marginTop: Spacing.sm,
   },
 });

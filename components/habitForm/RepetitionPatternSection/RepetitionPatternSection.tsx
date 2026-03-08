@@ -4,10 +4,12 @@ import { RepetitionType } from "@/types/habit";
 import { getOrderedWeekDays } from "@/utils/date";
 import { haptic } from "@/utils/haptics";
 import type React from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Switch, View } from "react-native";
 
 import AppText from "@/components/ui/AppText";
-import { DaySelector, FormSection, NumberStepperInput, SegmentedControl } from "@/components/ui/form";
+import { FormSection } from "@/components/ui/form";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import WheelPicker from "@quidone/react-native-wheel-picker";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 
 interface RepetitionPatternSectionProps {
@@ -18,6 +20,7 @@ interface RepetitionPatternSectionProps {
   customDays: number;
   setCustomDays: (days: number) => void;
   weekStartDay: number;
+  errorMessage?: string | null;
 }
 
 const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
@@ -28,6 +31,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   customDays,
   setCustomDays,
   weekStartDay,
+  errorMessage,
 }) => {
   const { colors } = useTheme();
 
@@ -57,23 +61,57 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
       case RepetitionType.WEEKDAYS:
         return (
           <View style={styles.scheduleControlBlock}>
-            <AppText variant="label" color={colors.textSecondary}>
-              Weekdays
-            </AppText>
-            <DaySelector days={WEEKDAYS} selectedDays={selectedDays} onToggleDay={handleDayToggle} />
+            <View style={styles.switchesContainer}>
+              {WEEKDAYS.map((day, index) => {
+                const isSelected = selectedDays.includes(day.dayIndex);
+
+                return (
+                  <Pressable
+                    key={day.dayIndex}
+                    onPress={() => handleDayToggle(day.dayIndex)}
+                    android_ripple={Platform.OS === "android" ? { color: colors.ripple } : undefined}
+                    style={({ pressed }) => [
+                      styles.switchRow,
+                      {
+                        borderBottomColor: index === WEEKDAYS.length - 1 ? "transparent" : colors.divider,
+                      },
+                      Platform.OS === "ios" && pressed ? styles.switchRowPressed : null,
+                    ]}
+                  >
+                    <View style={styles.switchTextBlock}>
+                      <AppText variant="body" color={colors.text}>
+                        {day.name}
+                      </AppText>
+                      <AppText variant="caption" color={colors.textTertiary}>
+                        {isSelected ? "Habit appears on this day." : "Not scheduled on this day."}
+                      </AppText>
+                    </View>
+                    <Switch
+                      value={isSelected}
+                      onValueChange={() => handleDayToggle(day.dayIndex)}
+                      trackColor={{ false: colors.inputBorder, true: colors.primary }}
+                      thumbColor={Platform.OS === "android" ? colors.cardBackground : undefined}
+                      ios_backgroundColor={colors.inputBorder}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         );
       case RepetitionType.INTERVAL:
         return (
-          <NumberStepperInput
-            label="Interval"
-            value={customDays}
-            onChange={setCustomDays}
-            min={1}
-            max={365}
-            unit="d"
-            presets={[2, 3, 7, 14, 30]}
-          />
+          <View style={styles.intervalPickerContainer}>
+            <WheelPicker
+              data={Array.from({ length: 365 }, (_, i) => ({ value: i + 1, label: `${i + 1} days` }))}
+              value={customDays}
+              onValueChanged={({ item }: { item: { value: number; label: string } }) => setCustomDays(item.value)}
+              style={{ height: 150, width: "100%" }}
+              itemHeight={40}
+              itemTextStyle={{ color: colors.text, fontSize: 18 }}
+              overlayItemStyle={{ backgroundColor: colors.primarySubtle, borderRadius: BorderRadius.md }}
+            />
+          </View>
         );
       default:
         return null;
@@ -88,21 +126,24 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
         : null;
 
   return (
-    <FormSection label="Schedule">
+    <FormSection label="Schedule" description="Choose how often this habit becomes due.">
       <SegmentedControl
-        options={[
-          { label: "Daily", value: RepetitionType.DAILY },
-          { label: "Weekly", value: RepetitionType.WEEKDAYS },
-          { label: "Interval", value: RepetitionType.INTERVAL },
-        ]}
-        value={repetitionType}
-        accessibilityLabel="Schedule type"
-        onChange={(next) => {
+        values={["Daily", "Weekly", "Interval"]}
+        selectedIndex={repetitionType === RepetitionType.DAILY ? 0 : repetitionType === RepetitionType.WEEKDAYS ? 1 : 2}
+        onChange={(event) => {
+          const index = event.nativeEvent.selectedSegmentIndex;
+          let next = RepetitionType.DAILY;
+          if (index === 1) next = RepetitionType.WEEKDAYS;
+          else if (index === 2) next = RepetitionType.INTERVAL;
+
           if (next !== repetitionType) {
             void haptic.medium();
           }
-          setRepetitionType(next as RepetitionType);
+          setRepetitionType(next);
         }}
+        tintColor={colors.primary}
+        backgroundColor={colors.cardBackground}
+        style={styles.segmentedControl}
       />
 
       <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>
@@ -116,9 +157,22 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
                 {helperText}
               </AppText>
             ) : null}
+
+            {errorMessage ? (
+              <AppText variant="small" color={colors.error} style={styles.sharedHelperText}>
+                {errorMessage}
+              </AppText>
+            ) : null}
           </View>
         ) : (
-          renderRepetitionOptions()
+          <View>
+            {renderRepetitionOptions()}
+            {errorMessage ? (
+              <AppText variant="small" color={colors.error} style={styles.topLevelErrorText}>
+                {errorMessage}
+              </AppText>
+            ) : null}
+          </View>
         )}
       </View>
     </FormSection>
@@ -134,6 +188,9 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.base,
     minHeight: 80,
     justifyContent: "center",
+  },
+  segmentedControl: {
+    marginBottom: Spacing.base,
   },
   infoBlock: {
     paddingVertical: Spacing.xs,
@@ -161,5 +218,32 @@ const styles = StyleSheet.create({
   },
   scheduleControlBlock: {
     gap: Spacing.sm,
+  },
+  switchesContainer: {
+    marginTop: Spacing.xs,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xs,
+    borderBottomWidth: 1,
+  },
+  switchTextBlock: {
+    flex: 1,
+    paddingRight: Spacing.md,
+  },
+  switchRowPressed: {
+    opacity: 0.8,
+  },
+  intervalPickerContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+    overflow: "hidden",
+  },
+  topLevelErrorText: {
+    marginTop: Spacing.sm,
   },
 });

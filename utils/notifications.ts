@@ -1,74 +1,131 @@
-import notifee, {
-  TriggerType,
-  TimestampTrigger,
-  RepeatFrequency,
-  AndroidNotificationSetting,
-  AuthorizationStatus,
-} from "@notifee/react-native";
-import type { Dayjs } from "dayjs";
+import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-export const setNotification = async (timerId: string, habitTitle: string, date: Dayjs) => {
+import { canScheduleExactAlarms, openSettings } from "react-native-permissions";
+
+const TIMER_CHANNEL_ID = "timers";
+const TIMER_CHANNEL_NAME = "Timers";
+
+const getTimerNotificationId = (timerId: string) => `timer-${timerId}`;
+
+const ensureNotificationPermission = async (): Promise<boolean> => {
   try {
-    // First check current notification settings without requesting
-    const currentSettings = await notifee.getNotificationSettings();
-
-    // Only request permission if not already granted
-    if (currentSettings.authorizationStatus !== AuthorizationStatus.AUTHORIZED) {
-      await notifee.requestPermission();
+    const existingPermissions = await Notifications.getPermissionsAsync();
+    if (existingPermissions.granted) {
+      return true;
     }
 
-    // Check alarm settings only if needed (Android)
-    if (Platform.OS === "android") {
-      if (currentSettings.android.alarm !== AndroidNotificationSetting.ENABLED) {
-        await notifee.openAlarmPermissionSettings();
-      }
-    }
+    const requestedPermissions = await Notifications.requestPermissionsAsync();
+    return requestedPermissions.granted;
+  } catch (error) {
+    console.error("Error requesting notification permissions:", error);
+    return false;
+  }
+};
 
-    // Create a channel (required for Android)
-    const channelId = await notifee.createChannel({
-      id: "default",
-      name: "Default Channel",
+const ensureTimerChannel = async () => {
+  if (Platform.OS !== "android") {
+    return;
+  }
+
+  try {
+    await Notifications.setNotificationChannelAsync(TIMER_CHANNEL_ID, {
+      name: TIMER_CHANNEL_NAME,
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
     });
+  } catch (error) {
+    console.error("Error creating timer notification channel:", error);
+  }
+};
 
-    const trigger: TimestampTrigger = {
-      type: TriggerType.TIMESTAMP,
-      timestamp: date.valueOf(), // Use the date's timestamp
-      repeatFrequency: RepeatFrequency.WEEKLY, // repeat once a week
-      alarmManager: {
-        allowWhileIdle: true,
-      },
+export const prepareTimerNotifications = async ({
+  openAlarmSettings = true,
+}: { openAlarmSettings?: boolean } = {}): Promise<boolean> => {
+  const hasPermission = await ensureNotificationPermission();
+  if (!hasPermission) {
+    return false;
+  }
+
+  await ensureTimerChannel();
+
+  if (Platform.OS !== "android") {
+    return true;
+  }
+
+  try {
+    const exactAlarmsEnabled = await canScheduleExactAlarms();
+    if (exactAlarmsEnabled) {
+      return true;
+    }
+
+    if (openAlarmSettings) {
+      await openSettings("alarms");
+    }
+  } catch (error) {
+    console.error("Error checking exact alarm access:", error);
+  }
+
+  return false;
+};
+
+export const scheduleTimerNotification = async (timerId: string, habitTitle: string, remainingMs: number) => {
+  try {
+    const canSchedule = await prepareTimerNotifications({ openAlarmSettings: false });
+    if (!canSchedule) {
+      return undefined;
+    }
+
+    const notificationId = getTimerNotificationId(timerId);
+    const content: Notifications.NotificationContentInput = {
+      title: "Timer Reached its goal!",
+      body: `${habitTitle} timer has reached its goal, but is still running.`,
+      sound: "default",
+      color: "#023c69",
+      priority: Notifications.AndroidNotificationPriority.MAX,
     };
 
-    const notificationId = await notifee.createTriggerNotification(
-      {
-        id: timerId,
-        title: "Timer Reached its goal!",
-        body: `${habitTitle} timer has reached its goal, but is still running.`,
-        android: {
-          channelId,
-        },
+    if (remainingMs <= 0) {
+      return Notifications.scheduleNotificationAsync({
+        identifier: notificationId,
+        content,
+        trigger: null,
+      });
+    }
+
+    return Notifications.scheduleNotificationAsync({
+      identifier: notificationId,
+      content,
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(Date.now() + remainingMs),
+        channelId: TIMER_CHANNEL_ID,
       },
-      trigger
-    );
-
-    return notificationId;
+    });
   } catch (error) {
-    console.error("Error scheduling notification:", error);
+    console.error("Error scheduling timer notification:", error);
+    return undefined;
   }
 };
 
-export const cancelNotification = async (notificationId: string) => {
+export const cancelTimerNotification = async (timerId: string) => {
   try {
-    await notifee.cancelNotification(notificationId);
+    const notificationId = getTimerNotificationId(timerId);
+    await Promise.allSettled([
+      Notifications.cancelScheduledNotificationAsync(notificationId),
+      Notifications.dismissNotificationAsync(notificationId),
+    ]);
   } catch (error) {
-    console.error("Error cancelling notification:", error);
+    console.error("Error cancelling timer notification:", error);
   }
 };
 
-export const cancelAllNotifications = async () => {
+export const cancelAllTimerNotifications = async () => {
   try {
-    await notifee.cancelAllNotifications();
+    await Promise.allSettled([
+      Notifications.cancelAllScheduledNotificationsAsync(),
+      Notifications.dismissAllNotificationsAsync(),
+    ]);
   } catch (error) {
-    console.error("Error cancelling all notifications:", error);
+    console.error("Error cancelling all timer notifications:", error);
   }
 };
