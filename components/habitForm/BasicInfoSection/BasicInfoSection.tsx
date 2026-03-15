@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 
 import { BorderRadius, Spacing } from "@/constants/Spacing";
@@ -68,7 +68,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
   );
 };
 
-export default BasicInfoSection;
+export default memo(BasicInfoSection);
 
 const styles = StyleSheet.create({
   row: {

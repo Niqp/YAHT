@@ -1,15 +1,13 @@
-import { CalendarDays } from "lucide-react-native";
+import React, { memo, useCallback, useMemo } from "react";
+import { CalendarDays, RotateCcw } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { RepetitionType } from "@/types/habit";
 import { getOrderedWeekDays } from "@/utils/date";
 import { haptic } from "@/utils/haptics";
-import type React from "react";
-import { Platform, Pressable, StyleSheet, Switch, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import AppText from "@/components/ui/AppText";
-import { FormSection } from "@/components/ui/form";
-import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import WheelPicker from "@quidone/react-native-wheel-picker";
+import { AppSegmentedControl, AppText } from "@/components/ui";
+import { FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 
 interface RepetitionPatternSectionProps {
@@ -21,7 +19,20 @@ interface RepetitionPatternSectionProps {
   setCustomDays: (days: number) => void;
   weekStartDay: number;
   errorMessage?: string | null;
+  presentation?: "card" | "sheet";
 }
+
+const INTERVAL_OPTIONS = Array.from({ length: 365 }, (_, index) => ({
+  value: index + 1,
+  label: `${index + 1} days`,
+}));
+
+const INTERVAL_PRESETS = [
+  { label: "1 day", value: 1 },
+  { label: "2 days", value: 2 },
+  { label: "3 days", value: 3 },
+  { label: "7 days", value: 7 },
+] as const;
 
 const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   repetitionType,
@@ -32,106 +43,94 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   setCustomDays,
   weekStartDay,
   errorMessage,
+  presentation = "card",
 }) => {
   const { colors } = useTheme();
 
-  const WEEKDAYS = getOrderedWeekDays(weekStartDay);
+  const orderedWeekdays = useMemo(() => getOrderedWeekDays(weekStartDay), [weekStartDay]);
+  const weekdayOptions = useMemo(
+    () =>
+      orderedWeekdays.map((day) => ({
+        value: day.dayIndex,
+        label: day.name.slice(0, 3),
+      })),
+    [orderedWeekdays]
+  );
+  const segmentedIndex = useMemo(
+    () => (repetitionType === RepetitionType.DAILY ? 0 : repetitionType === RepetitionType.WEEKDAYS ? 1 : 2),
+    [repetitionType]
+  );
 
-  const handleDayToggle = (day: number) => {
-    if (selectedDays.includes(day)) {
-      setSelectedDays(selectedDays.filter((d) => d !== day));
-    } else {
-      setSelectedDays([...selectedDays, day]);
-    }
-  };
-
-  const renderRepetitionOptions = () => {
-    switch (repetitionType) {
-      case RepetitionType.DAILY:
-        return (
-          <View style={styles.infoBlock}>
-            <View style={styles.infoRow}>
-              <CalendarDays size={24} color={colors.primary} />
-              <AppText variant="body" color={colors.textSecondary} style={styles.infoText}>
-                This habit will repeat every single day.
-              </AppText>
-            </View>
-          </View>
-        );
-      case RepetitionType.WEEKDAYS:
-        return (
-          <View style={styles.scheduleControlBlock}>
-            <View style={styles.switchesContainer}>
-              {WEEKDAYS.map((day, index) => {
-                const isSelected = selectedDays.includes(day.dayIndex);
-
-                return (
-                  <Pressable
-                    key={day.dayIndex}
-                    onPress={() => handleDayToggle(day.dayIndex)}
-                    android_ripple={Platform.OS === "android" ? { color: colors.ripple } : undefined}
-                    style={({ pressed }) => [
-                      styles.switchRow,
-                      {
-                        borderBottomColor: index === WEEKDAYS.length - 1 ? "transparent" : colors.divider,
-                      },
-                      Platform.OS === "ios" && pressed ? styles.switchRowPressed : null,
-                    ]}
-                  >
-                    <View style={styles.switchTextBlock}>
-                      <AppText variant="body" color={colors.text}>
-                        {day.name}
-                      </AppText>
-                      <AppText variant="caption" color={colors.textTertiary}>
-                        {isSelected ? "Habit appears on this day." : "Not scheduled on this day."}
-                      </AppText>
-                    </View>
-                    <Switch
-                      value={isSelected}
-                      onValueChange={() => handleDayToggle(day.dayIndex)}
-                      trackColor={{ false: colors.inputBorder, true: colors.primary }}
-                      thumbColor={Platform.OS === "android" ? colors.cardBackground : undefined}
-                      ios_backgroundColor={colors.inputBorder}
-                    />
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        );
-      case RepetitionType.INTERVAL:
-        return (
-          <View style={styles.intervalPickerContainer}>
-            <WheelPicker
-              data={Array.from({ length: 365 }, (_, i) => ({ value: i + 1, label: `${i + 1} days` }))}
-              value={customDays}
-              onValueChanged={({ item }: { item: { value: number; label: string } }) => setCustomDays(item.value)}
-              style={{ height: 150, width: "100%" }}
-              itemHeight={40}
-              itemTextStyle={{ color: colors.text, fontSize: 18 }}
-              overlayItemStyle={{ backgroundColor: colors.primarySubtle, borderRadius: BorderRadius.md }}
-            />
-          </View>
-        );
-      default:
-        return null;
-    }
-  };
+  const handleDayToggle = useCallback(
+    (day: number) => {
+      if (selectedDays.includes(day)) {
+        setSelectedDays(selectedDays.filter((d) => d !== day));
+      } else {
+        setSelectedDays([...selectedDays, day]);
+      }
+    },
+    [selectedDays, setSelectedDays]
+  );
 
   const helperText =
     repetitionType === RepetitionType.INTERVAL
       ? `Habit becomes due ${customDays === 1 ? "every day" : `every ${customDays} days`}.`
       : repetitionType === RepetitionType.WEEKDAYS
         ? "Select the weekdays when this habit should appear."
-        : null;
+        : "This habit appears every day.";
 
-  return (
-    <FormSection label="Schedule" description="Choose how often this habit becomes due.">
-      <SegmentedControl
+  const activePanel =
+    repetitionType === RepetitionType.DAILY ? (
+      <View style={[styles.panel, styles.centeredPanel]}>
+        <View style={styles.infoBlock}>
+          <View style={styles.infoRow}>
+            <CalendarDays size={24} color={colors.primary} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.infoText}>
+              This habit will repeat every single day.
+            </AppText>
+          </View>
+        </View>
+      </View>
+    ) : repetitionType === RepetitionType.WEEKDAYS ? (
+      <View style={styles.panel}>
+        <View style={styles.scheduleControlBlock}>
+          <View style={styles.completionTypeDescription}>
+            <CalendarDays size={24} color={colors.primary} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
+              Pick the days when this habit should appear each week.
+            </AppText>
+          </View>
+          <PresetPills
+            options={weekdayOptions}
+            selectionMode="multiple"
+            selectedValues={selectedDays}
+            onToggle={handleDayToggle}
+          />
+        </View>
+      </View>
+    ) : (
+      <View style={styles.panel}>
+        <View style={styles.scheduleControlBlock}>
+          <View style={styles.completionTypeDescription}>
+            <RotateCcw size={24} color={colors.primary} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
+              Choose how many days should pass before this habit is due again.
+            </AppText>
+          </View>
+          <View style={[styles.pickerSurface, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+            <WheelPicker data={INTERVAL_OPTIONS} value={customDays} onChange={setCustomDays} style={styles.picker} />
+          </View>
+          <PresetPills options={INTERVAL_PRESETS} selectedValue={customDays} onSelect={setCustomDays} />
+        </View>
+      </View>
+    );
+
+  const content = (
+    <>
+      <AppSegmentedControl
         values={["Daily", "Weekly", "Interval"]}
-        selectedIndex={repetitionType === RepetitionType.DAILY ? 0 : repetitionType === RepetitionType.WEEKDAYS ? 1 : 2}
-        onChange={(event) => {
-          const index = event.nativeEvent.selectedSegmentIndex;
+        selectedIndex={segmentedIndex}
+        onChange={(index) => {
           let next = RepetitionType.DAILY;
           if (index === 1) next = RepetitionType.WEEKDAYS;
           else if (index === 2) next = RepetitionType.INTERVAL;
@@ -141,55 +140,57 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
           }
           setRepetitionType(next);
         }}
-        tintColor={colors.primary}
-        backgroundColor={colors.cardBackground}
         style={styles.segmentedControl}
       />
 
       <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>
-        {repetitionType === RepetitionType.WEEKDAYS || repetitionType === RepetitionType.INTERVAL ? (
-          <View
-            style={[styles.scheduleInputContainer, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}
-          >
-            {renderRepetitionOptions()}
-            {helperText ? (
-              <AppText variant="small" color={colors.textTertiary} style={styles.sharedHelperText}>
-                {helperText}
-              </AppText>
-            ) : null}
+        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+          {activePanel}
+        </View>
 
-            {errorMessage ? (
-              <AppText variant="small" color={colors.error} style={styles.sharedHelperText}>
-                {errorMessage}
-              </AppText>
-            ) : null}
-          </View>
-        ) : (
-          <View>
-            {renderRepetitionOptions()}
-            {errorMessage ? (
-              <AppText variant="small" color={colors.error} style={styles.topLevelErrorText}>
-                {errorMessage}
-              </AppText>
-            ) : null}
-          </View>
-        )}
+        <AppText variant="small" color={errorMessage ? colors.error : colors.textTertiary} style={styles.feedbackText}>
+          {errorMessage ?? helperText}
+        </AppText>
       </View>
+    </>
+  );
+
+  if (presentation === "sheet") {
+    return (
+      <View>
+        <AppText variant="title" color={colors.text} style={styles.sheetTitle}>
+          Repeatability
+        </AppText>
+        <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
+          Choose how often this habit becomes due.
+        </AppText>
+        {content}
+      </View>
+    );
+  }
+
+  return (
+    <FormSection label="Schedule" description="Choose how often this habit becomes due.">
+      {content}
     </FormSection>
   );
 };
 
-export default RepetitionPatternSection;
+export default memo(RepetitionPatternSection);
 
 const styles = StyleSheet.create({
   optionsWrapper: {
     borderTopWidth: 1,
     marginTop: Spacing.base,
     paddingTop: Spacing.base,
-    minHeight: 80,
-    justifyContent: "center",
   },
   segmentedControl: {
+    marginBottom: Spacing.base,
+  },
+  sheetTitle: {
+    marginBottom: Spacing.xs,
+  },
+  sheetDescription: {
     marginBottom: Spacing.base,
   },
   infoBlock: {
@@ -204,46 +205,51 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
     flex: 1,
   },
-  scheduleInputContainer: {
+  fixedPanelFrame: {
     width: "100%",
     borderWidth: 1,
     borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  sharedHelperText: {
-    minHeight: 18,
-  },
-  scheduleControlBlock: {
-    gap: Spacing.sm,
-  },
-  switchesContainer: {
-    marginTop: Spacing.xs,
-  },
-  switchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xs,
-    borderBottomWidth: 1,
-  },
-  switchTextBlock: {
-    flex: 1,
-    paddingRight: Spacing.md,
-  },
-  switchRowPressed: {
-    opacity: 0.8,
-  },
-  intervalPickerContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.sm,
+    minHeight: 288,
+    height: 288,
     overflow: "hidden",
   },
-  topLevelErrorText: {
+  panel: {
+    flex: 1,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
+  },
+  centeredPanel: {
+    justifyContent: "center",
+  },
+  scheduleControlBlock: {
+    flex: 1,
+    gap: Spacing.md,
+  },
+  picker: {
+    height: 120,
+    width: "100%",
+  },
+  pickerSurface: {
+    height: 164,
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    overflow: "hidden",
+    justifyContent: "center",
+  },
+  completionTypeDescription: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    minHeight: 44,
+  },
+  completionDescription: {
+    marginLeft: Spacing.md,
+    flex: 1,
+    lineHeight: 22,
+  },
+  feedbackText: {
     marginTop: Spacing.sm,
   },
 });

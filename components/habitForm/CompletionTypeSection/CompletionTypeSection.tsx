@@ -1,11 +1,9 @@
+import React, { memo, useMemo } from "react";
 import { CheckSquare, Clock, RotateCcw } from "lucide-react-native";
-import type React from "react";
 import { StyleSheet, View } from "react-native";
 
-import AppText from "@/components/ui/AppText";
-import { DurationInput, FormSection } from "@/components/ui/form";
-import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import WheelPicker from "@quidone/react-native-wheel-picker";
+import { AppSegmentedControl, AppText } from "@/components/ui";
+import { DurationInput, FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { CompletionType } from "@/types/habit";
@@ -17,7 +15,20 @@ interface CompletionTypeSectionProps {
   setCompletionGoal: (goal: number) => void;
   isEditMode: boolean;
   errorMessage?: string | null;
+  presentation?: "card" | "sheet";
 }
+
+const REPETITION_OPTIONS = Array.from({ length: 100 }, (_, index) => ({
+  value: index + 1,
+  label: `${index + 1} reps`,
+}));
+
+const REPETITION_PRESETS = [
+  { label: "5", value: 5 },
+  { label: "10", value: 10 },
+  { label: "15", value: 15 },
+  { label: "20", value: 20 },
+] as const;
 
 const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   completionType,
@@ -26,89 +37,90 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   setCompletionGoal,
   isEditMode,
   errorMessage,
+  presentation = "card",
 }) => {
   const { colors } = useTheme();
+  const segmentedIndex = useMemo(
+    () => (completionType === CompletionType.SIMPLE ? 0 : completionType === CompletionType.REPETITIONS ? 1 : 2),
+    [completionType]
+  );
 
-  const renderCompletionOptions = () => {
-    switch (completionType) {
-      case "simple":
-        return (
-          <View style={styles.infoBlock}>
-            <View style={styles.completionTypeDescription}>
-              <CheckSquare size={24} color={colors.primary} />
-              <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-                Simple completion (done or not done)
-              </AppText>
-            </View>
-          </View>
-        );
-      case "repetitions":
-        return (
-          <View style={styles.completionTypeContainer}>
-            <View style={styles.completionTypeDescription}>
-              <RotateCcw size={24} color={colors.primary} />
-              <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-                Track repetitions (e.g., number of exercises)
-              </AppText>
-            </View>
-            <View
-              style={[styles.goalControlContainer, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}
-            >
-              <WheelPicker
-                data={Array.from({ length: 100 }, (_, i) => ({ value: i + 1, label: `${i + 1} reps` }))}
-                value={completionGoal}
-                onValueChanged={({ item }: { item: { value: number; label: string } }) => setCompletionGoal(item.value)}
-                style={{ height: 150, width: "100%" }}
-                itemHeight={40}
-                itemTextStyle={{ color: colors.text, fontSize: 18 }}
-                overlayItemStyle={{ backgroundColor: colors.primarySubtle, borderRadius: BorderRadius.md }}
-              />
-            </View>
-          </View>
-        );
-      case CompletionType.TIMED:
-        return (
-          <View style={styles.completionTypeContainer}>
-            <View style={styles.completionTypeDescription}>
-              <Clock size={24} color={colors.primary} />
-              <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-                Track time (e.g., minutes of exercise)
-              </AppText>
-            </View>
-            <DurationInput label="Duration goal" valueMs={completionGoal} onChangeMs={setCompletionGoal} />
-          </View>
-        );
-      default:
-        return null;
-    }
-  };
+  const helperText =
+    completionType === CompletionType.SIMPLE
+      ? "Mark the habit as complete with a single tap."
+      : completionType === CompletionType.REPETITIONS
+        ? `Complete after ${completionGoal} ${completionGoal === 1 ? "rep" : "reps"}.`
+        : "Choose how much time needs to be tracked before completion.";
 
-  return (
-    <FormSection label="Completion goal" description="Decide how this habit should be marked complete.">
-      <SegmentedControl
+  const activePanel =
+    completionType === CompletionType.SIMPLE ? (
+      <View style={[styles.panel, styles.centeredPanel]}>
+        <View style={styles.infoBlockCentered}>
+          <View style={styles.completionTypeDescription}>
+            <CheckSquare size={24} color={colors.primary} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
+              Simple completion (done or not done)
+            </AppText>
+          </View>
+        </View>
+      </View>
+    ) : completionType === CompletionType.REPETITIONS ? (
+      <View style={styles.panel}>
+        <View style={styles.completionTypeContainer}>
+          <View style={styles.completionTypeDescription}>
+            <RotateCcw size={24} color={colors.primary} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
+              Track repetitions (e.g., number of exercises)
+            </AppText>
+          </View>
+          <View style={[styles.pickerSurface, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+            <WheelPicker
+              data={REPETITION_OPTIONS}
+              value={completionGoal}
+              onChange={setCompletionGoal}
+              style={styles.picker}
+            />
+          </View>
+          <PresetPills options={REPETITION_PRESETS} selectedValue={completionGoal} onSelect={setCompletionGoal} />
+        </View>
+      </View>
+    ) : (
+      <View style={styles.panel}>
+        <View style={styles.completionTypeContainer}>
+          <View style={styles.completionTypeDescription}>
+            <Clock size={24} color={colors.primary} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
+              Track time in hours and minutes
+            </AppText>
+          </View>
+          <DurationInput valueMs={completionGoal} onChangeMs={setCompletionGoal} />
+        </View>
+      </View>
+    );
+
+  const content = (
+    <>
+      <AppSegmentedControl
         values={["Simple", "Repetitions", "Timed"]}
-        selectedIndex={
-          completionType === CompletionType.SIMPLE ? 0 : completionType === CompletionType.REPETITIONS ? 1 : 2
-        }
-        onChange={(event) => {
-          const index = event.nativeEvent.selectedSegmentIndex;
+        selectedIndex={segmentedIndex}
+        onChange={(index) => {
           if (index === 0) setCompletionType(CompletionType.SIMPLE);
           else if (index === 1) setCompletionType(CompletionType.REPETITIONS);
           else if (index === 2) setCompletionType(CompletionType.TIMED);
         }}
-        enabled={!isEditMode}
-        tintColor={colors.primary}
-        backgroundColor={colors.cardBackground}
+        disabled={isEditMode}
         style={styles.segmentedControl}
       />
 
-      <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>{renderCompletionOptions()}</View>
+      <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>
+        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+          {activePanel}
+        </View>
 
-      {errorMessage ? (
-        <AppText variant="small" color={colors.error} style={styles.errorText}>
-          {errorMessage}
+        <AppText variant="small" color={errorMessage ? colors.error : colors.textTertiary} style={styles.errorText}>
+          {errorMessage ?? helperText}
         </AppText>
-      ) : null}
+      </View>
 
       {isEditMode ? (
         <View style={[styles.editNoticeContainer, { backgroundColor: colors.errorSubtle, borderColor: colors.error }]}>
@@ -117,46 +129,97 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
           </AppText>
         </View>
       ) : null}
+    </>
+  );
+
+  if (presentation === "sheet") {
+    return (
+      <View>
+        <AppText variant="title" color={colors.text} style={styles.sheetTitle}>
+          Habit type
+        </AppText>
+        <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
+          Decide how this habit should be marked complete.
+        </AppText>
+        {content}
+      </View>
+    );
+  }
+
+  return (
+    <FormSection label="Completion goal" description="Decide how this habit should be marked complete.">
+      {content}
     </FormSection>
   );
 };
 
-export default CompletionTypeSection;
+export default memo(CompletionTypeSection);
 
 const styles = StyleSheet.create({
   optionsWrapper: {
     borderTopWidth: 1,
     marginTop: Spacing.base,
     paddingTop: Spacing.base,
-    minHeight: 80,
-    justifyContent: "center",
   },
   segmentedControl: {
     marginBottom: Spacing.base,
   },
+  sheetTitle: {
+    marginBottom: Spacing.xs,
+  },
+  sheetDescription: {
+    marginBottom: Spacing.base,
+  },
+  fixedPanelFrame: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    minHeight: 288,
+    height: 288,
+    overflow: "hidden",
+  },
+  panel: {
+    flex: 1,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.md,
+  },
+  centeredPanel: {
+    justifyContent: "center",
+  },
   completionTypeContainer: {
+    flex: 1,
     gap: Spacing.md,
   },
   infoBlock: {
     paddingVertical: Spacing.xs,
   },
+  infoBlockCentered: {
+    flex: 1,
+    justifyContent: "center",
+  },
   completionTypeDescription: {
     flexDirection: "row",
-    alignItems: "center",
-    minHeight: 28,
+    alignItems: "flex-start",
+    minHeight: 44,
   },
   completionDescription: {
     marginLeft: Spacing.md,
     flex: 1,
+    lineHeight: 22,
   },
-  goalControlContainer: {
+  picker: {
+    height: 120,
     width: "100%",
+  },
+  pickerSurface: {
+    height: 164,
     borderWidth: 1,
     borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    gap: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    overflow: "hidden",
+    justifyContent: "center",
   },
   editNoticeContainer: {
     marginTop: Spacing.base,

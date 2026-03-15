@@ -3,22 +3,130 @@ import {
   CompletionTypeSection,
   RepetitionPatternSection,
   DiscardChangesSheet,
+  SheetTriggerCard,
 } from "@/components/habitForm";
-import { AppText, ScaleButton } from "@/components/ui";
+import { AppBottomSheet, AppText, ScaleButton } from "@/components/ui";
+import { WheelPicker } from "@/components/ui/form";
 import { Elevation } from "@/constants/Elevation";
-import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import { CompletionType, Habit, RepetitionConfig, RepetitionType } from "@/types/habit";
 import { getCurrentDateStamp } from "@/utils/date";
+import type BottomSheet from "@gorhom/bottom-sheet";
+import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { CalendarDays, CheckSquare } from "lucide-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  InteractionManager,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DEFAULT_ICON = "🌟";
 const DEFAULT_REPETITION_GOAL = 5;
 const DEFAULT_TIMED_GOAL_MS = 5 * 60 * 1000;
+const WEEKDAY_SHORT_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WARMUP_REPETITION_OPTIONS = Array.from({ length: 100 }, (_, index) => ({
+  value: index + 1,
+  label: `${index + 1} reps`,
+}));
+const WARMUP_INTERVAL_OPTIONS = Array.from({ length: 365 }, (_, index) => ({
+  value: index + 1,
+  label: `${index + 1} days`,
+}));
+const WARMUP_HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
+  value: index,
+  label: index === 1 ? "1 hr" : `${index} hrs`,
+}));
+const WARMUP_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => ({
+  value: index,
+  label: index === 1 ? "1 min" : `${index} min`,
+}));
+
+type AddSheetKey = "completion" | "repetition";
+
+const formatCountLabel = (count: number, singular: string, plural: string) => {
+  return `${count} ${count === 1 ? singular : plural}`;
+};
+
+const formatDurationLabel = (durationMs: number) => {
+  const totalMinutes = Math.max(1, Math.round(durationMs / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${formatCountLabel(hours, "hr", "hrs")} ${formatCountLabel(minutes, "min", "min")}`;
+  }
+
+  if (hours > 0) {
+    return formatCountLabel(hours, "hr", "hrs");
+  }
+
+  return formatCountLabel(minutes, "min", "min");
+};
+
+const getCompletionSummary = (completionType: CompletionType, repetitionGoal: number, timedGoalMs: number) => {
+  switch (completionType) {
+    case CompletionType.REPETITIONS:
+      return formatCountLabel(repetitionGoal, "rep", "reps");
+    case CompletionType.TIMED:
+      return formatDurationLabel(timedGoalMs);
+    case CompletionType.SIMPLE:
+    default:
+      return "Simple check-off";
+  }
+};
+
+const getCompletionHelperText = (completionType: CompletionType) => {
+  switch (completionType) {
+    case CompletionType.REPETITIONS:
+      return "Count toward a repetition goal";
+    case CompletionType.TIMED:
+      return "Track elapsed time to completion";
+    case CompletionType.SIMPLE:
+    default:
+      return "Single tap completes the habit";
+  }
+};
+
+const getRepetitionSummary = (repetitionType: RepetitionType, selectedDays: number[], customDays: number) => {
+  switch (repetitionType) {
+    case RepetitionType.WEEKDAYS: {
+      const labels = normalizeDays(selectedDays).map((day) => WEEKDAY_SHORT_LABELS[day]);
+
+      if (labels.length === 0) {
+        return "Pick at least one day";
+      }
+
+      return labels.join(" ");
+    }
+    case RepetitionType.INTERVAL:
+      return customDays === 1 ? "Every day" : `Every ${customDays} days`;
+    case RepetitionType.DAILY:
+    default:
+      return "Daily";
+  }
+};
+
+const getRepetitionHelperText = (repetitionType: RepetitionType) => {
+  switch (repetitionType) {
+    case RepetitionType.WEEKDAYS:
+      return "Only show the habit on selected weekdays";
+    case RepetitionType.INTERVAL:
+      return "Space the habit by a repeating interval";
+    case RepetitionType.DAILY:
+    default:
+      return "Keep it due every day";
+  }
+};
 
 const normalizeDays = (days: number[]) => {
   return [...new Set(days)].filter((day) => day >= 0 && day <= 6).sort((a, b) => a - b);
@@ -86,6 +194,8 @@ const buildCompletionConfig = (completionType: CompletionType, completionGoal: n
 
 export default function AddEditHabitScreen() {
   const { colors, weekStartDay } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
   const habitIdParam = params.habitId;
   const habitId = Array.isArray(habitIdParam) ? habitIdParam[0] : habitIdParam;
@@ -110,10 +220,16 @@ export default function AddEditHabitScreen() {
   const [titleError, setTitleError] = useState<string | null>(null);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [completionError, setCompletionError] = useState<string | null>(null);
+  const [activeSheet, setActiveSheet] = useState<AddSheetKey | null>(null);
+  const [shouldWarmPickers, setShouldWarmPickers] = useState(false);
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
   const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
+  const settingsSheetRef = useRef<BottomSheet>(null);
+
+  const availableHeight = windowHeight - insets.top - insets.bottom;
+  const maxSheetContentSize = Math.max(availableHeight - Spacing.xxl, 320);
 
   useEffect(() => {
     hasInitializedFormRef.current = false;
@@ -182,61 +298,94 @@ export default function AddEditHabitScreen() {
     hasInitializedFormRef.current = true;
   }, [habit, habitId, isHydrated]);
 
+  useEffect(() => {
+    if (Platform.OS !== "android") {
+      return;
+    }
+
+    let interactionTask: ReturnType<typeof InteractionManager.runAfterInteractions> | null = null;
+    const timeoutId = setTimeout(() => {
+      interactionTask = InteractionManager.runAfterInteractions(() => {
+        setShouldWarmPickers(true);
+      });
+    }, 350);
+
+    return () => {
+      clearTimeout(timeoutId);
+      interactionTask?.cancel();
+    };
+  }, []);
+
   const hasUnsavedChanges = isDirty;
 
-  const handleTitleChange = (nextTitle: string) => {
+  const handleTitleChange = useCallback((nextTitle: string) => {
     setTitle(nextTitle);
     if (nextTitle.trim()) {
       setTitleError(null);
     }
     setIsDirty(true);
-  };
+  }, []);
 
-  const handleIconChange = (nextIcon: string) => {
+  const handleIconChange = useCallback((nextIcon: string) => {
     setIcon(nextIcon);
     setIsDirty(true);
-  };
+  }, []);
 
-  const handleRepetitionTypeChange = (nextType: RepetitionType) => {
+  const handleRepetitionTypeChange = useCallback((nextType: RepetitionType) => {
     setRepetitionType(nextType);
     setScheduleError(null);
     setIsDirty(true);
-  };
+  }, []);
 
-  const handleSelectedDaysChange = (nextDays: number[]) => {
+  const handleSelectedDaysChange = useCallback((nextDays: number[]) => {
     setSelectedDays(nextDays);
     if (nextDays.length > 0) {
       setScheduleError(null);
     }
     setIsDirty(true);
-  };
+  }, []);
 
-  const handleCustomDaysChange = (nextDays: number) => {
+  const handleCustomDaysChange = useCallback((nextDays: number) => {
     setCustomDays(nextDays);
     if (nextDays >= 1) {
       setScheduleError(null);
     }
     setIsDirty(true);
-  };
+  }, []);
 
-  const handleCompletionTypeChange = (nextType: CompletionType) => {
+  const handleCompletionTypeChange = useCallback((nextType: CompletionType) => {
     setCompletionType(nextType);
     setCompletionError(null);
     setIsDirty(true);
-  };
+  }, []);
 
-  const handleCompletionGoalChange = (nextGoal: number) => {
-    if (completionType === CompletionType.TIMED) {
-      setTimedGoalMs(nextGoal);
-    }
+  const handleCompletionGoalChange = useCallback(
+    (nextGoal: number) => {
+      if (completionType === CompletionType.TIMED) {
+        setTimedGoalMs(nextGoal);
+      }
 
-    if (completionType === CompletionType.REPETITIONS) {
-      setRepetitionGoal(nextGoal);
-    }
+      if (completionType === CompletionType.REPETITIONS) {
+        setRepetitionGoal(nextGoal);
+      }
 
-    setIsDirty(true);
-    setCompletionError(null);
-  };
+      setIsDirty(true);
+      setCompletionError(null);
+    },
+    [completionType]
+  );
+
+  const openCompletionSheet = useCallback(() => {
+    setActiveSheet("completion");
+  }, []);
+
+  const closeSettingsSheet = useCallback(() => {
+    settingsSheetRef.current?.close();
+  }, []);
+
+  const openRepetitionSheet = useCallback(() => {
+    setActiveSheet("repetition");
+  }, []);
 
   const resolvedCompletionGoal =
     completionType === CompletionType.TIMED
@@ -244,24 +393,28 @@ export default function AddEditHabitScreen() {
       : completionType === CompletionType.REPETITIONS
         ? repetitionGoal
         : DEFAULT_REPETITION_GOAL;
+  const completionSummary = getCompletionSummary(completionType, repetitionGoal, timedGoalMs);
+  const completionHelperText = getCompletionHelperText(completionType);
+  const repetitionSummary = getRepetitionSummary(repetitionType, selectedDays, customDays);
+  const repetitionHelperText = getRepetitionHelperText(repetitionType);
 
-  const navigateBack = () => {
+  const navigateBack = useCallback(() => {
     if (router.canGoBack()) {
       router.back();
       return;
     }
 
     router.replace("/today");
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (!hasUnsavedChanges) {
       navigateBack();
       return;
     }
 
     setIsDiscardSheetOpen(true);
-  };
+  }, [hasUnsavedChanges, navigateBack]);
 
   const handleSave = async () => {
     if (isSubmitting) {
@@ -332,7 +485,7 @@ export default function AddEditHabitScreen() {
     }
   };
 
-  const handleConfirmedDelete = async () => {
+  const handleConfirmedDelete = useCallback(async () => {
     if (!habitId || isSubmitting) {
       return;
     }
@@ -352,9 +505,9 @@ export default function AddEditHabitScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [deleteHabit, habitId, isSubmitting]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (!isEditMode || !habitId) {
       return;
     }
@@ -372,7 +525,7 @@ export default function AddEditHabitScreen() {
         },
       },
     ]);
-  };
+  }, [habitId, isEditMode, handleConfirmedDelete]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -396,24 +549,6 @@ export default function AddEditHabitScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View
-            style={[
-              styles.introCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-                shadowColor: colors.shadow,
-              },
-              Elevation[1],
-            ]}
-          >
-            <AppText variant="body" color={colors.textSecondary} style={styles.introText}>
-              {isEditMode
-                ? "Update details and schedule. Existing completion history stays intact."
-                : "Set a clear title, repetition pattern, and completion type."}
-            </AppText>
-          </View>
-
           <BasicInfoSection
             title={title}
             setTitle={handleTitleChange}
@@ -422,25 +557,32 @@ export default function AddEditHabitScreen() {
             errorMessage={titleError}
           />
 
-          <RepetitionPatternSection
-            repetitionType={repetitionType}
-            setRepetitionType={handleRepetitionTypeChange}
-            selectedDays={selectedDays}
-            setSelectedDays={handleSelectedDaysChange}
-            customDays={customDays}
-            setCustomDays={handleCustomDaysChange}
-            weekStartDay={weekStartDay}
-            errorMessage={scheduleError}
-          />
+          <View style={styles.panelSection}>
+            <AppText variant="label" color={colors.textSecondary} style={styles.panelSectionLabel}>
+              Setup panels
+            </AppText>
+            <AppText variant="caption" color={colors.textTertiary} style={styles.panelSectionDescription}>
+              Open a panel to adjust details while keeping the main form compact.
+            </AppText>
 
-          <CompletionTypeSection
-            completionType={completionType}
-            setCompletionType={handleCompletionTypeChange}
-            completionGoal={resolvedCompletionGoal}
-            setCompletionGoal={handleCompletionGoalChange}
-            isEditMode={isEditMode}
-            errorMessage={completionError}
-          />
+            <SheetTriggerCard
+              label="Habit type"
+              value={completionSummary}
+              helperText={completionHelperText}
+              icon={<CheckSquare size={18} color={colors.primary} />}
+              onPress={openCompletionSheet}
+              errorMessage={completionError}
+            />
+
+            <SheetTriggerCard
+              label="Repeatability"
+              value={repetitionSummary}
+              helperText={repetitionHelperText}
+              icon={<CalendarDays size={18} color={colors.primary} />}
+              onPress={openRepetitionSheet}
+              errorMessage={scheduleError}
+            />
+          </View>
 
           {isEditMode && (
             <View style={styles.dangerZone}>
@@ -491,6 +633,48 @@ export default function AddEditHabitScreen() {
         </View>
       </KeyboardAvoidingView>
 
+      {activeSheet ? (
+        <AppBottomSheet
+          ref={settingsSheetRef}
+          index={0}
+          enableDynamicSizing
+          enableContentPanningGesture={false}
+          overDragResistanceFactor={8}
+          topInset={insets.top}
+          bottomInset={insets.bottom}
+          maxDynamicContentSize={maxSheetContentSize}
+          onClose={() => setActiveSheet(null)}
+        >
+          <BottomSheetView style={[styles.sheetScrollContent, { paddingBottom: insets.bottom + Spacing.lg }]}>
+            {activeSheet === "completion" ? (
+              <CompletionTypeSection
+                completionType={completionType}
+                setCompletionType={handleCompletionTypeChange}
+                completionGoal={resolvedCompletionGoal}
+                setCompletionGoal={handleCompletionGoalChange}
+                isEditMode={isEditMode}
+                errorMessage={completionError}
+                presentation="sheet"
+              />
+            ) : (
+              <RepetitionPatternSection
+                repetitionType={repetitionType}
+                setRepetitionType={handleRepetitionTypeChange}
+                selectedDays={selectedDays}
+                setSelectedDays={handleSelectedDaysChange}
+                customDays={customDays}
+                setCustomDays={handleCustomDaysChange}
+                weekStartDay={weekStartDay}
+                errorMessage={scheduleError}
+                presentation="sheet"
+              />
+            )}
+
+            <ScaleButton label="Done" variant="secondary" onPress={closeSettingsSheet} style={styles.sheetDoneButton} />
+          </BottomSheetView>
+        </AppBottomSheet>
+      ) : null}
+
       <DiscardChangesSheet
         isOpen={isDiscardSheetOpen}
         isEditMode={isEditMode}
@@ -500,6 +684,37 @@ export default function AddEditHabitScreen() {
           navigateBack();
         }}
       />
+
+      {shouldWarmPickers ? (
+        <View pointerEvents="none" importantForAccessibility="no-hide-descendants" style={styles.pickerWarmupHost}>
+          <View style={styles.pickerWarmupRow}>
+            <WheelPicker
+              data={WARMUP_REPETITION_OPTIONS}
+              value={5}
+              onChange={() => { }}
+              style={styles.pickerWarmupWheel}
+            />
+            <WheelPicker
+              data={WARMUP_INTERVAL_OPTIONS}
+              value={7}
+              onChange={() => { }}
+              style={styles.pickerWarmupWheel}
+            />
+            <WheelPicker
+              data={WARMUP_HOUR_OPTIONS}
+              value={0}
+              onChange={() => { }}
+              style={styles.pickerWarmupWheel}
+            />
+            <WheelPicker
+              data={WARMUP_MINUTE_OPTIONS}
+              value={15}
+              onChange={() => { }}
+              style={styles.pickerWarmupWheel}
+            />
+          </View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -519,15 +734,16 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.base,
     paddingBottom: Spacing.xxxl + 72,
   },
-  introCard: {
-    borderWidth: 1,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
+  panelSection: {
     marginBottom: Spacing.lg,
   },
-  introText: {
-    textAlign: "left",
+  panelSectionLabel: {
+    marginBottom: Spacing.xs,
+    marginLeft: Spacing.xs,
+  },
+  panelSectionDescription: {
+    marginBottom: Spacing.md,
+    marginLeft: Spacing.xs,
   },
   dangerZone: {
     marginTop: Spacing.xs,
@@ -555,5 +771,28 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     width: "100%",
+  },
+  sheetScrollContent: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+  },
+  sheetDoneButton: {
+    marginTop: Spacing.lg,
+  },
+  pickerWarmupHost: {
+    position: "absolute",
+    left: -9999,
+    top: -9999,
+    width: 360,
+    height: 180,
+    opacity: 0,
+  },
+  pickerWarmupRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  pickerWarmupWheel: {
+    width: 80,
+    height: 120,
   },
 });

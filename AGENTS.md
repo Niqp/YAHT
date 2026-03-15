@@ -7,7 +7,6 @@ A skill is a set of local instructions to follow that is stored in a `SKILL.md` 
 ### Available skills
 - yaht-project: Comprehensive context and patterns for working with the YAHT (Yet Another Habit Tracker) React Native/Expo project. (file: d:/WebDev/YAHT/.agent/skills/yaht-project/SKILL.md)
 - frontend-design: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications. (file: d:/WebDev/YAHT/.agent/skills/frontend-design/SKILL.md)
-- git-bash-unix: Execute terminal commands through Git Bash and prefer Unix-style commands/paths in this repo. (file: d:/WebDev/YAHT/.agent/skills/git-bash-unix/SKILL.md)
 
 ### How to use skills
 - Discovery: The list above is the skills available in this session (name + description + file path). Skill bodies live on disk at the listed paths.
