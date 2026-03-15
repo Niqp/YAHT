@@ -21,7 +21,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 
 | Category         | Technology                                                                                                         | Notes                                           |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| Framework        | Expo 52 (managed + dev-client)                                                                                     | `expo-router` 4.x for file-based routing        |
+| Framework        | Expo 54 (managed + dev-client)                                                                                     | `expo-router` 6.x for file-based routing        |
 | Language         | TypeScript 5.x                                                                                                     | Strict mode, `@/*` path alias to project root   |
 | State Management | Zustand 5.x + persist middleware                                                                                   | MMKV storage via `react-native-mmkv`            |
 | Date Library     | dayjs 1.x                                                                                                          | Plugins: `isSameOrAfter`, `isToday`, `duration` |
@@ -40,7 +40,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 
 | Directory     | Purpose                                                                                                                                                                                                                      |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/`        | Expo Router pages. Root `_layout.tsx` provides GestureHandler, BottomSheet, SafeArea, and TimerManager providers. Tabs: `today`, `stats`, `settings`. `add.tsx` is a modal route for create/edit.                            |
+| `app/`        | Expo Router pages. Root `_layout.tsx` provides GestureHandler, SafeArea, React Navigation theme, BottomSheet, and TimerManager providers. Tabs: `today`, `stats`, `settings`. `add.tsx` is a modal route for create/edit.    |
 | `components/` | UI components grouped by feature in subfolders. Each component may have a colocated `.styles.ts` file.                                                                                                                       |
 | `store/`      | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`.                                                                                 |
 | `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.                             |
@@ -145,6 +145,7 @@ All visual constants live in `constants/`. Import from there — never hardcode 
 
 - Expo Router file-based routing with tab navigator
 - Root `_layout.tsx` → `(tabs)/_layout.tsx` → tab screens
+- Root layout provides React Navigation `ThemeProvider` and `SafeAreaProvider`; hidden-header tab scenes apply safe-area padding from `(tabs)/_layout.tsx`
 - `add.tsx` is a modal with optional `habitId` search param for edit mode
 - `index.tsx` redirects to `/(tabs)/today`
 

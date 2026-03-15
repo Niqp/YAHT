@@ -79,6 +79,10 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
               value={completionGoal}
               onChange={setCompletionGoal}
               style={styles.picker}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
             />
           </View>
           <PresetPills options={REPETITION_PRESETS} selectedValue={completionGoal} onSelect={setCompletionGoal} />
@@ -200,7 +204,7 @@ const styles = StyleSheet.create({
   },
   completionTypeDescription: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     minHeight: 44,
   },
   completionDescription: {

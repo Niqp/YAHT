@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { BorderRadius, Spacing } from "@/constants/Spacing";
@@ -17,6 +17,7 @@ const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => ({
   value: index,
   label: index === 1 ? "1 min" : `${index} min`,
 }));
+const MIN_DURATION_MS = 60 * 1000;
 
 const DURATION_PRESETS = [
   { label: "5m", value: 5 * 60 * 1000 },
@@ -31,18 +32,29 @@ interface DurationInputProps {
 }
 function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
   const { colors } = useTheme();
+  const normalizedValueMs = Math.max(MIN_DURATION_MS, valueMs);
 
-  const hours = Math.floor(valueMs / 3600000);
-  const minutes = Math.floor((valueMs % 3600000) / 60000);
+  const hours = Math.floor(normalizedValueMs / 3600000);
+  const minutes = Math.floor((normalizedValueMs % 3600000) / 60000);
+  const minuteOptions = useMemo(() => (hours === 0 ? MINUTE_OPTIONS.slice(1) : MINUTE_OPTIONS), [hours]);
+
+  useEffect(() => {
+    if (valueMs < MIN_DURATION_MS) {
+      onChangeMs(MIN_DURATION_MS);
+    }
+  }, [onChangeMs, valueMs]);
+
   const handleHoursChange = useCallback(
     (nextHours: number) => {
-      onChangeMs((nextHours * 60 + minutes) * 60000);
+      const nextMinutes = nextHours === 0 && minutes === 0 ? 1 : minutes;
+      onChangeMs((nextHours * 60 + nextMinutes) * 60000);
     },
     [minutes, onChangeMs]
   );
   const handleMinutesChange = useCallback(
     (nextMinutes: number) => {
-      onChangeMs((hours * 60 + nextMinutes) * 60000);
+      const normalizedMinutes = hours === 0 && nextMinutes === 0 ? 1 : nextMinutes;
+      onChangeMs((hours * 60 + normalizedMinutes) * 60000);
     },
     [hours, onChangeMs]
   );
@@ -60,6 +72,10 @@ function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
               value={hours}
               onChange={handleHoursChange}
               style={styles.picker}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
             />
           </View>
 
@@ -70,10 +86,14 @@ function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
               Minutes
             </AppText>
             <WheelPicker
-              data={MINUTE_OPTIONS}
+              data={minuteOptions}
               value={minutes}
               onChange={handleMinutesChange}
               style={styles.picker}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
             />
           </View>
         </View>

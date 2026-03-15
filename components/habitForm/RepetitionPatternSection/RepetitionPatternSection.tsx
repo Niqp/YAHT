@@ -4,7 +4,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { RepetitionType } from "@/types/habit";
 import { getOrderedWeekDays } from "@/utils/date";
 import { haptic } from "@/utils/haptics";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppSegmentedControl, AppText } from "@/components/ui";
 import { FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
@@ -34,6 +34,16 @@ const INTERVAL_PRESETS = [
   { label: "7 days", value: 7 },
 ] as const;
 
+const chunkIntoRows = <T,>(items: ReadonlyArray<T>, size: number) => {
+  const rows: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    rows.push(items.slice(index, index + size));
+  }
+
+  return rows;
+};
+
 const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   repetitionType,
   setRepetitionType,
@@ -60,6 +70,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     () => (repetitionType === RepetitionType.DAILY ? 0 : repetitionType === RepetitionType.WEEKDAYS ? 1 : 2),
     [repetitionType]
   );
+  const weekdayRows = useMemo(() => chunkIntoRows(weekdayOptions, 3), [weekdayOptions]);
 
   const handleDayToggle = useCallback(
     (day: number) => {
@@ -100,12 +111,39 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
               Pick the days when this habit should appear each week.
             </AppText>
           </View>
-          <PresetPills
-            options={weekdayOptions}
-            selectionMode="multiple"
-            selectedValues={selectedDays}
-            onToggle={handleDayToggle}
-          />
+          <View style={[styles.weekdaySurface, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+            <View style={styles.weekdayGrid}>
+              {weekdayRows.map((row, rowIndex) => (
+                <View key={`weekday-row-${rowIndex}`} style={styles.weekdayRow}>
+                  {row.map((option) => {
+                    const isActive = selectedDays.includes(option.value);
+
+                    return (
+                      <Pressable
+                        key={String(option.value)}
+                        onPress={() => handleDayToggle(option.value)}
+                        android_ripple={{ color: colors.ripple, borderless: false }}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: isActive }}
+                        style={({ pressed }) => [
+                          styles.weekdayPill,
+                          {
+                            backgroundColor: isActive ? colors.primarySubtle : colors.cardBackground,
+                            borderColor: isActive ? colors.primary : colors.inputBorder,
+                          },
+                          pressed ? styles.weekdayPillPressed : null,
+                        ]}
+                      >
+                        <AppText variant="bodyMedium" color={isActive ? colors.primary : colors.textSecondary}>
+                          {option.label}
+                        </AppText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
       </View>
     ) : (
@@ -118,7 +156,16 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
             </AppText>
           </View>
           <View style={[styles.pickerSurface, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
-            <WheelPicker data={INTERVAL_OPTIONS} value={customDays} onChange={setCustomDays} style={styles.picker} />
+            <WheelPicker
+              data={INTERVAL_OPTIONS}
+              value={customDays}
+              onChange={setCustomDays}
+              style={styles.picker}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
+            />
           </View>
           <PresetPills options={INTERVAL_PRESETS} selectedValue={customDays} onSelect={setCustomDays} />
         </View>
@@ -226,6 +273,37 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.md,
   },
+  weekdaySurface: {
+    width: "100%",
+    maxWidth: 320,
+    alignSelf: "center",
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  weekdayGrid: {
+    gap: Spacing.sm,
+    alignItems: "center",
+  },
+  weekdayRow: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+  weekdayPill: {
+    width: 86,
+    minHeight: 52,
+    borderWidth: 1,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.sm,
+  },
+  weekdayPillPressed: {
+    opacity: 0.82,
+  },
   picker: {
     height: 120,
     width: "100%",
@@ -241,7 +319,7 @@ const styles = StyleSheet.create({
   },
   completionTypeDescription: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     minHeight: 44,
   },
   completionDescription: {

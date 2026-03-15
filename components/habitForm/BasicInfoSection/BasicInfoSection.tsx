@@ -86,7 +86,9 @@ const styles = StyleSheet.create({
   emojiInput: {
     width: "100%",
     height: "100%",
+    paddingVertical: 0,
     textAlign: "center",
+    textAlignVertical: "center",
     fontSize: 22,
     lineHeight: 26,
   },

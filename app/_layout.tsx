@@ -1,27 +1,14 @@
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { DarkTheme, DefaultTheme, ThemeProvider, type Theme } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 
 import { useTimerManager } from "@/hooks/timer/useTimerManager";
 import { useTheme } from "@/hooks/useTheme";
-
-const ROOT_STACK_SCREENS = (
-  <>
-    <Stack.Screen name="index" redirect />
-    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    <Stack.Screen
-      name="add"
-      options={{
-        presentation: "modal",
-        headerShown: false,
-      }}
-    />
-  </>
-);
 
 const useSystemThemeSync = (updateSystemTheme: () => void, setupSystemThemeListener: () => () => void) => {
   useEffect(() => {
@@ -54,14 +41,44 @@ export default function RootLayout() {
     [colors.background, colors.cardBackground, colors.text]
   );
 
+  const navigationTheme = useMemo<Theme>(() => {
+    const baseTheme = isDarkMode ? DarkTheme : DefaultTheme;
+
+    return {
+      ...baseTheme,
+      dark: isDarkMode,
+      colors: {
+        ...baseTheme.colors,
+        primary: colors.primary,
+        background: colors.background,
+        card: colors.cardBackground,
+        text: colors.text,
+        border: colors.border,
+        notification: colors.accent,
+      },
+    };
+  }, [colors.accent, colors.background, colors.border, colors.cardBackground, colors.primary, colors.text, isDarkMode]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-      <BottomSheetModalProvider>
-        <StatusBar style={isDarkMode ? "light" : "dark"} backgroundColor="transparent" translucent />
-        <SafeAreaProvider>
-          <Stack screenOptions={stackScreenOptions}>{ROOT_STACK_SCREENS}</Stack>
-        </SafeAreaProvider>
-      </BottomSheetModalProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <ThemeProvider value={navigationTheme}>
+          <BottomSheetModalProvider>
+            <StatusBar style={isDarkMode ? "light" : "dark"} backgroundColor="transparent" translucent />
+            <Stack screenOptions={stackScreenOptions}>
+              <Stack.Screen name="index" redirect />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="add"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+          </BottomSheetModalProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

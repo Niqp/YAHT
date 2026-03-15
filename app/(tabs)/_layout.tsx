@@ -3,6 +3,7 @@ import { Tabs } from "expo-router";
 import { Home, BarChart2, Settings } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Spacing } from "@/constants/Spacing";
 import { Typography } from "@/constants/Typography";
@@ -28,6 +29,7 @@ const TAB_SCREENS = [
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const tabBarShadow = useMemo(
     () =>
@@ -51,6 +53,12 @@ export default function TabsLayout() {
   const screenOptions = useMemo<BottomTabNavigationOptions>(
     () => ({
       headerShown: false,
+      sceneStyle: {
+        backgroundColor: colors.background,
+        paddingTop: insets.top,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+      },
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.tabIconDefault,
       tabBarStyle: {
@@ -63,7 +71,16 @@ export default function TabsLayout() {
         paddingBottom: Spacing.xs,
       },
     }),
-    [colors.primary, colors.tabBackground, colors.tabIconDefault, tabBarShadow]
+    [
+      colors.background,
+      colors.primary,
+      colors.tabBackground,
+      colors.tabIconDefault,
+      insets.left,
+      insets.right,
+      insets.top,
+      tabBarShadow,
+    ]
   );
 
   return (

@@ -28,11 +28,11 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DEFAULT_ICON = "🌟";
-const DEFAULT_REPETITION_GOAL = 5;
-const DEFAULT_TIMED_GOAL_MS = 5 * 60 * 1000;
+const DEFAULT_REPETITION_GOAL = 1;
+const DEFAULT_TIMED_GOAL_MS = 1 * 60 * 1000;
 const WEEKDAY_SHORT_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WARMUP_REPETITION_OPTIONS = Array.from({ length: 100 }, (_, index) => ({
   value: index + 1,
@@ -528,7 +528,17 @@ export default function AddEditHabitScreen() {
   }, [habitId, isEditMode, handleConfirmedDelete]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          paddingTop: insets.top,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
+      ]}
+    >
       <Stack.Screen
         options={{
           title: isEditMode ? "Edit Habit" : "New Habit",
@@ -607,6 +617,7 @@ export default function AddEditHabitScreen() {
             {
               backgroundColor: colors.cardBackground,
               borderTopColor: colors.divider,
+              paddingBottom: insets.bottom + Spacing.base,
               shadowColor: colors.shadow,
             },
             Elevation[2],
@@ -691,31 +702,47 @@ export default function AddEditHabitScreen() {
             <WheelPicker
               data={WARMUP_REPETITION_OPTIONS}
               value={5}
-              onChange={() => { }}
+              onChange={() => {}}
               style={styles.pickerWarmupWheel}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
             />
             <WheelPicker
               data={WARMUP_INTERVAL_OPTIONS}
               value={7}
-              onChange={() => { }}
+              onChange={() => {}}
               style={styles.pickerWarmupWheel}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
             />
             <WheelPicker
               data={WARMUP_HOUR_OPTIONS}
               value={0}
-              onChange={() => { }}
+              onChange={() => {}}
               style={styles.pickerWarmupWheel}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
             />
             <WheelPicker
               data={WARMUP_MINUTE_OPTIONS}
               value={15}
-              onChange={() => { }}
+              onChange={() => {}}
               style={styles.pickerWarmupWheel}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
             />
           </View>
         </View>
       ) : null}
-    </SafeAreaView>
+    </View>
   );
 }
 
