@@ -1,6 +1,6 @@
-import { CheckCircle, Circle, Minus, Plus, RotateCcw, Timer } from "lucide-react-native";
+import { CheckCircle, Circle, PlusCircle, RotateCcw, PlayCircle, PauseCircle, Clock } from "lucide-react-native";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, View } from "react-native";
 import type { ColorTheme } from "@/constants/Colors";
 import type { Habit } from "@/types/habit";
 import styles from "../HabitItem.styles";
@@ -27,49 +27,21 @@ export const HabitStatusIndicator = ({
 }) => (
   <View style={styles.statusContainer}>
     {isCompleted ? (
-      <CheckCircle size={22} color={colors.success} strokeWidth={2} />
-    ) : completionType === "timed" && timerActive ? (
-      <Timer size={22} color={colors.accent} strokeWidth={2} />
+      <CheckCircle size={20} color={colors.success} strokeWidth={2} />
+    ) : completionType === "timed" ? (
+      timerActive ? (
+        <PauseCircle size={22} color={colors.accent} strokeWidth={2} />
+      ) : (
+        <PlayCircle size={22} color={colors.textSecondary} strokeWidth={2} />
+      )
+    ) : completionType === "repetitions" ? (
+      <PlusCircle size={22} color={colors.textSecondary} strokeWidth={2} />
     ) : (
       <Circle size={22} color={colors.textSecondary} strokeWidth={2} />
     )}
   </View>
 );
 
-// Repetition controls
-export const RepetitionControls = ({
-  completionValue,
-  handleIncrement,
-  handleDecrement,
-  colors,
-}: {
-  completionValue: number;
-  handleIncrement: () => void;
-  handleDecrement: () => void;
-  colors: ColorsSubset;
-}) => (
-  <View style={styles.repControlsContainer}>
-    <TouchableOpacity
-      style={[styles.repButton, { backgroundColor: colors.input }]}
-      onPress={handleDecrement}
-      accessibilityRole="button"
-      accessibilityLabel="Decrease count"
-    >
-      <Minus size={16} color={colors.textSecondary} strokeWidth={2} />
-    </TouchableOpacity>
-
-    <Text style={[styles.repCount, { color: colors.text }]}>{completionValue}</Text>
-
-    <TouchableOpacity
-      style={[styles.repButton, { backgroundColor: colors.input }]}
-      onPress={handleIncrement}
-      accessibilityRole="button"
-      accessibilityLabel="Increase count"
-    >
-      <Plus size={16} color={colors.textSecondary} strokeWidth={2} />
-    </TouchableOpacity>
-  </View>
-);
 
 // Subtitle with icon
 export const HabitSubtitle = ({
@@ -117,9 +89,9 @@ export const SubtitleIcon = ({
       return <RotateCcw size={16} color={isCompleted ? colors.success : colors.textSecondary} strokeWidth={2} />;
     case "timed":
       return (
-        <Timer
+        <Clock
           size={16}
-          color={timerActive ? colors.accent : isCompleted ? colors.success : colors.textSecondary}
+          color={isCompleted ? colors.success : timerActive ? colors.success : colors.textSecondary}
           strokeWidth={2}
         />
       );

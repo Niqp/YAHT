@@ -120,6 +120,9 @@ All spacing must use these values. No exceptions.
 2. **Card padding**: `base` (16) horizontal, `lg` (20) vertical.
 3. **Never use spacing values outside the scale.** If you need 15 or 17, round to the nearest token.
 4. **Bottom padding on scrollable screens**: at least `xxxl` (40) so FABs or tab bars don't obscure content.
+5. **Gestalt Proximity**: A section header must mathematically and visually appear closer to its children than to the section above it.
+6. **Consistent Baselines**: Items in the same list must maintain consistent vertical alignment of their primary text, regardless of whether a specific item has a subtitle, icon, or trailing action. Do not let elements "float" upwards.
+7. **Scroll Affordance (Peeking)**: Horizontally scrollable carousels (like dates, tags) must be sized so that the last visible item is partially cut off by the screen edge, instantly communicating that the user can swipe.
 
 ---
 
@@ -232,6 +235,7 @@ These rules apply to **any** component, current or future.
 - Elevation: `elevation-1` minimum for cards that sit above a background.
 - Internal padding: see spacing rules (Section 4.2).
 - When a card contains a list, rows are separated by 1px `divider` lines, not margins.
+- In dark mode applications, card backgrounds must rely on defined Elevation borders (1px solid `border` color) or a substantially distinct `surface` token to prevent them from melting into the `background`.
 
 ### 9.4 Bottom Sheets & Modals
 
@@ -254,6 +258,10 @@ These rules apply to **any** component, current or future.
 - Text: `label` typography (14, 600), `textSecondary` color.
 - Top margin: `xl` (24). Bottom margin: `sm` (8).
 - No background or border — spatial separation only.
+
+### 9.7 Interaction Semantics
+
+- **Visual Verbs**: Ensure the default state of an interactive target visually implies its verb. A boolean toggle uses a checkbox/circle. A timer must use a "Play" affordance (a triangle icon or distinct button), not an empty circle checkbox.
 
 ---
 

@@ -61,11 +61,13 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   const containerStyle = [
     styles.dateItem,
     { backgroundColor: colors.input },
-    isSelected && { backgroundColor: colors.primary },
+    isSelected && { 
+      backgroundColor: colors.primarySubtle,
+      borderColor: colors.primary
+    },
     isToday &&
     !isSelected && {
       backgroundColor: colors.input,
-      borderWidth: 2,
       borderColor: colors.accent,
     },
   ];
@@ -73,14 +75,14 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   const dayNameStyle = [
     styles.dayName,
     { color: colors.textSecondary },
-    isSelected && { color: colors.textInverse },
+    isSelected && { color: colors.primary, fontWeight: "bold" as const },
     isToday && !isSelected && { color: colors.accent, fontWeight: "bold" as const },
   ];
 
   const dayNumberStyle = [
     styles.dayNumber,
     { color: colors.text },
-    isSelected && { color: colors.textInverse },
+    isSelected && { color: colors.primary, fontWeight: "bold" as const },
     isToday && !isSelected && { color: colors.accent, fontWeight: "bold" as const },
   ];
 
@@ -332,7 +334,7 @@ export default function DateSlider() {
         </View>
       </View>
       <View testID="date-slider-recycler-container" style={styles.recyclerContainer} onLayout={handleListLayout}>
-        {isFocused && listWidth > 1 ? (
+        {listWidth > 1 ? (
           <RecyclerListView
             ref={recyclerListRef}
             style={[styles.recyclerList, { width: listWidth }]}

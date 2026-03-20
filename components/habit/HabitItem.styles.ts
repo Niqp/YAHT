@@ -48,12 +48,14 @@ const styles = StyleSheet.create({
   infoContainer: {
     flex: 1,
     justifyContent: "center",
+    paddingVertical: Spacing.sm,
     marginRight: Spacing.sm,
+    minHeight: 56,
   },
   title: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: Spacing.xxs,
+    marginBottom: Spacing.xs,
   },
   subtitleContainer: {
     flexDirection: "row",
@@ -81,6 +83,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
+    gap: Spacing.sm,
   },
   repButton: {
     // 44×44 minimum touch target (§5.1) — visual circle is smaller via inner icon
@@ -103,6 +106,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     alignItems: "center",
     justifyContent: "center",
+    marginRight: Spacing.sm,
   },
 });
 

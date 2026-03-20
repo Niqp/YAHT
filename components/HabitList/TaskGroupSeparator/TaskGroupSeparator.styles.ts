@@ -5,9 +5,9 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Spacing.sm,
+    marginTop: Spacing.md,
     paddingHorizontal: Spacing.base,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   sectionIconContainer: {
     width: 28,

@@ -16,7 +16,6 @@ import styles from "./HabitItem.styles";
 import {
   HabitStatusIndicator,
   HabitSubtitle,
-  RepetitionControls,
 } from "./habitViewSubComponents/HabitViewSubComponents";
 
 interface HabitItemProps {
@@ -111,11 +110,6 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     haptic.complete();
   };
 
-  const handleDecrement = () => {
-    if (completionValue <= 0) return;
-    const newValue = Math.max(0, (completionValue || 0) - 1);
-    updateCompletion({ id: habit.id, value: newValue });
-  };
 
   // Card inner content (shared between gradient and flat variants)
   const cardInner = (
@@ -134,18 +128,17 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
 
       <TouchableOpacity
         style={styles.mainContent}
-        onPress={habit?.completion?.type !== "repetitions" ? handlePress : undefined}
+        onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onLongPress={() => onLongPress(habit)}
         activeOpacity={1}
-        disabled={habit?.completion?.type === "repetitions"}
         accessibilityRole="button"
         accessibilityLabel={habit?.title}
         accessibilityState={{ checked: isCompleted }}
       >
         {/* Left section - Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: colors.input }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primarySubtle }]}>
           <Text style={styles.iconText}>{habit.icon}</Text>
         </View>
 
@@ -167,21 +160,12 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
 
         {/* Right section - Action buttons or completion indicator */}
         <View style={styles.actionButtons}>
-          {habit?.completion?.type === "repetitions" ? (
-            <RepetitionControls
-              completionValue={completionValue}
-              handleIncrement={handleIncrement}
-              handleDecrement={handleDecrement}
-              colors={colors}
-            />
-          ) : (
-            <HabitStatusIndicator
-              isCompleted={isCompleted}
-              timerActive={isTimerActive}
-              completionType={habit?.completion?.type}
-              colors={colors}
-            />
-          )}
+          <HabitStatusIndicator
+            isCompleted={isCompleted}
+            timerActive={isTimerActive}
+            completionType={habit?.completion?.type}
+            colors={colors}
+          />
         </View>
       </TouchableOpacity>
 

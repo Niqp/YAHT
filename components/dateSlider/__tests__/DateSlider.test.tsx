@@ -7,6 +7,7 @@ import DateSlider from "@/components/dateSlider/DateSlider";
 const TODAY = "2026-02-21";
 const PREVIOUS_DAY = "2026-02-20";
 const PRIMARY_COLOR = "#4a67ff";
+const PRIMARY_SUBTLE_COLOR = "#e0e7ff";
 
 type MockHabitStoreState = {
   selectedDate: string;
@@ -56,6 +57,7 @@ jest.mock("@/hooks/useTheme", () => ({
     colors: {
       input: "#1b1b1b",
       primary: "#4a67ff",
+      primarySubtle: "#e0e7ff",
       accent: "#ff8a00",
       textSecondary: "#6f6f6f",
       textInverse: "#ffffff",
@@ -161,14 +163,14 @@ describe("DateSlider", () => {
 
     const setSelectedDateMock = mockStore.getState().setSelectedDate as jest.Mock;
 
-    expect(getBackgroundColor(`date-item-${TODAY}`)).toBe(PRIMARY_COLOR);
+    expect(getBackgroundColor(`date-item-${TODAY}`)).toBe(PRIMARY_SUBTLE_COLOR);
 
     fireEvent.press(screen.getByTestId(`date-item-${PREVIOUS_DAY}`));
 
     expect(setSelectedDateMock).toHaveBeenCalledWith(PREVIOUS_DAY);
     expect(mockStore.getState().selectedDate).toBe(PREVIOUS_DAY);
-    expect(getBackgroundColor(`date-item-${PREVIOUS_DAY}`)).toBe(PRIMARY_COLOR);
-    expect(getBackgroundColor(`date-item-${TODAY}`)).not.toBe(PRIMARY_COLOR);
+    expect(getBackgroundColor(`date-item-${PREVIOUS_DAY}`)).toBe(PRIMARY_SUBTLE_COLOR);
+    expect(getBackgroundColor(`date-item-${TODAY}`)).not.toBe(PRIMARY_SUBTLE_COLOR);
   });
 
   it("updates selected date with accessibilityTap activation", () => {

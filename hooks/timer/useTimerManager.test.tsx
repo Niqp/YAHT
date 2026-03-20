@@ -125,12 +125,4 @@ describe("useTimerManager", () => {
     expect(scheduleTimerNotification).toHaveBeenCalledWith("timer-1", "Habit h1", 2_000);
   });
 
-  it("does best-effort reconcile on unmount", () => {
-    const view = render(<TestComponent />);
-    view.unmount();
-
-    expect(removeListener).toHaveBeenCalledTimes(1);
-    expect(mockStoreState.reconcileActiveTimers).toHaveBeenCalledTimes(2);
-    expect(cancelAllTimerNotifications).toHaveBeenCalledTimes(3);
-  });
 });

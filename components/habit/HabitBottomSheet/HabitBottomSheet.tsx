@@ -75,6 +75,7 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
   return (
     <AppBottomSheet
       ref={bottomSheetRef}
+      enableDynamicSizing={true}
       onChange={(index) => {
         if (index === -1) onClose();
       }}

@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   flatListContent: {
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: Spacing.base,
   },
   recyclerContainer: {
     width: "100%",
@@ -70,6 +70,8 @@ const styles = StyleSheet.create({
     width: 45,
     height: 70,
     borderRadius: 22.5,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   dayName: {
     fontSize: 12,

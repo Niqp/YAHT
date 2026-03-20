@@ -101,8 +101,8 @@ const sepiaDark = {
 
   // ── Text ─────────────────────────────────────────────────────────────────
   text: "#EDE5D8",
-  textSecondary: "#A89C8C",
-  textTertiary: "#6B5D4F",
+  textSecondary: "#BDB3A6",
+  textTertiary: "#8B7D6E",
   textInverse: "#1A1612",
 
   // ── Borders & Dividers ───────────────────────────────────────────────────
@@ -237,8 +237,8 @@ const clearDark = {
   accent: "#95C2F5",
   // Text
   text: "#E7EEF8",
-  textSecondary: "#B2C0D2",
-  textTertiary: "#7A8FA9",
+  textSecondary: "#C5CFDF",
+  textTertiary: "#9BAAC0",
   textInverse: "#0F1620",
   // Borders and dividers
   border: "#2D415A",
@@ -300,8 +300,8 @@ const oledDark = {
   accent: "#95C2F5",
   // Text
   text: "#EDF3FB",
-  textSecondary: "#B4C2D5",
-  textTertiary: "#758AA5",
+  textSecondary: "#C9D4E3",
+  textTertiary: "#9AAEC4",
   textInverse: "#000000",
   // Borders and dividers
   border: "#1A2B40",
