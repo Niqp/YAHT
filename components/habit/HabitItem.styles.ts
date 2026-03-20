@@ -3,14 +3,11 @@ import { Spacing, BorderRadius } from "@/constants/Spacing";
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
     borderRadius: BorderRadius.md,
     marginHorizontal: Spacing.base,
     borderWidth: 1,
     borderColor: "transparent",
     minHeight: 70,
-    position: "relative",
   },
   contentWrapper: {
     ...({ overflow: "hidden" } as const),
@@ -26,7 +23,6 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    height: "100%",
   },
   mainContent: {
     flex: 1,
@@ -104,7 +100,7 @@ const styles = StyleSheet.create({
   moreButton: {
     // 44×44 minimum touch target (§5.1)
     width: 44,
-    height: "100%",
+    alignSelf: "stretch",
     alignItems: "center",
     justifyContent: "center",
   },

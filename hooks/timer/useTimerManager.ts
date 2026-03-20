@@ -138,10 +138,6 @@ export const useTimerManager = () => {
     // Cleanup on unmount
     return () => {
       subscription.remove();
-
-      // Best-effort only: app kill does not guarantee this cleanup runs on mobile.
-      void clearTimerNotifications();
-      void reconcileTimers();
     };
   }, [clearTimerNotifications, isHydrated, reconcileTimers, scheduleBackgroundTimerNotifications]);
 };

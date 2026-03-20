@@ -77,7 +77,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     elapsedTime,
   });
 
-  const progressBarWidth = `${progress}%`;
+  const progressBarWidth = `${progress}%` as const;
 
   const { getSubtitleText } = useHabitDisplay({
     habit,
@@ -125,7 +125,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         style={[
           styles.progressBar,
           {
-            width: Number(progressBarWidth),
+            width: progressBarWidth,
             backgroundColor: isCompleted ? colors.success : colors.primary,
             opacity: 0.15,
           },
