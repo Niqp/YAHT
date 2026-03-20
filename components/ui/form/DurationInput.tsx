@@ -61,7 +61,7 @@ function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.displayCard, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+      <View style={[styles.displayCard, { backgroundColor: colors.input }]}>
         <View style={styles.wheelsRow}>
           <View style={styles.wheelColumn}>
             <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
@@ -113,7 +113,6 @@ const styles = StyleSheet.create({
   displayCard: {
     height: 164,
     width: "100%",
-    borderWidth: 1,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,

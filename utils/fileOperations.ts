@@ -1,7 +1,6 @@
-import * as DocumentPicker from "expo-document-picker";
 // Note: You'll need to install these packages:
-// expo install expo-file-system expo-document-picker expo-sharing
-import * as FileSystem from "expo-file-system";
+// expo install expo-file-system expo-sharing
+import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { Alert } from "react-native";
 import { useHabitStore } from "../store/habitStore";
@@ -23,15 +22,15 @@ export const exportData = async (): Promise<void> => {
     const date = getCurrentDateStamp();
     const fileName = `habits_backup_${date}.json`;
 
-    // Create file path in app's documents directory
-    const filePath = `${FileSystem.documentDirectory}${fileName}`;
+    // Create the backup file in the app's documents directory
+    const backupFile = new File(Paths.document, fileName);
 
-    // Write data to file
-    await FileSystem.writeAsStringAsync(filePath, habitsJson);
+    backupFile.create({ overwrite: true });
+    backupFile.write(habitsJson);
 
     // Share the file
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(filePath, {
+      await Sharing.shareAsync(backupFile.uri, {
         mimeType: "application/json",
         dialogTitle: "Export Habits Data",
         UTI: "public.json", // For iOS
@@ -41,7 +40,7 @@ export const exportData = async (): Promise<void> => {
     } else {
       Alert.alert(
         "Sharing not available",
-        `Sharing is not available on this device, but the file was saved to ${filePath}`
+        `Sharing is not available on this device, but the file was saved to ${backupFile.uri}`
       );
     }
   } catch (error) {
@@ -56,20 +55,10 @@ export const exportData = async (): Promise<void> => {
  */
 export const importData = async (): Promise<void> => {
   try {
-    // Pick a document
-    const result = await DocumentPicker.getDocumentAsync({
-      type: "application/json",
-      copyToCacheDirectory: true,
-    });
-
-    // Check if document was picked
-    if (result.canceled) {
-      return;
-    }
-
-    // Read file content
-    const fileUri = result.assets[0].uri;
-    const fileContent = await FileSystem.readAsStringAsync(fileUri);
+    const pickedFile = await File.pickFileAsync(undefined, "application/json");
+    const file = Array.isArray(pickedFile) ? pickedFile[0] : pickedFile;
+    const fileContent = await file.text();
+    const importHabits = useHabitStore.getState().importHabits;
 
     // Parse JSON
     try {
@@ -92,9 +81,6 @@ export const importData = async (): Promise<void> => {
           {
             text: "Import",
             onPress: async () => {
-              // Use the importHabits function from the store
-              const importHabits = useHabitStore((state) => state.importHabits);
-
               try {
                 const importedCount = await importHabits(importedHabits);
                 Alert.alert("Import Complete", `Successfully imported ${importedCount} habits.`);

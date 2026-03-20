@@ -83,23 +83,19 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     [selectedDays, setSelectedDays]
   );
 
-  const helperText =
-    repetitionType === RepetitionType.INTERVAL
-      ? `Habit becomes due ${customDays === 1 ? "every day" : `every ${customDays} days`}.`
-      : repetitionType === RepetitionType.WEEKDAYS
-        ? "Select the weekdays when this habit should appear."
-        : "This habit appears every day.";
-
   const activePanel =
     repetitionType === RepetitionType.DAILY ? (
       <View style={[styles.panel, styles.centeredPanel]}>
-        <View style={styles.infoBlock}>
-          <View style={styles.infoRow}>
-            <CalendarDays size={24} color={colors.primary} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.infoText}>
-              This habit will repeat every single day.
-            </AppText>
+        <View style={styles.infoBlockCentered}>
+          <View style={[styles.placeholderBadge, { backgroundColor: colors.primarySubtle }]}>
+            <CalendarDays size={34} color={colors.primary} />
           </View>
+          <AppText variant="title" color={colors.text} style={styles.placeholderTitle}>
+            Due every day
+          </AppText>
+          <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
+            Keep this habit on the list each day.
+          </AppText>
         </View>
       </View>
     ) : repetitionType === RepetitionType.WEEKDAYS ? (
@@ -107,11 +103,11 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
         <View style={styles.scheduleControlBlock}>
           <View style={styles.completionTypeDescription}>
             <CalendarDays size={24} color={colors.primary} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-              Pick the days when this habit should appear each week.
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+              Pick the weekdays when this habit should appear.
             </AppText>
           </View>
-          <View style={[styles.weekdaySurface, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+          <View style={[styles.weekdaySurface, { backgroundColor: colors.input }]}>
             <View style={styles.weekdayGrid}>
               {weekdayRows.map((row, rowIndex) => (
                 <View key={`weekday-row-${rowIndex}`} style={styles.weekdayRow}>
@@ -151,11 +147,11 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
         <View style={styles.scheduleControlBlock}>
           <View style={styles.completionTypeDescription}>
             <RotateCcw size={24} color={colors.primary} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-              Choose how many days should pass before this habit is due again.
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+              Make it due every {customDays} {customDays === 1 ? "day" : "days"}.
             </AppText>
           </View>
-          <View style={[styles.pickerSurface, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+          <View style={[styles.pickerSurface, { backgroundColor: colors.input }]}>
             <WheelPicker
               data={INTERVAL_OPTIONS}
               value={customDays}
@@ -195,9 +191,11 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
           {activePanel}
         </View>
 
-        <AppText variant="small" color={errorMessage ? colors.error : colors.textTertiary} style={styles.feedbackText}>
-          {errorMessage ?? helperText}
-        </AppText>
+        {errorMessage ? (
+          <AppText variant="small" color={colors.error} style={styles.feedbackText}>
+            {errorMessage}
+          </AppText>
+        ) : null}
       </View>
     </>
   );
@@ -240,17 +238,28 @@ const styles = StyleSheet.create({
   sheetDescription: {
     marginBottom: Spacing.base,
   },
-  infoBlock: {
-    paddingVertical: Spacing.xs,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 28,
-  },
-  infoText: {
-    marginLeft: Spacing.md,
+  infoBlockCentered: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  placeholderBadge: {
+    width: 84,
+    height: 84,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.md,
+  },
+  placeholderTitle: {
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  placeholderCaption: {
+    textAlign: "center",
+    maxWidth: 228,
+    lineHeight: 20,
   },
   fixedPanelFrame: {
     width: "100%",
@@ -277,7 +286,6 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 320,
     alignSelf: "center",
-    borderWidth: 1,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,
@@ -310,7 +318,6 @@ const styles = StyleSheet.create({
   },
   pickerSurface: {
     height: 164,
-    borderWidth: 1,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,

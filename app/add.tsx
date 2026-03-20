@@ -21,6 +21,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   InteractionManager,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -222,6 +223,7 @@ export default function AddEditHabitScreen() {
   const [completionError, setCompletionError] = useState<string | null>(null);
   const [activeSheet, setActiveSheet] = useState<AddSheetKey | null>(null);
   const [shouldWarmPickers, setShouldWarmPickers] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
@@ -313,6 +315,18 @@ export default function AddEditHabitScreen() {
     return () => {
       clearTimeout(timeoutId);
       interactionTask?.cancel();
+    };
+  }, []);
+
+  // Workaround for RN #52596: KeyboardAvoidingView leaves residual bottom padding on Android
+  // after keyboard dismissal. Disabling it on hide forces an immediate offset reset to zero.
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", () => setIsKeyboardVisible(true));
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => setIsKeyboardVisible(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
     };
   }, []);
 
@@ -552,7 +566,7 @@ export default function AddEditHabitScreen() {
         }}
       />
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardContainer}>
+      <KeyboardAvoidingView behavior="padding" enabled={isKeyboardVisible} style={styles.keyboardContainer}>
         <ScrollView
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}

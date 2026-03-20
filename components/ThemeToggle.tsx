@@ -8,7 +8,7 @@ import type { ColorThemeName } from "../constants/Colors";
 export default function ThemeToggle() {
   const { colors, mode, colorScheme, colorTheme, setMode, setColorTheme } = useTheme();
 
-  const themeOptions: { value: ThemeMode; label: string; icon: JSX.Element }[] = [
+  const themeOptions: { value: ThemeMode; label: string; icon: React.ReactElement }[] = [
     {
       value: "light",
       label: "Light",
@@ -26,7 +26,7 @@ export default function ThemeToggle() {
     },
   ];
 
-  const colorThemeOptions: { value: ColorThemeName; label: string; icon: JSX.Element }[] = [
+  const colorThemeOptions: { value: ColorThemeName; label: string; icon: React.ReactElement }[] = [
     {
       value: "sepia",
       label: "Sepia",

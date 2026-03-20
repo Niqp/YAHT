@@ -26,6 +26,12 @@ const webStorage = {
   },
 };
 
+const noopStorage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+};
+
 // ── Native: MMKV adapter ───────────────────────────────────────────────────────
 function createNativeStorage() {
   // Dynamic require so web bundles never touch MMKV
@@ -46,6 +52,10 @@ function createNativeStorage() {
   };
 }
 
-export const mmkvStorage = createJSONStorage(() =>
-  Platform.OS === "web" ? webStorage : createNativeStorage()
-);
+export const mmkvStorage = createJSONStorage(() => {
+  try {
+    return Platform.OS === "web" ? webStorage : createNativeStorage();
+  } catch {
+    return noopStorage;
+  }
+})!;

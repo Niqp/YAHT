@@ -31,6 +31,15 @@ export default function TabsLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const baseSceneStyle = useMemo(
+    () => ({
+      paddingTop: insets.top,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
+    }),
+    [insets.left, insets.right, insets.top]
+  );
+
   const tabBarShadow = useMemo(
     () =>
       Platform.select({
@@ -53,12 +62,6 @@ export default function TabsLayout() {
   const screenOptions = useMemo<BottomTabNavigationOptions>(
     () => ({
       headerShown: false,
-      sceneStyle: {
-        backgroundColor: colors.background,
-        paddingTop: insets.top,
-        paddingLeft: insets.left,
-        paddingRight: insets.right,
-      },
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.tabIconDefault,
       tabBarStyle: {
@@ -71,16 +74,7 @@ export default function TabsLayout() {
         paddingBottom: Spacing.xs,
       },
     }),
-    [
-      colors.background,
-      colors.primary,
-      colors.tabBackground,
-      colors.tabIconDefault,
-      insets.left,
-      insets.right,
-      insets.top,
-      tabBarShadow,
-    ]
+    [colors.primary, colors.tabBackground, colors.tabIconDefault, tabBarShadow]
   );
 
   return (
@@ -93,6 +87,10 @@ export default function TabsLayout() {
             headerShown: false,
             title: tab.title,
             tabBarIcon: ({ color, size }) => tab.renderIcon(color, size),
+            sceneStyle: {
+              ...baseSceneStyle,
+              backgroundColor: tab.name === "today" ? colors.surface : colors.background,
+            },
           }}
         />
       ))}

@@ -154,7 +154,7 @@ describe("themeStore", () => {
 
     it("calls onThemeSync callback when app becomes active", () => {
       const onThemeSync = jest.fn();
-      let capturedHandler: ((state: string) => void) | null = null;
+      let capturedHandler: ((state: string) => void) | undefined;
 
       mockAddEventListener.mockImplementation((_event: string, handler: (state: string) => void) => {
         capturedHandler = handler;
@@ -162,13 +162,17 @@ describe("themeStore", () => {
       });
 
       useThemeStore.getState().setupSystemThemeListener(onThemeSync);
-      capturedHandler?.("active");
+      if (!capturedHandler) {
+        throw new Error("Expected AppState handler to be registered");
+      }
+
+      capturedHandler("active");
       expect(onThemeSync).toHaveBeenCalledTimes(1);
     });
 
     it("does not call onThemeSync when app goes to background", () => {
       const onThemeSync = jest.fn();
-      let capturedHandler: ((state: string) => void) | null = null;
+      let capturedHandler: ((state: string) => void) | undefined;
 
       mockAddEventListener.mockImplementation((_event: string, handler: (state: string) => void) => {
         capturedHandler = handler;
@@ -176,7 +180,11 @@ describe("themeStore", () => {
       });
 
       useThemeStore.getState().setupSystemThemeListener(onThemeSync);
-      capturedHandler?.("background");
+      if (!capturedHandler) {
+        throw new Error("Expected AppState handler to be registered");
+      }
+
+      capturedHandler("background");
       expect(onThemeSync).not.toHaveBeenCalled();
     });
   });

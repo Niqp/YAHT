@@ -30,6 +30,22 @@ const REPETITION_PRESETS = [
   { label: "20", value: 20 },
 ] as const;
 
+const formatTimedGoal = (durationMs: number) => {
+  const totalMinutes = Math.max(1, Math.round(durationMs / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return `${hours} ${hours === 1 ? "hr" : "hrs"} ${minutes} min`;
+  }
+
+  if (hours > 0) {
+    return `${hours} ${hours === 1 ? "hr" : "hrs"}`;
+  }
+
+  return `${minutes} min`;
+};
+
 const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   completionType,
   setCompletionType,
@@ -45,23 +61,19 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
     [completionType]
   );
 
-  const helperText =
-    completionType === CompletionType.SIMPLE
-      ? "Mark the habit as complete with a single tap."
-      : completionType === CompletionType.REPETITIONS
-        ? `Complete after ${completionGoal} ${completionGoal === 1 ? "rep" : "reps"}.`
-        : "Choose how much time needs to be tracked before completion.";
-
   const activePanel =
     completionType === CompletionType.SIMPLE ? (
       <View style={[styles.panel, styles.centeredPanel]}>
         <View style={styles.infoBlockCentered}>
-          <View style={styles.completionTypeDescription}>
-            <CheckSquare size={24} color={colors.primary} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-              Simple completion (done or not done)
-            </AppText>
+          <View style={[styles.placeholderBadge, { backgroundColor: colors.primarySubtle }]}>
+            <CheckSquare size={34} color={colors.primary} />
           </View>
+          <AppText variant="title" color={colors.text} style={styles.placeholderTitle}>
+            One tap, done
+          </AppText>
+          <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
+            Mark this habit complete with a single check whenever you are finished.
+          </AppText>
         </View>
       </View>
     ) : completionType === CompletionType.REPETITIONS ? (
@@ -69,11 +81,11 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
         <View style={styles.completionTypeContainer}>
           <View style={styles.completionTypeDescription}>
             <RotateCcw size={24} color={colors.primary} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-              Track repetitions (e.g., number of exercises)
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+              Complete after a certain amount of repetitions.
             </AppText>
           </View>
-          <View style={[styles.pickerSurface, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+          <View style={[styles.pickerSurface, { backgroundColor: colors.input }]}>
             <WheelPicker
               data={REPETITION_OPTIONS}
               value={completionGoal}
@@ -93,8 +105,8 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
         <View style={styles.completionTypeContainer}>
           <View style={styles.completionTypeDescription}>
             <Clock size={24} color={colors.primary} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription}>
-              Track time in hours and minutes
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+              Complete after this much time is tracked.
             </AppText>
           </View>
           <DurationInput valueMs={completionGoal} onChangeMs={setCompletionGoal} />
@@ -121,9 +133,11 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
           {activePanel}
         </View>
 
-        <AppText variant="small" color={errorMessage ? colors.error : colors.textTertiary} style={styles.errorText}>
-          {errorMessage ?? helperText}
-        </AppText>
+        {errorMessage ? (
+          <AppText variant="small" color={colors.error} style={styles.errorText}>
+            {errorMessage}
+          </AppText>
+        ) : null}
       </View>
 
       {isEditMode ? (
@@ -195,12 +209,28 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.md,
   },
-  infoBlock: {
-    paddingVertical: Spacing.xs,
-  },
   infoBlockCentered: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  placeholderBadge: {
+    width: 84,
+    height: 84,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.md,
+  },
+  placeholderTitle: {
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  placeholderCaption: {
+    textAlign: "center",
+    maxWidth: 220,
+    lineHeight: 20,
   },
   completionTypeDescription: {
     flexDirection: "row",
@@ -218,7 +248,6 @@ const styles = StyleSheet.create({
   },
   pickerSurface: {
     height: 164,
-    borderWidth: 1,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,

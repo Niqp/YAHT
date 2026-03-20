@@ -8,7 +8,7 @@ import { formatTime } from "../../utils/date";
 interface StatItem {
   label: string;
   value: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
 }
 
 interface HabitStatsProps {

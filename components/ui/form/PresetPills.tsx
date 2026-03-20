@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "center",
     gap: Spacing.sm,
   },
   pill: {
