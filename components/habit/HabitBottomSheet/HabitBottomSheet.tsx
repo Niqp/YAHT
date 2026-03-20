@@ -65,11 +65,16 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
   }, [habit, updateCompletion, onClose]);
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
     if (isOpen) {
-      bottomSheetRef.current?.expand();
+      // Small delay to allow BottomSheet to measure the newly rendered content
+      timeoutId = setTimeout(() => {
+        bottomSheetRef.current?.expand();
+      }, 50);
     } else {
       bottomSheetRef.current?.close();
     }
+    return () => clearTimeout(timeoutId);
   }, [isOpen]);
 
   return (

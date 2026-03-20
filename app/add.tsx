@@ -15,7 +15,7 @@ import { CompletionType, Habit, RepetitionConfig, RepetitionType } from "@/types
 import { getCurrentDateStamp } from "@/utils/date";
 import type BottomSheet from "@gorhom/bottom-sheet";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
-import { Stack, router, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { CalendarDays, CheckSquare } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -229,6 +229,20 @@ export default function AddEditHabitScreen() {
   const hasHandledMissingHabitRef = useRef(false);
   const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
   const settingsSheetRef = useRef<BottomSheet>(null);
+
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      // If a bottom sheet is active, prevent back navigation and close the sheet
+      if (activeSheet !== null) {
+        e.preventDefault();
+        setActiveSheet(null);
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, activeSheet]);
 
   const availableHeight = windowHeight - insets.top - insets.bottom;
   const maxSheetContentSize = Math.max(availableHeight - Spacing.xxl, 320);
