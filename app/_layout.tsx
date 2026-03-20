@@ -3,26 +3,16 @@ import { DarkTheme, DefaultTheme, ThemeProvider, type Theme } from "@react-navig
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 
 import { useTimerManager } from "@/hooks/timer/useTimerManager";
 import { useTheme } from "@/hooks/useTheme";
 
-const useSystemThemeSync = (updateSystemTheme: () => void, setupSystemThemeListener: () => () => void) => {
-  useEffect(() => {
-    updateSystemTheme();
-    const unsubscribe = setupSystemThemeListener();
-
-    return unsubscribe;
-  }, [setupSystemThemeListener, updateSystemTheme]);
-};
-
 export default function RootLayout() {
-  const { colors, isDarkMode, updateSystemTheme, setupSystemThemeListener } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   useTimerManager();
-  useSystemThemeSync(updateSystemTheme, setupSystemThemeListener);
 
   const stackScreenOptions = useMemo<NativeStackNavigationOptions>(
     () => ({

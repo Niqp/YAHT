@@ -1,20 +1,21 @@
+import { useColorScheme } from "react-native";
+import { Colors } from "../constants/Colors";
 import { useThemeStore } from "../store/themeStore";
 
-export const useTheme = () => {
-  const {
-    mode,
-    colors,
-    colorScheme,
-    colorTheme,
-    weekStartDay,
-    setMode,
-    setColorTheme,
-    setWeekStartDay,
-    setupSystemThemeListener,
-    updateSystemTheme,
-  } = useThemeStore();
+// Helper function to determine dark mode state
+const isDarkModeActive = (
+  mode: "light" | "dark" | "system",
+  systemColorScheme: "light" | "dark" | null | undefined
+): boolean => mode === "dark" || (mode === "system" && systemColorScheme === "dark");
 
-  const isDarkMode = colorScheme === "dark";
+export const useTheme = () => {
+  const { mode, colorTheme, weekStartDay, setMode, setColorTheme, setWeekStartDay } = useThemeStore();
+
+  const systemColorScheme = useColorScheme();
+  const isDarkMode = isDarkModeActive(mode, systemColorScheme);
+
+  const colorScheme = isDarkMode ? "dark" : "light";
+  const colors = Colors[colorTheme][colorScheme];
 
   return {
     colors,
@@ -26,7 +27,5 @@ export const useTheme = () => {
     setColorTheme,
     weekStartDay,
     setWeekStartDay,
-    setupSystemThemeListener,
-    updateSystemTheme,
   };
 };
