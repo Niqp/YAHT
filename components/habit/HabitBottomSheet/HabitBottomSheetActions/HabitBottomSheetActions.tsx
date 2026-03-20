@@ -2,6 +2,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Edit, Trash2, Check, RotateCcw } from "lucide-react-native";
 import { View, TouchableOpacity, Text } from "react-native";
 import styles from "./HabitBottomSheetActions.styles";
+import { getElevation } from "@/constants/Elevation";
 
 interface HabitBottomSheetActionsProps {
   isCompleted: boolean;
@@ -22,7 +23,7 @@ export default function HabitBottomSheetActions({
   return (
     <View style={styles.actionsContainer}>
       <TouchableOpacity
-        style={[styles.actionButton, { backgroundColor: colors.input }]}
+        style={[styles.actionButton, { backgroundColor: colors.input }, getElevation(1, colors.shadow)]}
         onPress={handleEdit}
         activeOpacity={0.7}
       >
@@ -31,7 +32,7 @@ export default function HabitBottomSheetActions({
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.actionButton, { backgroundColor: colors.input }]}
+        style={[styles.actionButton, { backgroundColor: colors.input }, getElevation(1, colors.shadow)]}
         onPress={handleDelete}
         activeOpacity={0.7}
       >
@@ -41,7 +42,7 @@ export default function HabitBottomSheetActions({
 
       {!isCompleted ? (
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.input }]}
+          style={[styles.actionButton, { backgroundColor: colors.input }, getElevation(1, colors.shadow)]}
           onPress={handleComplete}
           activeOpacity={0.7}
         >
@@ -50,7 +51,7 @@ export default function HabitBottomSheetActions({
         </TouchableOpacity>
       ) : (
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.input }]}
+          style={[styles.actionButton, { backgroundColor: colors.input }, getElevation(1, colors.shadow)]}
           onPress={handleReset}
           activeOpacity={0.7}
         >

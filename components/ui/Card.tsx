@@ -1,7 +1,7 @@
 import React from "react";
 import { Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -54,8 +54,7 @@ export default function Card({
     backgroundColor,
     borderWidth: resolvedBordered ? 1 : 0,
     borderColor: resolvedBordered ? colors.border : "transparent",
-    shadowColor: colors.shadow,
-    ...Elevation[resolvedElevation],
+    ...getElevation(resolvedElevation, colors.shadow),
   };
 
   const body = (

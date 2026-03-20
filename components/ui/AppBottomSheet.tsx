@@ -18,7 +18,7 @@ import BottomSheet, {
   type BottomSheetProps,
 } from "@gorhom/bottom-sheet";
 import { BorderRadius } from "@/constants/Spacing";
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 import { useTheme } from "@/hooks/useTheme";
 
 interface AppBottomSheetProps extends Omit<BottomSheetProps, "backgroundStyle" | "handleIndicatorStyle"> {
@@ -63,8 +63,7 @@ const AppBottomSheet = forwardRef<BottomSheet, AppBottomSheetProps>(({ children,
         styles.background,
         {
           backgroundColor: colors.cardBackground,
-          ...Elevation[2],
-          shadowColor: colors.shadow,
+          ...getElevation(2, colors.shadow),
         },
       ]}
       handleIndicatorStyle={[styles.handle, { backgroundColor: colors.border }]}

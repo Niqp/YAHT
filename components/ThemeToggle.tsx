@@ -4,6 +4,7 @@ import { Sun, Moon, Smartphone, BookOpen, Droplets, Monitor } from "lucide-react
 import { useTheme } from "../hooks/useTheme";
 import type { ThemeMode } from "../store/themeStore";
 import type { ColorThemeName } from "../constants/Colors";
+import { getElevation } from "../constants/Elevation";
 
 export default function ThemeToggle() {
   const { colors, mode, colorScheme, colorTheme, setMode, setColorTheme } = useTheme();
@@ -45,7 +46,7 @@ export default function ThemeToggle() {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.cardBackground }]}>
+    <View style={[styles.container, { backgroundColor: colors.cardBackground }, getElevation(2, colors.shadow)]}>
       <Text style={[styles.title, { color: colors.text }]}>Appearance</Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         Current theme: {colorScheme === "dark" ? "Dark" : "Light"}
@@ -119,14 +120,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
   title: {
     fontSize: 18,

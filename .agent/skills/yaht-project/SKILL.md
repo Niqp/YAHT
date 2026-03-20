@@ -124,7 +124,7 @@ All visual constants live in `constants/`. Import from there — never hardcode 
 | `Colors.ts`     | `Colors`, `ColorTheme`, `ColorThemeName`     | 3×2 color palette matrix (sepia/clear/oled × light/dark). Use via `useTheme().colors`. |
 | `Typography.ts` | `Typography`, `TypographyVariant`            | `StyleSheet` with 9 named text styles.                                                 |
 | `Spacing.ts`    | `Spacing`, `BorderRadius`                    | 4pt grid spacing + border radius tokens.                                               |
-| `Elevation.ts`  | `Elevation`                                  | Platform-aware shadow presets (levels 0–3). Spread + add `shadowColor: colors.shadow`. |
+| `Elevation.ts`  | `getElevation`                               | Platform-aware shadow presets (levels 0–3). Spread returns: `...getElevation(1, colors.shadow)`. |
 | `Animation.ts`  | `SpringConfig`, `TimingConfig`, `PressScale` | Reanimated spring/timing configs for consistent motion.                                |
 
 **Design system UI components** live in `components/ui/` and are barrel-exported from `components/ui/index.ts`:

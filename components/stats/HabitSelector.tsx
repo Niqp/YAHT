@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import type { Habit } from "../../types/habit";
+import { getElevation } from "../../constants/Elevation";
 
 interface HabitSelectorProps {
   habits: Habit[];
@@ -31,7 +32,7 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ habits, selectedHabit, on
       </TouchableOpacity>
 
       {isDropdownOpen && (
-        <View style={[styles.dropdownMenu, { backgroundColor: colors.cardBackground }]}>
+        <View style={[styles.dropdownMenu, { backgroundColor: colors.cardBackground }, getElevation(3, colors.shadow)]}>
           <ScrollView
             style={styles.dropdownScroll}
             showsVerticalScrollIndicator={true}
@@ -95,14 +96,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5,
     maxHeight: 250,
   },
   dropdownScroll: {

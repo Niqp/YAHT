@@ -44,10 +44,7 @@ export default function TabsLayout() {
     () =>
       Platform.select({
         ios: {
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
+          boxShadow: `0px -3px 3px 0px ${colors.shadow}`,
           borderTopWidth: 0,
         },
         android: {

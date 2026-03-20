@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react-native";
 import type React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { styles } from "./AppMenuList.styles";
+import { getElevation } from "@/constants/Elevation";
 
 interface MenuItem {
   title: string;
@@ -17,7 +18,7 @@ interface AppMenuListProps {
 export const AppMenuList: React.FC<AppMenuListProps> = ({ menuItems }) => {
   const { colors } = useTheme();
   return (
-    <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+    <View style={[styles.section, { backgroundColor: colors.cardBackground }, getElevation(2, colors.shadow)]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>App</Text>
       {menuItems.map((item) => (
         <TouchableOpacity

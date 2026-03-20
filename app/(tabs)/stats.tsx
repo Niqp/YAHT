@@ -5,6 +5,7 @@ import HabitSelector from "../../components/stats/HabitSelector";
 import OverallStats from "../../components/stats/OverallStats";
 import { useStats } from "../../hooks/useStats";
 import { useTheme } from "../../hooks/useTheme";
+import { getElevation } from "../../constants/Elevation";
 
 export default function StatsScreen() {
   const { colors } = useTheme();
@@ -45,7 +46,7 @@ export default function StatsScreen() {
         <OverallStats stats={overallStats} />
 
         {/* Habit Performance Section */}
-        <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+        <View style={[styles.section, { backgroundColor: colors.cardBackground }, getElevation(2, colors.shadow)]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Habit Performance</Text>
 
           {/* Habit Selector */}
@@ -89,14 +90,6 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     padding: 16,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,

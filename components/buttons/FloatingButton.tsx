@@ -6,7 +6,7 @@ import { Plus } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { SpringConfig, PressScale } from "@/constants/Animation";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 
 interface FloatingButtonProps {
   navigateToAddHabit: () => void;
@@ -60,8 +60,7 @@ export function FloatingButton({ navigateToAddHabit }: FloatingButtonProps) {
             borderRadius: BorderRadius.full,
             justifyContent: "center",
             alignItems: "center",
-            ...Elevation[3],
-            shadowColor: colors.shadow,
+            ...getElevation(3, colors.shadow),
           }}
         >
           <Plus size={24} color={colors.textInverse} strokeWidth={2} />

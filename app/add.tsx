@@ -7,7 +7,7 @@ import {
 } from "@/components/habitForm";
 import { AppBottomSheet, AppText, ScaleButton } from "@/components/ui";
 import { WheelPicker } from "@/components/ui/form";
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
@@ -646,9 +646,8 @@ export default function AddEditHabitScreen() {
               backgroundColor: colors.cardBackground,
               borderTopColor: colors.divider,
               paddingBottom: insets.bottom + Spacing.base,
-              shadowColor: colors.shadow,
             },
-            Elevation[2],
+            getElevation(2, colors.shadow),
           ]}
         >
           <View style={styles.primaryActionsRow}>
@@ -725,7 +724,7 @@ export default function AddEditHabitScreen() {
       />
 
       {shouldWarmPickers ? (
-        <View pointerEvents="none" importantForAccessibility="no-hide-descendants" style={styles.pickerWarmupHost}>
+        <View importantForAccessibility="no-hide-descendants" style={[styles.pickerWarmupHost, { pointerEvents: "none" }]}>
           <View style={styles.pickerWarmupRow}>
             <WheelPicker
               data={WARMUP_REPETITION_OPTIONS}

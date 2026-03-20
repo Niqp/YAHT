@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
-
+import { getElevation } from "../../constants/Elevation";
 interface OverallStatsProps {
   stats: {
     totalHabits: number;
@@ -16,7 +16,7 @@ const OverallStats: React.FC<OverallStatsProps> = ({ stats }) => {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+    <View style={[styles.section, { backgroundColor: colors.cardBackground }, getElevation(2, colors.shadow)]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Overall Stats</Text>
       <View style={styles.statsGrid}>
         <View style={[styles.statItem, { backgroundColor: colors.input }]}>
@@ -50,14 +50,6 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     padding: 16,
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,

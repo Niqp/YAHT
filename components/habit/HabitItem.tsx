@@ -11,7 +11,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, useReducedMotion } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { SpringConfig, PressScale } from "@/constants/Animation";
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 import styles from "./HabitItem.styles";
 import {
   HabitStatusIndicator,
@@ -189,8 +189,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         animatedStyle,
         {
           borderColor: colors.border,
-          ...Elevation[1],
-          shadowColor: colors.shadow,
+          ...getElevation(1, colors.shadow),
         },
       ]}
     >

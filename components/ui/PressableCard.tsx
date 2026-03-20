@@ -9,7 +9,7 @@
 import React from "react";
 import { Platform, Pressable, StyleSheet, View, type PressableProps, type ViewStyle } from "react-native";
 import { BorderRadius } from "@/constants/Spacing";
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 import { useTheme } from "@/hooks/useTheme";
 
 interface PressableCardProps extends PressableProps {
@@ -53,8 +53,7 @@ export default function PressableCard({
           backgroundColor: bg,
           borderColor: bordered ? colors.border : "transparent",
           borderWidth: bordered ? 1 : 0,
-          ...Elevation[elevation],
-          shadowColor: colors.shadow,
+          ...getElevation(elevation, colors.shadow),
         },
         // iOS press feedback — opacity dim
         Platform.OS === "ios" && pressed && styles.pressedIos,

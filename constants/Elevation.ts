@@ -4,41 +4,47 @@
  * Platform-aware shadow styles as specified in UI_UX_GUIDELINES.md §6.
  * Rules:
  *  - Always use `colors.shadow` for shadowColor — never hardcode "#000".
- *  - Apply by spreading: `{ ...Elevation[1], shadowColor: colors.shadow }`
+ *  - Apply the function: `style={getElevation(1, colors.shadow)}`
  */
 import { Platform, ViewStyle } from "react-native";
 
-type ElevationStyle = Pick<ViewStyle, "shadowOpacity" | "shadowOffset" | "shadowRadius" | "elevation">;
-
 /**
- * Elevation presets. Spread into a style object and always pair with
- * `shadowColor: colors.shadow` from `useTheme()`.
+ * Returns platform-aware elevation and shadow styles.
+ * On Android, returns `elevation`.
+ * On iOS, returns `boxShadow` combining the level's opacity with the base shadow color.
  *
  * @example
- * style={{ ...Elevation[1], shadowColor: colors.shadow }}
+ * style={getElevation(1, colors.shadow)}
  */
-export const Elevation: Record<0 | 1 | 2 | 3, ElevationStyle> = {
-  /** Flat backgrounds — no shadow */
-  0: Platform.select({
-    ios: { shadowOpacity: 0, shadowOffset: { width: 0, height: 0 }, shadowRadius: 0 },
-    default: { elevation: 0 },
-  }) as ElevationStyle,
+export function getElevation(level: 0 | 1 | 2 | 3, shadowColor: string = "rgba(0,0,0,0.3)"): ViewStyle {
+  if (Platform.OS !== "ios") {
+    switch (level) {
+      case 0: return { elevation: 0 };
+      case 1: return { elevation: 2 };
+      case 2: return { elevation: 4 };
+      case 3: return { elevation: 8 };
+    }
+  }
 
-  /** Cards, list items, inputs */
-  1: Platform.select({
-    ios: { shadowOpacity: 0.06, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 },
-    default: { elevation: 2 },
-  }) as ElevationStyle,
+  if (level === 0) {
+    return { boxShadow: "0px 0px 0px 0px transparent" } as ViewStyle;
+  }
 
-  /** Bottom sheet, tab bar, raised sections */
-  2: Platform.select({
-    ios: { shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6 },
-    default: { elevation: 4 },
-  }) as ElevationStyle,
+  const opacities = { 1: 0.06, 2: 0.1, 3: 0.15 } as const;
+  const offsets = { 1: "0px 1px 3px", 2: "0px 2px 6px", 3: "0px 4px 10px" } as const;
 
-  /** FAB, dialogs, toasts */
-  3: Platform.select({
-    ios: { shadowOpacity: 0.15, shadowOffset: { width: 0, height: 4 }, shadowRadius: 10 },
-    default: { elevation: 8 },
-  }) as ElevationStyle,
-};
+  let color = shadowColor;
+  const match = shadowColor.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/);
+  
+  if (match) {
+    const r = match[1];
+    const g = match[2];
+    const b = match[3];
+    const baseAlpha = parseFloat(match[4]);
+    // The old system effectively stacked opacities (alpha * shadowOpacity)
+    const finalAlpha = Math.min(1, baseAlpha * opacities[level]);
+    color = `rgba(${r}, ${g}, ${b}, ${finalAlpha.toFixed(3)})`;
+  }
+
+  return { boxShadow: `${offsets[level]} 0px ${color}` } as ViewStyle;
+}

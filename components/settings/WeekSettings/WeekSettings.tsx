@@ -4,6 +4,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import type { WeekStartDay } from "../../../store/themeStore";
 import { styles } from "./WeekSettings.styles";
 import { useTheme } from "@/hooks/useTheme";
+import { getElevation } from "@/constants/Elevation";
 
 interface WeekSettingsProps {
   weekStartDay: WeekStartDay;
@@ -13,7 +14,7 @@ interface WeekSettingsProps {
 export const WeekSettings: React.FC<WeekSettingsProps> = ({ weekStartDay, setWeekStartDay }) => {
   const { colors } = useTheme();
   return (
-    <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
+    <View style={[styles.section, { backgroundColor: colors.cardBackground }, getElevation(2, colors.shadow)]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Week Settings</Text>
       <View style={styles.weekSettingContainer}>
         <View style={styles.weekSettingHeader}>

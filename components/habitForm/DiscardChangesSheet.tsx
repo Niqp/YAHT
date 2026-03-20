@@ -1,5 +1,5 @@
 import { AppText, ScaleButton } from "@/components/ui";
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -54,8 +54,7 @@ export default function DiscardChangesSheet({ isEditMode, isOpen, onClose, onDis
         styles.background,
         {
           backgroundColor: colors.cardBackground,
-          ...Elevation[2],
-          shadowColor: colors.shadow,
+          ...getElevation(2, colors.shadow),
         },
       ]}
       handleIndicatorStyle={[styles.handle, { backgroundColor: colors.border }]}

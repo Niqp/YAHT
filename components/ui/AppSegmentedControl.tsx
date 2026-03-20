@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -44,8 +44,7 @@ export default function AppSegmentedControl({
         fontStyle={{ color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}
         activeFontStyle={{ color: colors.text, fontSize: 13, fontWeight: "600" }}
         sliderStyle={{
-          shadowOpacity: 0,
-          shadowRadius: 0,
+          boxShadow: "0px 0px 0px 0px transparent",
           elevation: 0,
           borderWidth: 0,
           backgroundColor: colors.cardBackground,
@@ -126,15 +125,14 @@ function AndroidSegmentedControl({ values, selectedIndex, onChange, disabled, st
       accessibilityRole="tablist"
     >
       <Animated.View
-        pointerEvents="none"
         style={[
           styles.androidThumb,
           {
+            pointerEvents: "none",
             backgroundColor: colors.primary,
             borderColor: colors.primary,
-            shadowColor: colors.shadow,
           },
-          Elevation[1],
+          getElevation(1, colors.shadow),
           thumbStyle,
         ]}
       />

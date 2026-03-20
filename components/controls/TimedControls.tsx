@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Clock } from "lucide-react-native";
 import { useTheme } from "../../hooks/useTheme";
-import { Elevation } from "@/constants/Elevation";
+import { getElevation } from "@/constants/Elevation";
 
 import styles from "./TimedControls.styles";
 
@@ -212,9 +212,8 @@ export default function IOSTimerPicker({
             {
               backgroundColor: colors.surface,
               borderColor: colors.border,
-              shadowColor: colors.shadow,
             },
-            Elevation[1],
+            getElevation(1, colors.shadow),
           ]}
         >
           <View style={styles.pickerControls}>
