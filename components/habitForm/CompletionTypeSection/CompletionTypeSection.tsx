@@ -56,6 +56,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   presentation = "card",
 }) => {
   const { colors } = useTheme();
+
   const segmentedIndex = useMemo(
     () => (completionType === CompletionType.SIMPLE ? 0 : completionType === CompletionType.REPETITIONS ? 1 : 2),
     [completionType]
@@ -95,6 +96,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
               initialNumToRender={3}
               maxToRenderPerBatch={3}
               windowSize={5}
+              animateMount={presentation === "sheet"}
             />
           </View>
           <PresetPills options={REPETITION_PRESETS} selectedValue={completionGoal} onSelect={setCompletionGoal} />

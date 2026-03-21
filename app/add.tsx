@@ -22,7 +22,6 @@ import { CalendarDays, CheckSquare, Bell } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
-  InteractionManager,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -37,22 +36,6 @@ const DEFAULT_ICON = "🌟";
 const DEFAULT_REPETITION_GOAL = 1;
 const DEFAULT_TIMED_GOAL_MS = 1 * 60 * 1000;
 const WEEKDAY_SHORT_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const WARMUP_REPETITION_OPTIONS = Array.from({ length: 100 }, (_, index) => ({
-  value: index + 1,
-  label: `${index + 1} reps`,
-}));
-const WARMUP_INTERVAL_OPTIONS = Array.from({ length: 365 }, (_, index) => ({
-  value: index + 1,
-  label: `${index + 1} days`,
-}));
-const WARMUP_HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
-  value: index,
-  label: index === 1 ? "1 hr" : `${index} hrs`,
-}));
-const WARMUP_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => ({
-  value: index,
-  label: index === 1 ? "1 min" : `${index} min`,
-}));
 
 type AddSheetKey = "completion" | "repetition" | "reminder";
 
@@ -245,7 +228,6 @@ export default function AddEditHabitScreen() {
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [completionError, setCompletionError] = useState<string | null>(null);
   const [activeSheet, setActiveSheet] = useState<AddSheetKey | null>(null);
-  const [shouldWarmPickers, setShouldWarmPickers] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const hasInitializedFormRef = useRef(false);
@@ -346,24 +328,6 @@ export default function AddEditHabitScreen() {
 
     hasInitializedFormRef.current = true;
   }, [habit, habitId, isHydrated]);
-
-  useEffect(() => {
-    if (Platform.OS !== "android") {
-      return;
-    }
-
-    let interactionTask: ReturnType<typeof InteractionManager.runAfterInteractions> | null = null;
-    const timeoutId = setTimeout(() => {
-      interactionTask = InteractionManager.runAfterInteractions(() => {
-        setShouldWarmPickers(true);
-      });
-    }, 350);
-
-    return () => {
-      clearTimeout(timeoutId);
-      interactionTask?.cancel();
-    };
-  }, []);
 
   // Workaround for RN #52596: KeyboardAvoidingView leaves residual bottom padding on Android
   // after keyboard dismissal. Disabling it on hide forces an immediate offset reset to zero.
@@ -834,56 +798,6 @@ export default function AddEditHabitScreen() {
           navigateBack();
         }}
       />
-
-      {shouldWarmPickers ? (
-        <View
-          importantForAccessibility="no-hide-descendants"
-          style={[styles.pickerWarmupHost, { pointerEvents: "none" }]}
-        >
-          <View style={styles.pickerWarmupRow}>
-            <WheelPicker
-              data={WARMUP_REPETITION_OPTIONS}
-              value={5}
-              onChange={() => {}}
-              style={styles.pickerWarmupWheel}
-              virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
-            />
-            <WheelPicker
-              data={WARMUP_INTERVAL_OPTIONS}
-              value={7}
-              onChange={() => {}}
-              style={styles.pickerWarmupWheel}
-              virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
-            />
-            <WheelPicker
-              data={WARMUP_HOUR_OPTIONS}
-              value={0}
-              onChange={() => {}}
-              style={styles.pickerWarmupWheel}
-              virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
-            />
-            <WheelPicker
-              data={WARMUP_MINUTE_OPTIONS}
-              value={15}
-              onChange={() => {}}
-              style={styles.pickerWarmupWheel}
-              virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
-            />
-          </View>
-        </View>
-      ) : null}
     </View>
   );
 }

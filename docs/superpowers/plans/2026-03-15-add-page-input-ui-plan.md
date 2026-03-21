@@ -38,6 +38,7 @@
 ### Task 1: Add explicit virtualized support to the shared wheel wrapper
 
 **Files:**
+
 - Create: `D:/WebDev/YAHT/components/__tests__/WheelPicker.test.tsx`
 - Modify: `D:/WebDev/YAHT/components/ui/form/WheelPicker.tsx`
 
@@ -120,6 +121,7 @@ git commit -m "test(ui): add wheel picker virtualization coverage"
 ### Task 2: Add a centered 3-column weekly grid mode to shared pills
 
 **Files:**
+
 - Create: `D:/WebDev/YAHT/components/__tests__/PresetPills.test.tsx`
 - Modify: `D:/WebDev/YAHT/components/ui/form/PresetPills.tsx`
 
@@ -181,7 +183,7 @@ const isWeeklyGrid = layoutVariant === "weeklyGrid";
     testID={isWeeklyGrid ? `preset-pill-${String(option.value)}` : undefined}
     style={[styles.pill, isWeeklyGrid ? styles.weeklyGridPill : null]}
   />
-</View>
+</View>;
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -202,6 +204,7 @@ git commit -m "feat(ui): add weekly grid preset pills"
 ### Task 3: Update repeatability section for expanded weekday labels and virtualized interval wheel
 
 **Files:**
+
 - Create: `D:/WebDev/YAHT/components/__tests__/RepetitionPatternSection.test.tsx`
 - Modify: `D:/WebDev/YAHT/components/habitForm/RepetitionPatternSection/RepetitionPatternSection.tsx`
 
@@ -328,6 +331,7 @@ git commit -m "feat(add): refresh weekly repeatability controls"
 ### Task 4: Update completion type section for aligned copy and virtualized repetition wheel only
 
 **Files:**
+
 - Create: `D:/WebDev/YAHT/components/__tests__/CompletionTypeSection.test.tsx`
 - Modify: `D:/WebDev/YAHT/components/habitForm/CompletionTypeSection/CompletionTypeSection.tsx`
 
@@ -434,6 +438,7 @@ git commit -m "feat(add): virtualize repetition picker"
 ### Task 5: Re-evaluate the Android picker warm-up and simplify it
 
 **Files:**
+
 - Modify: `D:/WebDev/YAHT/app/add.tsx`
 - Create only if needed: `D:/WebDev/YAHT/components/__tests__/AddScreenPickerWarmup.test.tsx`
 
@@ -520,6 +525,7 @@ git commit -m "refactor(add): simplify picker warmup path"
 ### Task 6: Final verification
 
 **Files:**
+
 - Verify all files changed in this plan
 
 - [ ] **Step 1: Run the focused test suite**

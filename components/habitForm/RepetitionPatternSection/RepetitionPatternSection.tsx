@@ -161,6 +161,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
               initialNumToRender={3}
               maxToRenderPerBatch={3}
               windowSize={5}
+              animateMount={presentation === "sheet"}
             />
           </View>
           <PresetPills options={INTERVAL_PRESETS} selectedValue={customDays} onSelect={setCustomDays} />

@@ -29,8 +29,9 @@ const DURATION_PRESETS = [
 interface DurationInputProps {
   valueMs: number;
   onChangeMs: (valueMs: number) => void;
+  animateMount?: boolean;
 }
-function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
+function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInputProps) {
   const { colors } = useTheme();
   const normalizedValueMs = Math.max(MIN_DURATION_MS, valueMs);
 
@@ -76,6 +77,7 @@ function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
               initialNumToRender={3}
               maxToRenderPerBatch={3}
               windowSize={5}
+              animateMount={animateMount}
             />
           </View>
 
@@ -94,6 +96,7 @@ function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
               initialNumToRender={3}
               maxToRenderPerBatch={3}
               windowSize={5}
+              animateMount={animateMount}
             />
           </View>
         </View>

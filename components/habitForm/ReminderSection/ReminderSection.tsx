@@ -70,80 +70,84 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
         />
       </View>
 
-      {enabled && (
-        <View style={styles.settingsContainer}>
-          <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
-            Time of day
-          </AppText>
-          <View style={[styles.timeDisplayCard, { backgroundColor: colors.input }]}>
-            <View style={styles.wheelsRow}>
-              <View style={styles.wheelColumn}>
-                <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
-                  Hour
-                </AppText>
-                <WheelPicker
-                  data={HOUR_OPTIONS}
-                  value={hour}
-                  onChange={setHour}
-                  style={styles.picker}
-                  virtualized
-                  initialNumToRender={3}
-                  maxToRenderPerBatch={3}
-                  windowSize={5}
-                />
-              </View>
+      <View
+        style={[styles.settingsContainer, !enabled && styles.disabledSection]}
+        pointerEvents={enabled ? "auto" : "none"}
+      >
+        <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
+          Time of day
+        </AppText>
+        <View style={[styles.timeDisplayCard, { backgroundColor: colors.input }]}>
+          <View style={styles.wheelsRow}>
+            <View style={styles.wheelColumn}>
+              <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
+                Hour
+              </AppText>
+              <WheelPicker
+                data={HOUR_OPTIONS}
+                value={hour}
+                onChange={setHour}
+                style={styles.picker}
+                virtualized
+                initialNumToRender={3}
+                maxToRenderPerBatch={3}
+                windowSize={5}
+                animateMount={presentation === "sheet"}
+              />
+            </View>
 
-              <View style={styles.timeSeparator}>
-                <AppText variant="title" color={colors.textTertiary}>
-                  :
-                </AppText>
-              </View>
+            <View style={styles.timeSeparator}>
+              <AppText variant="title" color={colors.textTertiary}>
+                :
+              </AppText>
+            </View>
 
-              <View style={styles.wheelColumn}>
-                <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
-                  Minute
-                </AppText>
-                <WheelPicker
-                  data={MINUTE_OPTIONS}
-                  value={minute}
-                  onChange={setMinute}
-                  style={styles.picker}
-                  virtualized
-                  initialNumToRender={3}
-                  maxToRenderPerBatch={3}
-                  windowSize={5}
-                />
-              </View>
+            <View style={styles.wheelColumn}>
+              <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
+                Minute
+              </AppText>
+              <WheelPicker
+                data={MINUTE_OPTIONS}
+                value={minute}
+                onChange={setMinute}
+                style={styles.picker}
+                virtualized
+                initialNumToRender={3}
+                maxToRenderPerBatch={3}
+                windowSize={5}
+                animateMount={presentation === "sheet"}
+              />
             </View>
           </View>
-
-          <View style={[styles.toggleRow, styles.repeatToggleRow, { borderTopColor: colors.divider }]}>
-            <View style={styles.toggleText}>
-              <AppText variant="bodyMedium" color={colors.text}>
-                Repeat if ignored
-              </AppText>
-              <AppText variant="caption" color={colors.textSecondary}>
-                Sends follow-up notifications until you complete the habit or the day ends.
-              </AppText>
-            </View>
-            <Switch
-              value={repeatIfNotCompleted}
-              onValueChange={setRepeatIfNotCompleted}
-              trackColor={{ false: colors.inputBorder, true: colors.primary }}
-              thumbColor={colors.cardBackground}
-            />
-          </View>
-
-          {repeatIfNotCompleted && (
-            <View style={styles.intervalSection}>
-              <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
-                Nagging interval
-              </AppText>
-              <PresetPills options={INTERVAL_PRESETS} selectedValue={repeatIntervalMs} onSelect={setRepeatIntervalMs} />
-            </View>
-          )}
         </View>
-      )}
+
+        <View style={[styles.toggleRow, styles.repeatToggleRow, { borderTopColor: colors.divider }]}>
+          <View style={styles.toggleText}>
+            <AppText variant="bodyMedium" color={colors.text}>
+              Repeat if ignored
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary}>
+              Sends follow-up notifications until you complete the habit or the day ends.
+            </AppText>
+          </View>
+          <Switch
+            value={repeatIfNotCompleted}
+            onValueChange={setRepeatIfNotCompleted}
+            trackColor={{ false: colors.inputBorder, true: colors.primary }}
+            thumbColor={colors.cardBackground}
+          />
+        </View>
+
+        <View
+          style={[styles.intervalSection, !repeatIfNotCompleted && styles.disabledSection]}
+          pointerEvents={repeatIfNotCompleted ? "auto" : "none"}
+        >
+          <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
+            Nagging interval
+          </AppText>
+          <PresetPills options={INTERVAL_PRESETS} selectedValue={repeatIntervalMs} onSelect={setRepeatIntervalMs} />
+        </View>
+      </View>
     </View>
   );
 
@@ -236,5 +240,8 @@ const styles = StyleSheet.create({
   },
   sheetDescription: {
     marginBottom: Spacing.base,
+  },
+  disabledSection: {
+    opacity: 0.4,
   },
 });

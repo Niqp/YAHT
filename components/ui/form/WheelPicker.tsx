@@ -1,5 +1,6 @@
-import React, { memo, useMemo } from "react";
-import type { StyleProp, ViewStyle } from "react-native";
+import React, { memo, useEffect, useMemo, useState } from "react";
+import { InteractionManager, StyleProp, View, ViewStyle } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import { BorderRadius } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
@@ -20,6 +21,7 @@ interface WheelPickerProps {
   maxToRenderPerBatch?: number;
   windowSize?: number;
   updateCellsBatchingPeriod?: number;
+  animateMount?: boolean;
 }
 
 function WheelPicker({
@@ -34,8 +36,28 @@ function WheelPicker({
   maxToRenderPerBatch,
   windowSize,
   updateCellsBatchingPeriod,
+  animateMount = true,
 }: WheelPickerProps) {
   const { colors } = useTheme();
+  const [isReady, setIsReady] = useState(!animateMount);
+
+  useEffect(() => {
+    if (animateMount) {
+      let task: ReturnType<typeof InteractionManager.runAfterInteractions> | null = null;
+      const timeoutId = setTimeout(() => {
+        task = InteractionManager.runAfterInteractions(() => {
+          setIsReady(true);
+        });
+      }, 350);
+
+      return () => {
+        clearTimeout(timeoutId);
+        task?.cancel();
+      };
+    } else {
+      setIsReady(true);
+    }
+  }, [animateMount]);
   const overlayItemStyle = useMemo(
     () => ({ backgroundColor: colors.primarySubtle, borderRadius: BorderRadius.md }),
     [colors.primarySubtle]
@@ -53,8 +75,9 @@ function WheelPicker({
     enableScrollByTapOnItem: true,
   } as const;
 
+  let content;
   if (virtualized) {
-    return (
+    content = (
       <VirtualizedBaseWheelPicker
         {...commonProps}
         initialNumToRender={initialNumToRender}
@@ -63,9 +86,23 @@ function WheelPicker({
         updateCellsBatchingPeriod={updateCellsBatchingPeriod}
       />
     );
+  } else {
+    content = <BaseWheelPicker {...commonProps} />;
   }
 
-  return <BaseWheelPicker {...commonProps} />;
+  if (animateMount) {
+    if (isReady) {
+      return (
+        <Animated.View entering={FadeIn.duration(200)} style={style}>
+          {content}
+        </Animated.View>
+      );
+    } else {
+      return <View style={style} />;
+    }
+  }
+
+  return content;
 }
 
 export default memo(WheelPicker);
