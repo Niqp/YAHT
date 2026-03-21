@@ -69,4 +69,3 @@ export function FloatingButton({ navigateToAddHabit }: FloatingButtonProps) {
     </Animated.View>
   );
 }
-

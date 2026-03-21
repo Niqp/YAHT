@@ -13,42 +13,40 @@ import { shouldShowHabitOnDate, getCurrentDateDayjs, getDateStamp } from "@/util
  * Returns 0 when there are no habits or no perfect days.
  */
 export function useAllHabitsStreak(): number {
-    const habits = useHabitStore((state) => state.habits);
+  const habits = useHabitStore((state) => state.habits);
 
-    return useMemo(() => {
-        const habitList = Object.values(habits);
-        if (habitList.length === 0) return 0;
+  return useMemo(() => {
+    const habitList = Object.values(habits);
+    if (habitList.length === 0) return 0;
 
-        let streak = 0;
-        const now = getCurrentDateDayjs();
+    let streak = 0;
+    const now = getCurrentDateDayjs();
 
-        // Walk backward from yesterday
-        for (let i = 1; i <= 365; i++) {
-            const date = now.subtract(i, "day");
-            const dateStamp = getDateStamp(date);
+    // Walk backward from yesterday
+    for (let i = 1; i <= 365; i++) {
+      const date = now.subtract(i, "day");
+      const dateStamp = getDateStamp(date);
 
-            // Find habits that were scheduled for this date
-            const scheduledHabits = habitList.filter((habit) => {
-                // Skip habits created after this date
-                if (habit.createdAt > dateStamp) return false;
-                return shouldShowHabitOnDate(habit, dateStamp);
-            });
+      // Find habits that were scheduled for this date
+      const scheduledHabits = habitList.filter((habit) => {
+        // Skip habits created after this date
+        if (habit.createdAt > dateStamp) return false;
+        return shouldShowHabitOnDate(habit, dateStamp);
+      });
 
-            // If no habits were scheduled, skip this day (don't break the streak)
-            if (scheduledHabits.length === 0) continue;
+      // If no habits were scheduled, skip this day (don't break the streak)
+      if (scheduledHabits.length === 0) continue;
 
-            // Check if ALL scheduled habits were completed
-            const allCompleted = scheduledHabits.every(
-                (habit) => habit.completionHistory[dateStamp]?.isCompleted
-            );
+      // Check if ALL scheduled habits were completed
+      const allCompleted = scheduledHabits.every((habit) => habit.completionHistory[dateStamp]?.isCompleted);
 
-            if (allCompleted) {
-                streak++;
-            } else {
-                break;
-            }
-        }
+      if (allCompleted) {
+        streak++;
+      } else {
+        break;
+      }
+    }
 
-        return streak;
-    }, [habits]);
+    return streak;
+  }, [habits]);
 }

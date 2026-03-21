@@ -5,6 +5,9 @@ import { canScheduleExactAlarms, openSettings } from "react-native-permissions";
 const TIMER_CHANNEL_ID = "timers";
 const TIMER_CHANNEL_NAME = "Timers";
 
+const REMINDER_CHANNEL_ID = "reminders";
+const REMINDER_CHANNEL_NAME = "Reminders";
+
 const getTimerNotificationId = (timerId: string) => `timer-${timerId}`;
 
 const ensureNotificationPermission = async (): Promise<boolean> => {
@@ -22,31 +25,34 @@ const ensureNotificationPermission = async (): Promise<boolean> => {
   }
 };
 
-const ensureTimerChannel = async () => {
+const ensureChannel = async (
+  channelId: string,
+  channelConfig: Notifications.NotificationChannelInput,
+  logContext = ""
+) => {
   if (Platform.OS !== "android") {
     return;
   }
 
   try {
-    await Notifications.setNotificationChannelAsync(TIMER_CHANNEL_ID, {
-      name: TIMER_CHANNEL_NAME,
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-    });
+    await Notifications.setNotificationChannelAsync(channelId, channelConfig);
   } catch (error) {
-    console.error("Error creating timer notification channel:", error);
+    console.error(`Error creating ${logContext} notification channel:`, error);
   }
 };
 
-export const prepareTimerNotifications = async ({
-  openAlarmSettings = true,
-}: { openAlarmSettings?: boolean } = {}): Promise<boolean> => {
+const prepareNotificationsBase = async (
+  channelId: string,
+  channelConfig: Notifications.NotificationChannelInput,
+  openAlarmSettings: boolean,
+  logContext: string
+): Promise<boolean> => {
   const hasPermission = await ensureNotificationPermission();
   if (!hasPermission) {
     return false;
   }
 
-  await ensureTimerChannel();
+  await ensureChannel(channelId, channelConfig, logContext);
 
   if (Platform.OS !== "android") {
     return true;
@@ -62,10 +68,25 @@ export const prepareTimerNotifications = async ({
       await openSettings("alarms");
     }
   } catch (error) {
-    console.error("Error checking exact alarm access:", error);
+    console.error(`Error checking exact alarm access for ${logContext}:`, error);
   }
 
   return false;
+};
+
+export const prepareTimerNotifications = async ({
+  openAlarmSettings = true,
+}: { openAlarmSettings?: boolean } = {}): Promise<boolean> => {
+  return prepareNotificationsBase(
+    TIMER_CHANNEL_ID,
+    {
+      name: TIMER_CHANNEL_NAME,
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+    },
+    openAlarmSettings,
+    "timers"
+  );
 };
 
 export const scheduleTimerNotification = async (timerId: string, habitTitle: string, remainingMs: number) => {
@@ -127,5 +148,51 @@ export const cancelAllTimerNotifications = async () => {
     ]);
   } catch (error) {
     console.error("Error cancelling all timer notifications:", error);
+  }
+};
+
+export const prepareReminderNotifications = async ({
+  openAlarmSettings = true,
+}: { openAlarmSettings?: boolean } = {}): Promise<boolean> => {
+  return prepareNotificationsBase(
+    REMINDER_CHANNEL_ID,
+    {
+      name: REMINDER_CHANNEL_NAME,
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+    },
+    openAlarmSettings,
+    "reminders"
+  );
+};
+
+export const scheduleReminderNotification = async (habitId: string, habitTitle: string, timestamp: number) => {
+  try {
+    const canSchedule = await prepareReminderNotifications({ openAlarmSettings: false });
+    if (!canSchedule) {
+      return undefined;
+    }
+
+    const notificationId = `reminder-${habitId}-${timestamp}`;
+    const content: Notifications.NotificationContentInput = {
+      title: "Friendly Reminder",
+      body: `It's time for: ${habitTitle}`,
+      sound: "default",
+      color: "#023c69",
+      priority: Notifications.AndroidNotificationPriority.HIGH,
+    };
+
+    return Notifications.scheduleNotificationAsync({
+      identifier: notificationId,
+      content,
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(timestamp),
+        channelId: REMINDER_CHANNEL_ID,
+      },
+    });
+  } catch (error) {
+    console.error("Error scheduling reminder notification:", error);
+    return undefined;
   }
 };

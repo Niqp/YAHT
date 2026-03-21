@@ -124,5 +124,4 @@ describe("useTimerManager", () => {
 
     expect(scheduleTimerNotification).toHaveBeenCalledWith("timer-1", "Habit h1", 2_000);
   });
-
 });

@@ -13,10 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SpringConfig, PressScale } from "@/constants/Animation";
 import { getElevation } from "@/constants/Elevation";
 import styles from "./HabitItem.styles";
-import {
-  HabitStatusIndicator,
-  HabitSubtitle,
-} from "./habitViewSubComponents/HabitViewSubComponents";
+import { HabitStatusIndicator, HabitSubtitle } from "./habitViewSubComponents/HabitViewSubComponents";
 
 interface HabitItemProps {
   habitId: Habit["id"];
@@ -109,7 +106,6 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     updateCompletion({ id: habit.id, value: newValue });
     haptic.complete();
   };
-
 
   // Card inner content (shared between gradient and flat variants)
   const cardInner = (
@@ -208,4 +204,3 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     </Animated.View>
   );
 }
-

@@ -19,10 +19,14 @@ import { Platform, ViewStyle } from "react-native";
 export function getElevation(level: 0 | 1 | 2 | 3, shadowColor: string = "rgba(0,0,0,0.3)"): ViewStyle {
   if (Platform.OS !== "ios") {
     switch (level) {
-      case 0: return { elevation: 0 };
-      case 1: return { elevation: 2 };
-      case 2: return { elevation: 4 };
-      case 3: return { elevation: 8 };
+      case 0:
+        return { elevation: 0 };
+      case 1:
+        return { elevation: 2 };
+      case 2:
+        return { elevation: 4 };
+      case 3:
+        return { elevation: 8 };
     }
   }
 
@@ -35,7 +39,7 @@ export function getElevation(level: 0 | 1 | 2 | 3, shadowColor: string = "rgba(0
 
   let color = shadowColor;
   const match = shadowColor.match(/^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/);
-  
+
   if (match) {
     const r = match[1];
     const g = match[2];

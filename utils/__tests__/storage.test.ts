@@ -20,13 +20,15 @@ jest.mock("react-native-mmkv", () => {
 import { MMKV } from "react-native-mmkv";
 import { mmkvStorage } from "@/utils/storage";
 
-const mockInstance = (MMKV as unknown as {
-  _instance: {
-    getString: jest.Mock;
-    set: jest.Mock;
-    delete: jest.Mock;
-  };
-})._instance as {
+const mockInstance = (
+  MMKV as unknown as {
+    _instance: {
+      getString: jest.Mock;
+      set: jest.Mock;
+      delete: jest.Mock;
+    };
+  }
+)._instance as {
   getString: jest.Mock;
   set: jest.Mock;
   delete: jest.Mock;

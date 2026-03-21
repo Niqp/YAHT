@@ -61,15 +61,15 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   const containerStyle = [
     styles.dateItem,
     { backgroundColor: colors.input },
-    isSelected && { 
+    isSelected && {
       backgroundColor: colors.primarySubtle,
-      borderColor: colors.primary
+      borderColor: colors.primary,
     },
     isToday &&
-    !isSelected && {
-      backgroundColor: colors.input,
-      borderColor: colors.accent,
-    },
+      !isSelected && {
+        backgroundColor: colors.input,
+        borderColor: colors.accent,
+      },
   ];
 
   const dayNameStyle = [

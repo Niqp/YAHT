@@ -2,6 +2,7 @@ import {
   BasicInfoSection,
   CompletionTypeSection,
   RepetitionPatternSection,
+  ReminderSection,
   DiscardChangesSheet,
   SheetTriggerCard,
 } from "@/components/habitForm";
@@ -13,10 +14,11 @@ import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import { CompletionType, Habit, RepetitionConfig, RepetitionType } from "@/types/habit";
 import { getCurrentDateStamp } from "@/utils/date";
+import { prepareReminderNotifications } from "@/utils/notifications";
 import type BottomSheet from "@gorhom/bottom-sheet";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
-import { CalendarDays, CheckSquare } from "lucide-react-native";
+import { CalendarDays, CheckSquare, Bell } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -52,7 +54,7 @@ const WARMUP_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => ({
   label: index === 1 ? "1 min" : `${index} min`,
 }));
 
-type AddSheetKey = "completion" | "repetition";
+type AddSheetKey = "completion" | "repetition" | "reminder";
 
 const formatCountLabel = (count: number, singular: string, plural: string) => {
   return `${count} ${count === 1 ? singular : plural}`;
@@ -127,6 +129,22 @@ const getRepetitionHelperText = (repetitionType: RepetitionType) => {
     default:
       return "Keep it due every day";
   }
+};
+
+const getReminderSummary = (enabled: boolean, hour: number, minute: number, repeat: boolean, intervalMs: number) => {
+  if (!enabled) return "Off";
+  const displayHour = hour.toString().padStart(2, "0");
+  const displayMin = minute.toString().padStart(2, "0");
+  let text = `${displayHour}:${displayMin}`;
+  if (repeat) {
+    if (intervalMs === 60 * 60000) text += " (Repeating 1h)";
+    else text += ` (Repeating ${Math.floor(intervalMs / 60000)}m)`;
+  }
+  return text;
+};
+
+const getReminderHelperText = (enabled: boolean) => {
+  return enabled ? "Get notified for this habit" : "No notifications";
 };
 
 const normalizeDays = (days: number[]) => {
@@ -216,6 +234,11 @@ export default function AddEditHabitScreen() {
   const [completionType, setCompletionType] = useState<CompletionType>(CompletionType.SIMPLE);
   const [repetitionGoal, setRepetitionGoal] = useState<number>(DEFAULT_REPETITION_GOAL);
   const [timedGoalMs, setTimedGoalMs] = useState<number>(DEFAULT_TIMED_GOAL_MS);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderHour, setReminderHour] = useState(9);
+  const [reminderMinute, setReminderMinute] = useState(0);
+  const [reminderRepeat, setReminderRepeat] = useState(false);
+  const [reminderRepeatIntervalMs, setReminderRepeatIntervalMs] = useState(15 * 60000);
   const [isDirty, setIsDirty] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [titleError, setTitleError] = useState<string | null>(null);
@@ -260,6 +283,11 @@ export default function AddEditHabitScreen() {
       setCompletionType(CompletionType.SIMPLE);
       setRepetitionGoal(DEFAULT_REPETITION_GOAL);
       setTimedGoalMs(DEFAULT_TIMED_GOAL_MS);
+      setReminderEnabled(false);
+      setReminderHour(9);
+      setReminderMinute(0);
+      setReminderRepeat(false);
+      setReminderRepeatIntervalMs(15 * 60000);
       setIsDirty(false);
       setTitleError(null);
       setScheduleError(null);
@@ -306,6 +334,11 @@ export default function AddEditHabitScreen() {
     setCompletionType(habit.completion.type);
     setRepetitionGoal(nextRepetitionGoal);
     setTimedGoalMs(nextTimedGoalMs);
+    setReminderEnabled(habit.reminder?.enabled ?? false);
+    setReminderHour(habit.reminder?.hour ?? 9);
+    setReminderMinute(habit.reminder?.minute ?? 0);
+    setReminderRepeat(habit.reminder?.repeatIfNotCompleted ?? false);
+    setReminderRepeatIntervalMs(habit.reminder?.repeatIntervalMs ?? 15 * 60000);
     setIsDirty(false);
     setTitleError(null);
     setScheduleError(null);
@@ -415,6 +448,38 @@ export default function AddEditHabitScreen() {
     setActiveSheet("repetition");
   }, []);
 
+  const openReminderSheet = useCallback(() => {
+    setActiveSheet("reminder");
+  }, []);
+
+  const handleReminderEnabledChange = useCallback((value: boolean) => {
+    setReminderEnabled(value);
+    setIsDirty(true);
+    if (value) {
+      void prepareReminderNotifications();
+    }
+  }, []);
+
+  const handleReminderHourChange = useCallback((value: number) => {
+    setReminderHour(value);
+    setIsDirty(true);
+  }, []);
+
+  const handleReminderMinuteChange = useCallback((value: number) => {
+    setReminderMinute(value);
+    setIsDirty(true);
+  }, []);
+
+  const handleReminderRepeatChange = useCallback((value: boolean) => {
+    setReminderRepeat(value);
+    setIsDirty(true);
+  }, []);
+
+  const handleReminderRepeatIntervalChange = useCallback((value: number) => {
+    setReminderRepeatIntervalMs(value);
+    setIsDirty(true);
+  }, []);
+
   const resolvedCompletionGoal =
     completionType === CompletionType.TIMED
       ? timedGoalMs
@@ -425,6 +490,14 @@ export default function AddEditHabitScreen() {
   const completionHelperText = getCompletionHelperText(completionType);
   const repetitionSummary = getRepetitionSummary(repetitionType, selectedDays, customDays);
   const repetitionHelperText = getRepetitionHelperText(repetitionType);
+  const reminderSummary = getReminderSummary(
+    reminderEnabled,
+    reminderHour,
+    reminderMinute,
+    reminderRepeat,
+    reminderRepeatIntervalMs
+  );
+  const reminderHelperText = getReminderHelperText(reminderEnabled);
 
   const navigateBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -481,12 +554,28 @@ export default function AddEditHabitScreen() {
 
       const completion = buildCompletionConfig(completionType, resolvedCompletionGoal);
 
+      const reminder = reminderEnabled
+        ? {
+            enabled: true,
+            hour: Math.floor(reminderHour),
+            minute: Math.floor(reminderMinute),
+            repeatIfNotCompleted: reminderRepeat,
+            repeatIntervalMs: reminderRepeat ? reminderRepeatIntervalMs : undefined,
+          }
+        : {
+            enabled: false,
+            hour: Math.floor(reminderHour),
+            minute: Math.floor(reminderMinute),
+            repeatIfNotCompleted: false,
+          };
+
       if (isEditMode && habitId) {
         await updateHabit(habitId, {
           title: normalizedTitle,
           icon,
           repetition,
           completion,
+          reminder,
         });
       } else {
         const habitData: Omit<Habit, "id"> = {
@@ -496,6 +585,7 @@ export default function AddEditHabitScreen() {
           completion,
           repetition,
           createdAt: getCurrentDateStamp(),
+          reminder,
         };
 
         await addHabit(habitData);
@@ -620,6 +710,14 @@ export default function AddEditHabitScreen() {
               onPress={openRepetitionSheet}
               errorMessage={scheduleError}
             />
+
+            <SheetTriggerCard
+              label="Reminders"
+              value={reminderSummary}
+              helperText={reminderHelperText}
+              icon={<Bell size={18} color={colors.primary} />}
+              onPress={openReminderSheet}
+            />
           </View>
 
           {isEditMode && (
@@ -694,7 +792,7 @@ export default function AddEditHabitScreen() {
                 errorMessage={completionError}
                 presentation="sheet"
               />
-            ) : (
+            ) : activeSheet === "repetition" ? (
               <RepetitionPatternSection
                 repetitionType={repetitionType}
                 setRepetitionType={handleRepetitionTypeChange}
@@ -704,6 +802,20 @@ export default function AddEditHabitScreen() {
                 setCustomDays={handleCustomDaysChange}
                 weekStartDay={weekStartDay}
                 errorMessage={scheduleError}
+                presentation="sheet"
+              />
+            ) : (
+              <ReminderSection
+                enabled={reminderEnabled}
+                setEnabled={handleReminderEnabledChange}
+                hour={reminderHour}
+                setHour={handleReminderHourChange}
+                minute={reminderMinute}
+                setMinute={handleReminderMinuteChange}
+                repeatIfNotCompleted={reminderRepeat}
+                setRepeatIfNotCompleted={handleReminderRepeatChange}
+                repeatIntervalMs={reminderRepeatIntervalMs}
+                setRepeatIntervalMs={handleReminderRepeatIntervalChange}
                 presentation="sheet"
               />
             )}
@@ -724,7 +836,10 @@ export default function AddEditHabitScreen() {
       />
 
       {shouldWarmPickers ? (
-        <View importantForAccessibility="no-hide-descendants" style={[styles.pickerWarmupHost, { pointerEvents: "none" }]}>
+        <View
+          importantForAccessibility="no-hide-descendants"
+          style={[styles.pickerWarmupHost, { pointerEvents: "none" }]}
+        >
           <View style={styles.pickerWarmupRow}>
             <WheelPicker
               data={WARMUP_REPETITION_OPTIONS}

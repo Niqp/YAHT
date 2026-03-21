@@ -8,11 +8,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 
 import { useTimerManager } from "@/hooks/timer/useTimerManager";
+import { useReminderManager } from "@/hooks/habit/useReminderManager";
 import { useTheme } from "@/hooks/useTheme";
 
 export default function RootLayout() {
   const { colors, isDarkMode } = useTheme();
   useTimerManager();
+  useReminderManager();
 
   const stackScreenOptions = useMemo<NativeStackNavigationOptions>(
     () => ({

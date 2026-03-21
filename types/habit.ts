@@ -32,6 +32,14 @@ export type CompletionHistory = {
   value?: number; // Optional value for repetitions or time spent
 };
 
+export interface ReminderConfig {
+  enabled: boolean;
+  hour: number; // 0-23
+  minute: number; // 0-59
+  repeatIfNotCompleted: boolean;
+  repeatIntervalMs?: number;
+}
+
 export interface Habit {
   id: UUIDv4;
   title: string;
@@ -41,6 +49,7 @@ export interface Habit {
   completionHistory: Record<string, CompletionHistory>; // Date-keyed completion history
   createdAt: string;
   color?: string;
+  reminder?: ReminderConfig;
 }
 
 export interface HabitStats {

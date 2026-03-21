@@ -28,7 +28,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | Animations       | react-native-reanimated 3.16                                                                                       | + react-native-gesture-handler 2.20             |
 | UI               | lucide-react-native (icons), @rneui/themed (buttons), @gorhom/bottom-sheet 5.x, expo-linear-gradient, expo-haptics | Design system components in `components/ui/`    |
 | Charts           | react-native-chart-kit 6.12                                                                                        |                                                 |
-| Notifications    | @notifee/react-native 9.x                                                                                          | Timestamp-triggered, Android alarm permissions  |
+| Notifications    | expo-notifications 0.28.x, react-native-permissions                                                                | Timestamp-triggered, Android alarm permissions  |
 | Virtualization   | recyclerlistview 4.x                                                                                               | Used in DateSlider                              |
 | Linting          | ESLint 9 flat config + typescript-eslint + eslint-config-prettier                                                  |                                                 |
 | Formatting       | Prettier (`.prettierrc`)                                                                                           | Enforces project style — run `npm run format`   |
@@ -119,13 +119,13 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 All visual constants live in `constants/`. Import from there — never hardcode values in components.
 
-| File            | Exports                                      | Usage                                                                                  |
-| --------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `Colors.ts`     | `Colors`, `ColorTheme`, `ColorThemeName`     | 3×2 color palette matrix (sepia/clear/oled × light/dark). Use via `useTheme().colors`. |
-| `Typography.ts` | `Typography`, `TypographyVariant`            | `StyleSheet` with 9 named text styles.                                                 |
-| `Spacing.ts`    | `Spacing`, `BorderRadius`                    | 4pt grid spacing + border radius tokens.                                               |
+| File            | Exports                                      | Usage                                                                                            |
+| --------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `Colors.ts`     | `Colors`, `ColorTheme`, `ColorThemeName`     | 3×2 color palette matrix (sepia/clear/oled × light/dark). Use via `useTheme().colors`.           |
+| `Typography.ts` | `Typography`, `TypographyVariant`            | `StyleSheet` with 9 named text styles.                                                           |
+| `Spacing.ts`    | `Spacing`, `BorderRadius`                    | 4pt grid spacing + border radius tokens.                                                         |
 | `Elevation.ts`  | `getElevation`                               | Platform-aware shadow presets (levels 0–3). Spread returns: `...getElevation(1, colors.shadow)`. |
-| `Animation.ts`  | `SpringConfig`, `TimingConfig`, `PressScale` | Reanimated spring/timing configs for consistent motion.                                |
+| `Animation.ts`  | `SpringConfig`, `TimingConfig`, `PressScale` | Reanimated spring/timing configs for consistent motion.                                          |
 
 **Design system UI components** live in `components/ui/` and are barrel-exported from `components/ui/index.ts`:
 

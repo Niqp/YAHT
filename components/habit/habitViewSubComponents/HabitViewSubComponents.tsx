@@ -42,7 +42,6 @@ export const HabitStatusIndicator = ({
   </View>
 );
 
-
 // Subtitle with icon
 export const HabitSubtitle = ({
   habit,
