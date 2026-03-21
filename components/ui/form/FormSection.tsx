@@ -30,7 +30,7 @@ export default function FormSection({ label, children, style, cardStyle, descrip
         </AppText>
       ) : null}
 
-      <Card variant="surface" style={cardStyle}>
+      <Card variant="card" elevation={1} bordered={true} style={cardStyle}>
         {children}
       </Card>
     </View>

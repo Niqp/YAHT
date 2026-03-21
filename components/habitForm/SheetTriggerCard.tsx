@@ -42,7 +42,7 @@ export default function SheetTriggerCard({
       accessibilityHint={`Open ${label.toLowerCase()} settings`}
     >
       <View style={styles.content}>
-        <View style={[styles.iconWrap, { backgroundColor: colors.primarySubtle }]}>{icon}</View>
+        <View style={[styles.iconWrap, { backgroundColor: colors.surface }]}>{icon}</View>
 
         <View style={styles.textBlock}>
           <AppText variant="small" color={colors.textSecondary}>

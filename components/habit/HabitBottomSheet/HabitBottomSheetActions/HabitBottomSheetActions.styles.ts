@@ -1,6 +1,28 @@
 import { Platform, StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
+  container: {
+    gap: 16,
+  },
+  repetitionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 16,
+  },
+  repButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  repText: {
+    fontSize: 18,
+    fontWeight: "600",
+    fontVariant: ["tabular-nums"],
+  },
   actionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

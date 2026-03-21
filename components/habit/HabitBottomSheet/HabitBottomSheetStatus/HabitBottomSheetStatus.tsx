@@ -26,7 +26,7 @@ const HabitBottomSheetStatus = ({ habit, isCompleted, selectedDate }: HabitBotto
   const { totalCompletions, completionRate, currentStreak } = habitStats;
 
   return (
-    <View style={[styles.statusSection, { backgroundColor: colors.input }]}>
+    <View style={[styles.statusSection, { backgroundColor: colors.surface }]}>
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: colors.text }]}>{totalCompletions}</Text>

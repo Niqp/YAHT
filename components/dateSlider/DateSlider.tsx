@@ -307,12 +307,12 @@ export default function DateSlider() {
       style={[
         styles.container,
         {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.surfaceDark,
         },
       ]}
     >
       <View style={styles.headerContainer}>
-        <Text style={[styles.monthText, { color: colors.primary }]}>{visibleMonthYear}</Text>
+        <Text style={[styles.monthText, { color: colors.textOnSurfaceDark }]}>{visibleMonthYear}</Text>
         <View style={styles.pillRow}>
           {/* Today button — animated expand/collapse */}
           <Animated.View style={todayPillStyle}>

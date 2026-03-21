@@ -1,9 +1,9 @@
 import { useEffect, useRef, useCallback } from "react";
 import { AppState, AppStateStatus, Platform } from "react-native";
 import { useHabitStore } from "@/store/habitStore";
-import { RepetitionType } from "@/types/habit";
 import dayjs from "dayjs";
 import { scheduleReminderNotification } from "@/utils/notifications";
+import { shouldShowHabitOnDate } from "@/utils/date";
 import * as Notifications from "expo-notifications";
 
 const MAX_LOOKAHEAD_DAYS = 7;
@@ -57,20 +57,7 @@ export const useReminderManager = () => {
         for (let dayOffset = 0; dayOffset < MAX_LOOKAHEAD_DAYS; dayOffset++) {
           const targetDate = now.add(dayOffset, "day");
           const dateString = targetDate.format("YYYY-MM-DD");
-
-          let isActive = false;
-          if (habit.repetition.type === RepetitionType.DAILY) {
-            isActive = true;
-          } else if (habit.repetition.type === RepetitionType.WEEKDAYS) {
-            isActive = habit.repetition.days.includes(targetDate.day());
-          } else if (habit.repetition.type === RepetitionType.INTERVAL) {
-            const start = dayjs(habit.createdAt).startOf("day");
-            const target = targetDate.startOf("day");
-            const diffDays = target.diff(start, "day");
-            isActive = diffDays >= 0 && diffDays % habit.repetition.days === 0;
-          }
-
-          if (!isActive) continue;
+          if (!shouldShowHabitOnDate(habit, dateString)) continue;
 
           const isCompleted = habit.completionHistory[dateString]?.isCompleted;
           if (isCompleted) continue;

@@ -13,8 +13,10 @@ export type ColorThemeName = "sepia" | "clear" | "oled";
 const sepiaLight = {
   // ── Backgrounds ──────────────────────────────────────────────────────────
   background: "#FAF7F2",
-  surface: "#c7a97dff",
+  surface: "#F3EDE4",
+  surfaceDark: "#c7a97dff",
   cardBackground: "#FFFFFF",
+  textOnSurfaceDark: "#FAF7F2",
 
   // ── Accent ───────────────────────────────────────────────────────────────
   primary: "#8B6F47",
@@ -42,8 +44,8 @@ const sepiaLight = {
   inputFocusBorder: "#8B6F47",
 
   // ── Semantic ─────────────────────────────────────────────────────────────
-  success: "#5A8A5E",
-  successSubtle: "#E8F0E8",
+  success: "#739E73",
+  successSubtle: "#EEF4EE",
   error: "#C0523E",
   errorSubtle: "#FAE8E4",
   warning: "#C4813D",
@@ -76,7 +78,7 @@ const sepiaLight = {
   /** @deprecated Use `surface` instead */
   habitBackground: "#F3EDE4",
   /** @deprecated Use `successSubtle` instead */
-  habitCompleted: "#E8F0E8",
+  habitCompleted: "#EEF4EE",
 
   // ── Gradients ─────────────────────────────────────────────────────────────
   gradientCardStart: "#FFFFFF",
@@ -91,12 +93,14 @@ const sepiaDark = {
   // ── Backgrounds ──────────────────────────────────────────────────────────
   background: "#0f0d0bff",
   surface: "#1f1c16ff",
+  surfaceDark: "#2C2620",
   cardBackground: "#2C2620",
+  textOnSurfaceDark: "#EDE5D8",
 
   // ── Accent ───────────────────────────────────────────────────────────────
   primary: "#C4A882",
   primaryMuted: "#9C8568",
-  primarySubtle: "#3D3428",
+  primarySubtle: "#4E4233",
   accent: "#D4944A",
 
   // ── Text ─────────────────────────────────────────────────────────────────
@@ -114,7 +118,7 @@ const sepiaDark = {
   iconMuted: "#6B5D4F",
 
   // ── Inputs ───────────────────────────────────────────────────────────────
-  input: "#2C2620",
+  input: "#3D3428",
   inputBorder: "#3D3428",
   inputFocusBorder: "#C4A882",
 
@@ -168,11 +172,13 @@ const clearLight = {
   // Backgrounds
   background: "#F6F8FB",
   surface: "#EAF0F7",
+  surfaceDark: "#D9E6F6",
   cardBackground: "#FFFFFF",
+  textOnSurfaceDark: "#18212C",
   // Accent
   primary: "#3F74B5",
   primaryMuted: "#7099CC",
-  primarySubtle: "#D9E6F6",
+  primarySubtle: "#B8CDE8",
   accent: "#5D90D2",
   // Text
   text: "#18212C",
@@ -190,8 +196,8 @@ const clearLight = {
   inputBorder: "#C9D5E5",
   inputFocusBorder: "#3F74B5",
   // Semantic
-  success: "#2E7D42",
-  successSubtle: "#E8F5E9",
+  success: "#6EDC70",
+  successSubtle: "#E5F9EA",
   error: "#C62828",
   errorSubtle: "#FFEBEE",
   warning: "#E65100",
@@ -216,7 +222,7 @@ const clearLight = {
   /** @deprecated */ selectedItem: "#3F74B5",
   /** @deprecated */ todayIndicator: "#5D90D2",
   /** @deprecated */ habitBackground: "#EAF0F7",
-  /** @deprecated */ habitCompleted: "#E8F5E9",
+  /** @deprecated */ habitCompleted: "#E5F9EA",
   // Gradients
   gradientCardStart: "#FFFFFF",
   gradientCardEnd: "#F6F8FB",
@@ -229,11 +235,13 @@ const clearDark = {
   // Backgrounds
   background: "#0F1620",
   surface: "#162130",
+  surfaceDark: "#22384F",
   cardBackground: "#1D2A3A",
+  textOnSurfaceDark: "#E7EEF8",
   // Accent
   primary: "#7FB1E8",
   primaryMuted: "#5F8FC2",
-  primarySubtle: "#22384F",
+  primarySubtle: "#2C4661",
   accent: "#95C2F5",
   // Text
   text: "#E7EEF8",
@@ -247,7 +255,7 @@ const clearDark = {
   icon: "#B2C0D2",
   iconMuted: "#6F839B",
   // Inputs
-  input: "#1D2A3A",
+  input: "#2D415A",
   inputBorder: "#2D415A",
   inputFocusBorder: "#7FB1E8",
   // Semantic
@@ -292,11 +300,13 @@ const oledDark = {
   // Backgrounds
   background: "#000000",
   surface: "#050B14",
+  surfaceDark: "#142638",
   cardBackground: "#0B1320",
+  textOnSurfaceDark: "#EDF3FB",
   // Accent
   primary: "#7FB1E8",
   primaryMuted: "#5F8FC2",
-  primarySubtle: "#142638",
+  primarySubtle: "#1D354E",
   accent: "#95C2F5",
   // Text
   text: "#EDF3FB",
@@ -310,7 +320,7 @@ const oledDark = {
   icon: "#B4C2D5",
   iconMuted: "#6A7F98",
   // Inputs
-  input: "#0B1320",
+  input: "#1A2B40",
   inputBorder: "#1A2B40",
   inputFocusBorder: "#7FB1E8",
   // Semantic

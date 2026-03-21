@@ -25,7 +25,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
           style={[
             styles.iconContainer,
             {
-              backgroundColor: colors.primarySubtle,
+              backgroundColor: colors.surface,
             },
           ]}
         >

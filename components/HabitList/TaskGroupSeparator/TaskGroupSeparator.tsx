@@ -23,7 +23,7 @@ const TaskGroupSeparator = React.memo(({ title, completed, count }: TaskGroupSep
       <View
         style={[
           styles.sectionIconContainer,
-          { backgroundColor: completed ? colors.successSubtle : colors.primarySubtle },
+          { backgroundColor: colors.surface },
         ]}
       >
         {completed ? (

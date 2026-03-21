@@ -25,6 +25,7 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const isCompleted = !!habit?.completionHistory?.[selectedDate]?.isCompleted;
+  const currentValue = habit?.completionHistory?.[selectedDate]?.value || 0;
 
   const handleEdit = useCallback(() => {
     if (habit) {
@@ -64,6 +65,18 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
     }
   }, [habit, updateCompletion, onClose]);
 
+  const handleIncrement = useCallback(() => {
+    if (habit && habit.completion.type === "repetitions") {
+      updateCompletion({ id: habit.id, value: currentValue + 1 });
+    }
+  }, [habit, currentValue, updateCompletion]);
+
+  const handleDecrement = useCallback(() => {
+    if (habit && habit.completion.type === "repetitions" && currentValue > 0) {
+      updateCompletion({ id: habit.id, value: currentValue - 1 });
+    }
+  }, [habit, currentValue, updateCompletion]);
+
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
     if (isOpen) {
@@ -90,11 +103,15 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
           <HabitBottomSheetHeader habit={habit} onClose={onClose} />
           <HabitBottomSheetStatus habit={habit} isCompleted={isCompleted} selectedDate={selectedDate} />
           <HabitBottomSheetActions
+            habit={habit}
             isCompleted={isCompleted}
+            currentValue={currentValue}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
             handleComplete={handleComplete}
             handleReset={handleReset}
+            handleIncrement={handleIncrement}
+            handleDecrement={handleDecrement}
           />
         </BottomSheetView>
       )}

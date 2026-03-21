@@ -86,7 +86,7 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => tab.renderIcon(color, size),
             sceneStyle: {
               ...baseSceneStyle,
-              backgroundColor: tab.name === "today" ? colors.surface : colors.background,
+              backgroundColor: tab.name === "today" ? colors.surfaceDark : colors.background,
             },
           }}
         />

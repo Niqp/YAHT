@@ -134,7 +134,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         accessibilityState={{ checked: isCompleted }}
       >
         {/* Left section - Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: colors.primarySubtle }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.surface }]}>
           <Text style={styles.iconText}>{habit.icon}</Text>
         </View>
 
