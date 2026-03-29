@@ -1,1 +1,0 @@
-export { AppMenuList } from "./AppMenuList";

@@ -1,123 +1,91 @@
+import { AppText, PressableCard } from "@/components/ui";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { useTheme } from "@/hooks/useTheme";
+import type { Habit } from "@/types/habit";
 import { ChevronDown } from "lucide-react-native";
-import type React from "react";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "../../hooks/useTheme";
-import type { Habit } from "../../types/habit";
-import { getElevation } from "../../constants/Elevation";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 
 interface HabitSelectorProps {
-  habits: Habit[];
   selectedHabit: Habit | null;
-  onSelectHabit: (habit: Habit) => void;
+  onPress: () => void;
 }
 
-const HabitSelector: React.FC<HabitSelectorProps> = ({ habits, selectedHabit, onSelectHabit }) => {
+const HabitSelector: React.FC<HabitSelectorProps> = ({ selectedHabit, onPress }) => {
   const { colors } = useTheme();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   if (!selectedHabit) return null;
 
   return (
-    <View style={styles.dropdownContainer}>
-      <TouchableOpacity
-        style={[styles.dropdownButton, { backgroundColor: colors.input }]}
-        onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-      >
-        <View style={styles.selectedHabitContainer}>
-          <Text style={styles.selectedHabitIcon}>{selectedHabit.icon}</Text>
-          <Text style={[styles.selectedHabitText, { color: colors.text }]}>{selectedHabit.title}</Text>
-        </View>
-        <ChevronDown size={20} color={colors.textSecondary} />
-      </TouchableOpacity>
+    <View style={styles.section}>
+      <AppText variant="label" color={colors.textSecondary}>
+        Viewing detailed stats for
+      </AppText>
 
-      {isDropdownOpen && (
-        <View style={[styles.dropdownMenu, { backgroundColor: colors.cardBackground }, getElevation(3, colors.shadow)]}>
-          <ScrollView
-            style={styles.dropdownScroll}
-            showsVerticalScrollIndicator={true}
-            contentContainerStyle={styles.dropdownScrollContent}
-          >
-            {habits.map((habit) => (
-              <TouchableOpacity
-                key={habit.id}
-                style={[
-                  styles.dropdownItem,
-                  selectedHabit?.id === habit.id && {
-                    backgroundColor: colors.input,
-                  },
-                ]}
-                onPress={() => {
-                  onSelectHabit(habit);
-                  setIsDropdownOpen(false);
-                }}
-              >
-                <Text style={styles.dropdownItemIcon}>{habit.icon}</Text>
-                <Text style={[styles.dropdownItemText, { color: colors.text }]} numberOfLines={1}>
-                  {habit.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+      <PressableCard
+        onPress={onPress}
+        backgroundColor={colors.cardBackground}
+        bordered
+        style={styles.selectorButton}
+        accessibilityLabel={`Choose habit. Currently selected: ${selectedHabit.title}`}
+        accessibilityHint="Opens the habit list"
+      >
+        <View style={styles.selectorRow}>
+          <View style={styles.selectedHabitContainer}>
+            <View style={[styles.selectedHabitIconContainer, { backgroundColor: colors.primarySubtle }]}>
+              <AppText style={styles.selectedHabitIcon}>{selectedHabit.icon}</AppText>
+            </View>
+
+            <View style={styles.selectedHabitTextBlock}>
+              <AppText variant="body">{selectedHabit.title}</AppText>
+              <AppText variant="caption" color={colors.textSecondary}>
+                Switch habit to update all cards below.
+              </AppText>
+            </View>
+          </View>
+
+          <ChevronDown size={20} color={colors.icon} />
         </View>
-      )}
+      </PressableCard>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  dropdownContainer: {
-    marginBottom: 16,
-    zIndex: 1000,
-    position: "relative",
+  section: {
+    gap: Spacing.sm,
   },
-  dropdownButton: {
+  selectorButton: {
+    minHeight: 72,
+  },
+  selectorRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    gap: Spacing.md,
   },
   selectedHabitContainer: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    gap: Spacing.md,
+  },
+  selectedHabitIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
   },
   selectedHabitIcon: {
-    fontSize: 18,
-    marginRight: 10,
+    fontSize: 22,
+    lineHeight: 24,
   },
-  selectedHabitText: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  dropdownMenu: {
-    position: "absolute",
-    top: 50,
-    left: 0,
-    right: 0,
-    borderRadius: 8,
-    maxHeight: 250,
-  },
-  dropdownScroll: {
-    maxHeight: 250,
-  },
-  dropdownScrollContent: {
-    padding: 8,
-  },
-  dropdownItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginVertical: 2,
-  },
-  dropdownItemIcon: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  dropdownItemText: {
-    fontSize: 16,
+  selectedHabitTextBlock: {
+    flex: 1,
+    gap: Spacing.xxs,
   },
 });
 

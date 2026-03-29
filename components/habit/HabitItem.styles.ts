@@ -6,12 +6,11 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     marginHorizontal: Spacing.base,
     borderWidth: 1,
-    borderColor: "transparent",
     minHeight: 70,
   },
   contentWrapper: {
     ...({ overflow: "hidden" } as const),
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.md - 1,
     flex: 1,
     flexDirection: "row" as const,
     alignItems: "center" as const,

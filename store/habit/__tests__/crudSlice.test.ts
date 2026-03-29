@@ -199,6 +199,28 @@ describe("deleteHabit", () => {
     expect(harness.getState().habits["h2"]).toBeUndefined();
   });
 
+  it("removes any active timers owned by the deleted habit", async () => {
+    const habit: Habit = {
+      id: "h1",
+      title: "Timed Habit",
+      icon: "⏱️",
+      repetition: { type: RepetitionType.DAILY },
+      completion: { type: CompletionType.TIMED, goal: 60000 },
+      completionHistory: {},
+      createdAt: "2026-01-01",
+    };
+    const harness = createHarness({ h1: habit });
+    harness.getState().activeTimers = {
+      h1: { "2026-01-01": { id: "timer-1", lastResumedAt: "2026-01-01T10:00:00.000Z" } },
+      h2: { "2026-01-01": { id: "timer-2", lastResumedAt: "2026-01-01T11:00:00.000Z" } },
+    };
+
+    await harness.slice.deleteHabit("h1");
+
+    expect(harness.getState().activeTimers["h1"]).toBeUndefined();
+    expect(harness.getState().activeTimers["h2"]).toBeDefined();
+  });
+
   it("is a no-op when the habit ID does not exist", async () => {
     const habit: Habit = {
       id: "h1",

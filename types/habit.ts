@@ -53,17 +53,36 @@ export interface Habit {
 }
 
 export interface HabitStats {
-  completionRate: number;
+  dueDaysSinceCreation: number;
+  completedDueDays: number;
+  adherenceSinceCreation: number;
   currentStreak: number;
   bestStreak: number;
   totalCompletions: number;
-  lastCompletionDate: string;
-  averageRepetitions: number;
-  bestRepetitions: number;
-  goalAchievementRate: number;
+  lastCompletedDate: string;
+  goalHitRate: number;
   totalRepetitions: number;
   totalTimeSpent: number;
-  averageTimePerSession: number;
-  longestSession: number;
-  completionSinceCreation: number;
+  bestDayValue: number;
+}
+
+export interface OverallStats {
+  activeHabits: number;
+  dueToday: number;
+  completedToday: number;
+  todayAdherence: number;
+  last7DayAdherence: number;
+}
+
+export interface ChartDay {
+  date: string;
+  label: string;
+  isDue: boolean;
+  isCompleted: boolean;
+  value: number;
+  goal: number | null;
+}
+
+export interface HabitChartData {
+  days: ChartDay[];
 }

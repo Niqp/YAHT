@@ -1,67 +1,215 @@
+import { AppText } from "@/components/ui";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { useTheme } from "@/hooks/useTheme";
+import type { ChartDay, CompletionType } from "@/types/habit";
+import { Check, Minus } from "lucide-react-native";
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import { LineChart } from "react-native-chart-kit";
-import { useTheme } from "../../../hooks/useTheme";
+import { StyleSheet, View } from "react-native";
 
 interface PerformanceLineChartProps {
-  lineChartData: {
-    labels: string[];
-    datasets: { data: number[] }[];
-  };
+  days: ChartDay[];
+  completionType: CompletionType;
 }
 
-const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ lineChartData }) => {
-  const { colors, isDarkMode } = useTheme();
-  const screenWidth = Dimensions.get("window").width;
+const BAR_HEIGHT = 88;
 
-  // Memoize chart config to avoid recreating on each render
-  const chartConfig = useMemo(
-    () => ({
-      backgroundColor: colors.cardBackground,
-      backgroundGradientFrom: colors.cardBackground,
-      backgroundGradientTo: colors.cardBackground,
-      decimalPlaces: 0,
-      color: (opacity = 1) => `rgba(${isDarkMode ? "200, 200, 255" : "74, 101, 114"}, ${opacity})`,
-      labelColor: (opacity = 1) => colors.text,
-      style: {
-        borderRadius: 16,
-      },
-      propsForDots: {
-        r: "6",
-        strokeWidth: "2",
-        stroke: colors.primary,
-      },
-    }),
-    [colors, isDarkMode]
-  );
+const formatCompactDuration = (valueMs: number) => {
+  const totalSeconds = Math.floor(valueMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m`;
+  }
+
+  return `${seconds}s`;
+};
+
+const formatValueLabel = (completionType: CompletionType, value: number) => {
+  if (completionType === "timed") {
+    return formatCompactDuration(value);
+  }
+
+  return value.toString();
+};
+
+const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, completionType }) => {
+  const { colors } = useTheme();
+
+  const scaleMax = useMemo(() => {
+    const values = days.filter((day) => day.isDue).flatMap((day) => [day.value, day.goal ?? 0]);
+    return Math.max(1, ...values);
+  }, [days]);
 
   return (
     <View style={styles.chartSection}>
-      <Text style={[styles.chartTitle, { color: colors.textSecondary }]}>Last 7 Days Performance</Text>
-      <LineChart
-        data={lineChartData}
-        width={screenWidth - 64}
-        height={180}
-        chartConfig={chartConfig}
-        style={styles.chart}
-        bezier
-        fromZero
-      />
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+            <Check size={12} color={colors.buttonPrimaryText} />
+          </View>
+          <AppText variant="small" color={colors.textSecondary}>
+            Goal hit
+          </AppText>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.accent, borderColor: colors.accent }]} />
+          <AppText variant="small" color={colors.textSecondary}>
+            Progress
+          </AppText>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendGoalMarker, { backgroundColor: colors.textTertiary }]} />
+          <AppText variant="small" color={colors.textSecondary}>
+            Goal
+          </AppText>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.input, borderColor: colors.border }]}>
+            <Minus size={12} color={colors.textTertiary} />
+          </View>
+          <AppText variant="small" color={colors.textSecondary}>
+            Off day
+          </AppText>
+        </View>
+      </View>
+
+      <View style={styles.columnsRow}>
+        {days.map((day) => {
+          const barHeight = day.isDue ? Math.max(0, Math.round((day.value / scaleMax) * BAR_HEIGHT)) : 0;
+          const goalBottom = day.isDue && day.goal ? Math.round((day.goal / scaleMax) * BAR_HEIGHT) : null;
+          const showValue = day.isDue && day.value > 0;
+
+          return (
+            <View key={day.date} style={styles.dayColumn}>
+              <AppText variant="tiny" color={colors.textSecondary} numberOfLines={1} style={styles.valueLabel}>
+                {day.isDue ? (showValue ? formatValueLabel(completionType, day.value) : "0") : "Off"}
+              </AppText>
+
+              <View
+                style={[
+                  styles.barTrack,
+                  {
+                    backgroundColor: day.isDue ? colors.surface : colors.input,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                {goalBottom !== null ? (
+                  <View
+                    style={[
+                      styles.goalMarker,
+                      {
+                        backgroundColor: colors.textTertiary,
+                        bottom: Math.max(2, goalBottom - 1),
+                      },
+                    ]}
+                  />
+                ) : null}
+
+                {day.isDue ? (
+                  day.value > 0 ? (
+                    <View
+                      style={[
+                        styles.barFill,
+                        {
+                          backgroundColor: day.isCompleted ? colors.primary : colors.accent,
+                          height: Math.max(6, barHeight),
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <View style={styles.skipState}>
+                      <Minus size={16} color={colors.textTertiary} />
+                    </View>
+                  )
+                ) : (
+                  <View style={styles.skipState}>
+                    <Minus size={16} color={colors.textTertiary} />
+                  </View>
+                )}
+              </View>
+
+              <AppText variant="small" color={colors.textSecondary}>
+                {day.label}
+              </AppText>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   chartSection: {
-    marginBottom: 24,
+    gap: Spacing.base,
   },
-  chartTitle: {
-    fontSize: 14,
-    marginBottom: 10,
+  legendRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
   },
-  chart: {
-    marginTop: 10,
-    borderRadius: 12,
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  legendSwatch: {
+    width: 22,
+    height: 22,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  legendGoalMarker: {
+    width: 12,
+    height: 2,
+  },
+  columnsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: Spacing.sm,
+  },
+  dayColumn: {
+    flex: 1,
+    alignItems: "center",
+  },
+  valueLabel: {
+    marginBottom: Spacing.sm,
+  },
+  barTrack: {
+    width: "100%",
+    maxWidth: 28,
+    height: BAR_HEIGHT,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    justifyContent: "flex-end",
+    overflow: "hidden",
+    position: "relative",
+  },
+  goalMarker: {
+    position: "absolute",
+    left: 3,
+    right: 3,
+    height: 2,
+    borderRadius: 1,
+  },
+  barFill: {
+    width: "100%",
+    borderRadius: BorderRadius.lg,
+  },
+  skipState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

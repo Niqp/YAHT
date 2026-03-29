@@ -19,63 +19,65 @@ interface HabitBottomSheetProps {
 }
 
 export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottomSheetProps) {
+  const habitId = habit?.id;
+  const liveHabit = useHabitStore((state) => (habitId ? state.habits[habitId] ?? null : null));
   const deleteHabit = useHabitStore((state) => state.deleteHabit);
   const updateCompletion = useHabitStore((state) => state.updateCompletion);
   const selectedDate = useHabitStore((state) => state.selectedDate);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const isCompleted = !!habit?.completionHistory?.[selectedDate]?.isCompleted;
-  const currentValue = habit?.completionHistory?.[selectedDate]?.value || 0;
+  const isCompleted = !!liveHabit?.completionHistory?.[selectedDate]?.isCompleted;
+  const currentValue = liveHabit?.completionHistory?.[selectedDate]?.value || 0;
 
   const handleEdit = useCallback(() => {
-    if (habit) {
+    if (liveHabit) {
       router.push({
         pathname: "/add",
-        params: { habitId: habit.id },
+        params: { habitId: liveHabit.id },
       });
       onClose();
     }
-  }, [habit, onClose]);
+  }, [liveHabit, onClose]);
 
   const handleDelete = useCallback(() => {
-    if (habit) {
-      deleteHabit(habit.id);
+    if (liveHabit) {
+      deleteHabit(liveHabit.id);
       onClose();
     }
-  }, [habit, deleteHabit, onClose]);
+  }, [liveHabit, deleteHabit, onClose]);
 
   const handleComplete = useCallback(() => {
-    if (habit) {
-      if (habit.completion.type === "simple") {
-        updateCompletion({ id: habit.id });
-      } else if (habit.completion.type === "repetitions" && habit.completion.goal) {
-        updateCompletion({ id: habit.id, value: habit.completion.goal });
-      } else if (habit.completion.type === "timed" && habit.completion.goal) {
-        updateCompletion({ id: habit.id, value: habit.completion.goal });
+    if (liveHabit) {
+      if (liveHabit.completion.type === "simple") {
+        updateCompletion({ id: liveHabit.id });
+      } else if (liveHabit.completion.type === "repetitions" && liveHabit.completion.goal) {
+        updateCompletion({ id: liveHabit.id, value: liveHabit.completion.goal });
+      } else if (liveHabit.completion.type === "timed" && liveHabit.completion.goal) {
+        updateCompletion({ id: liveHabit.id, value: liveHabit.completion.goal });
       }
       onClose();
     }
-  }, [habit, updateCompletion, onClose]);
+  }, [liveHabit, updateCompletion, onClose]);
 
   // Handle marking a habit as incomplete
   const handleReset = useCallback(() => {
-    if (habit) {
-      updateCompletion({ id: habit.id, value: 0 });
+    if (liveHabit) {
+      updateCompletion({ id: liveHabit.id, value: 0 });
       onClose();
     }
-  }, [habit, updateCompletion, onClose]);
+  }, [liveHabit, updateCompletion, onClose]);
 
   const handleIncrement = useCallback(() => {
-    if (habit && habit.completion.type === "repetitions") {
-      updateCompletion({ id: habit.id, value: currentValue + 1 });
+    if (liveHabit && liveHabit.completion.type === "repetitions") {
+      updateCompletion({ id: liveHabit.id, value: currentValue + 1 });
     }
-  }, [habit, currentValue, updateCompletion]);
+  }, [liveHabit, currentValue, updateCompletion]);
 
   const handleDecrement = useCallback(() => {
-    if (habit && habit.completion.type === "repetitions" && currentValue > 0) {
-      updateCompletion({ id: habit.id, value: currentValue - 1 });
+    if (liveHabit && liveHabit.completion.type === "repetitions" && currentValue > 0) {
+      updateCompletion({ id: liveHabit.id, value: currentValue - 1 });
     }
-  }, [habit, currentValue, updateCompletion]);
+  }, [liveHabit, currentValue, updateCompletion]);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -98,12 +100,12 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
         if (index === -1) onClose();
       }}
     >
-      {!!habit && (
+      {!!liveHabit && (
         <BottomSheetView style={styles.contentContainer}>
-          <HabitBottomSheetHeader habit={habit} onClose={onClose} />
-          <HabitBottomSheetStatus habit={habit} isCompleted={isCompleted} selectedDate={selectedDate} />
+          <HabitBottomSheetHeader habit={liveHabit} onClose={onClose} />
+          <HabitBottomSheetStatus habit={liveHabit} isCompleted={isCompleted} selectedDate={selectedDate} />
           <HabitBottomSheetActions
-            habit={habit}
+            habit={liveHabit}
             isCompleted={isCompleted}
             currentValue={currentValue}
             handleEdit={handleEdit}

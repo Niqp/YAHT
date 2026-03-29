@@ -26,6 +26,57 @@ export const getCurrentDateStamp = () => getDateStamp(getCurrentDateDayjs());
 export const getCurrentIsoString = () => getDateTimeStamp(getCurrentDateTimeDayjs());
 export const getIsoString = (date: dayjs.ConfigType) => getDateTimeStamp(date);
 
+export const isHabitDueOnDate = (habit: Habit, date: string): boolean => {
+  if (!habit || !date) return false;
+
+  try {
+    const selectedDate = getMidnightDayjs(date);
+    const createdAtDate = getMidnightDayjs(habit.createdAt);
+
+    if (selectedDate.isBefore(createdAtDate)) {
+      return false;
+    }
+
+    const dayOfWeek = selectedDate.day();
+
+    switch (habit.repetition.type) {
+      case "daily":
+        return true;
+      case "weekdays":
+        return Array.isArray(habit.repetition.days) && habit.repetition.days.includes(dayOfWeek);
+      case "interval":
+        if (selectedDate.isSame(createdAtDate)) {
+          return true;
+        }
+
+        if (typeof habit.repetition.days !== "number" || habit.repetition.days <= 0) {
+          return false;
+        }
+
+        const lastCompletedDate = Object.keys(habit.completionHistory)
+          .filter((historyDate) => {
+            if (!habit.completionHistory[historyDate]?.isCompleted) {
+              return false;
+            }
+
+            return !getMidnightDayjs(historyDate).isAfter(selectedDate);
+          })
+          .sort()
+          .at(-1);
+
+        const anchorDate = lastCompletedDate ? getMidnightDayjs(lastCompletedDate) : createdAtDate;
+        const nextDueDate = anchorDate.add(habit.repetition.days, "day");
+
+        return selectedDate.isSameOrAfter(nextDueDate);
+      default:
+        return false;
+    }
+  } catch (error) {
+    console.error("Error in isHabitDueOnDate:", error, "habit:", habit, "date:", date);
+    return false;
+  }
+};
+
 /**
  * Determine if a habit should be shown on a specific date
  */
@@ -34,50 +85,12 @@ export const shouldShowHabitOnDate = (habit: Habit, date: string): boolean => {
   if (!habit || !date) return false;
 
   try {
-    const selectedDate = getMidnightDayjs(date);
-    const createdAtDate = getMidnightDayjs(habit.createdAt);
-
     if (habit.completionHistory[date]?.isCompleted) {
       // If the habit is already completed on this date, show it
       return true;
     }
 
-    if (selectedDate.isBefore(createdAtDate)) {
-      // If the selected date is before the habit was created, return false
-      return false;
-    }
-
-    const dayOfWeek = selectedDate.day(); // 0 = Sunday, 6 = Saturday
-
-    switch (habit.repetition.type) {
-      case "daily":
-        return true;
-      case "weekdays":
-        // Type safety check - ensure repetitionValue is an array before using includes
-        return Array.isArray(habit.repetition.days) && habit.repetition.days.includes(dayOfWeek);
-      case "interval":
-        // For custom "Every X days" pattern
-        if (date === habit.createdAt) return true;
-        if (typeof habit.repetition.days === "number" && habit.repetition.days > 0) {
-          // Fallback to createdAt date if no completion history
-          let nextDueDate = createdAtDate;
-          const completionHistoryDates = Object.keys(habit.completionHistory).sort();
-          if (completionHistoryDates.length > 0) {
-            // Get the last completed date (sorted ascending, so last is newest)
-            const prevCompletedDateString = completionHistoryDates[completionHistoryDates.length - 1];
-            const prevDueDate = getMidnightDayjs(prevCompletedDateString);
-            nextDueDate = prevDueDate.add(habit.repetition.days, "day");
-          }
-
-          // Habit is due if today is the nextDueDate or past it
-          if (selectedDate.isSameOrAfter(nextDueDate)) {
-            return true;
-          }
-        }
-        return false;
-      default:
-        return false;
-    }
+    return isHabitDueOnDate(habit, date);
   } catch (error) {
     console.error("Error in shouldCompleteHabitOnDate:", error, "habit:", habit, "date:", date);
     // Fail safe by returning false instead of crashing

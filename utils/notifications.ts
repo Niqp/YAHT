@@ -9,6 +9,7 @@ const REMINDER_CHANNEL_ID = "reminders";
 const REMINDER_CHANNEL_NAME = "Reminders";
 
 const getTimerNotificationId = (timerId: string) => `timer-${timerId}`;
+const getReminderNotificationId = (habitId: string, timestamp: number) => `reminder-${habitId}-${timestamp}`;
 
 const ensureNotificationPermission = async (): Promise<boolean> => {
   try {
@@ -173,7 +174,16 @@ export const scheduleReminderNotification = async (habitId: string, habitTitle: 
       return undefined;
     }
 
-    const notificationId = `reminder-${habitId}-${timestamp}`;
+    return schedulePreparedReminderNotification(habitId, habitTitle, timestamp);
+  } catch (error) {
+    console.error("Error scheduling reminder notification:", error);
+    return undefined;
+  }
+};
+
+export const schedulePreparedReminderNotification = async (habitId: string, habitTitle: string, timestamp: number) => {
+  try {
+    const notificationId = getReminderNotificationId(habitId, timestamp);
     const content: Notifications.NotificationContentInput = {
       title: "Friendly Reminder",
       body: `It's time for: ${habitTitle}`,
@@ -192,7 +202,7 @@ export const scheduleReminderNotification = async (habitId: string, habitTitle: 
       },
     });
   } catch (error) {
-    console.error("Error scheduling reminder notification:", error);
+    console.error("Error scheduling prepared reminder notification:", error);
     return undefined;
   }
 };

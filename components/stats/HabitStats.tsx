@@ -1,14 +1,17 @@
+import { AppText, Card } from "@/components/ui";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { useTheme } from "@/hooks/useTheme";
+import type { CompletionType, HabitStats as HabitStatsData } from "@/types/habit";
+import { getDayjs } from "@/utils/date";
+import { Award, CalendarDays, CheckSquare, Clock3, RotateCcw, Target, TrendingUp } from "lucide-react-native";
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import { Award, CheckSquare, RotateCcw, TrendingUp, Clock } from "lucide-react-native";
-import { useTheme } from "../../hooks/useTheme";
-import type { CompletionType, HabitStats as HabitStatsData } from "../../types/habit";
-import { formatTime } from "../../utils/date";
+import { StyleSheet, View } from "react-native";
 
 interface StatItem {
   label: string;
   value: string;
   icon: React.ReactElement;
+  valueVariant?: "title" | "body";
 }
 
 interface HabitStatsProps {
@@ -18,125 +21,180 @@ interface HabitStatsProps {
 
 const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) => {
   const { colors } = useTheme();
-  const screenWidth = Dimensions.get("window").width;
 
   let stats: StatItem[] = [];
+  let title = "";
+  let subtitle = "";
+  const lastCompletedLabel = habitStats.lastCompletedDate
+    ? getDayjs(habitStats.lastCompletedDate).format("MMM D, YYYY")
+    : "Never";
 
   switch (completionType) {
     case "simple":
+      title = "Simple habit stats";
+      subtitle = "Streaks and completion history.";
       stats = [
         {
-          label: "Best Streak",
-          value: habitStats.bestStreak.toString(),
-          icon: <Award size={20} color={colors.primary} />,
+          label: "Current streak",
+          value: habitStats.currentStreak.toString(),
+          icon: <RotateCcw size={18} color={colors.primary} />,
         },
         {
-          label: "Total Completions",
+          label: "Best streak",
+          value: habitStats.bestStreak.toString(),
+          icon: <Award size={18} color={colors.primary} />,
+        },
+        {
+          label: "Total completions",
           value: habitStats.totalCompletions.toString(),
-          icon: <CheckSquare size={20} color={colors.primary} />,
+          icon: <CheckSquare size={18} color={colors.primary} />,
+        },
+        {
+          label: "Last completed",
+          value: lastCompletedLabel,
+          icon: <CalendarDays size={18} color={colors.primary} />,
+          valueVariant: "body",
         },
       ];
       break;
 
     case "repetitions":
+      title = "Repetition stats";
+      subtitle = "Volume, streaks and goal hit rate.";
       stats = [
         {
-          label: "Average Reps",
-          value: habitStats.averageRepetitions.toString(),
-          icon: <RotateCcw size={20} color={colors.primary} />,
+          label: "Current streak",
+          value: habitStats.currentStreak.toString(),
+          icon: <RotateCcw size={18} color={colors.primary} />,
         },
         {
-          label: "Best Reps",
-          value: habitStats.bestRepetitions.toString(),
-          icon: <TrendingUp size={20} color={colors.primary} />,
+          label: "Goal hit rate",
+          value: `${habitStats.goalHitRate}%`,
+          icon: <Target size={18} color={colors.primary} />,
         },
         {
-          label: "Total Reps",
+          label: "Total reps",
           value: habitStats.totalRepetitions.toString(),
-          icon: <Award size={20} color={colors.primary} />,
+          icon: <Award size={18} color={colors.primary} />,
+        },
+        {
+          label: "Best day",
+          value: habitStats.bestDayValue.toString(),
+          icon: <TrendingUp size={18} color={colors.primary} />,
         },
       ];
       break;
 
     case "timed":
+      title = "Timed habit stats";
+      subtitle = "Time volume, streaks and strongest sessions.";
       stats = [
         {
-          label: "Total Time",
-          value: formatTime(habitStats.totalTimeSpent),
-          icon: <Clock size={20} color={colors.primary} />,
+          label: "Current streak",
+          value: habitStats.currentStreak.toString(),
+          icon: <RotateCcw size={18} color={colors.primary} />,
         },
         {
-          label: "Avg Session",
-          value: formatTime(habitStats.averageTimePerSession),
-          icon: <RotateCcw size={20} color={colors.primary} />,
+          label: "Goal hit rate",
+          value: `${habitStats.goalHitRate}%`,
+          icon: <Target size={18} color={colors.primary} />,
         },
         {
-          label: "Longest",
-          value: formatTime(habitStats.longestSession),
-          icon: <Award size={20} color={colors.primary} />,
+          label: "Total time",
+          value: formatDurationLabel(habitStats.totalTimeSpent),
+          icon: <Clock3 size={18} color={colors.primary} />,
+          valueVariant: "body",
+        },
+        {
+          label: "Best day",
+          value: formatDurationLabel(habitStats.bestDayValue),
+          icon: <Award size={18} color={colors.primary} />,
+          valueVariant: "body",
         },
       ];
       break;
   }
 
-  // Calculate the width based on the number of stats
-  const statWidth = completionType === "simple" ? "47%" : "30%";
-
   return (
-    <View style={styles.typeStatsSection}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        {completionType === "simple"
-          ? "Simple Habit Stats"
-          : completionType === "repetitions"
-            ? "Repetition Stats"
-            : "Timed Stats"}
-      </Text>
-
+    <Card title={title} subtitle={subtitle}>
       <View style={styles.typeStatsGrid}>
-        {stats.map((stat, index) => (
-          <View key={index} style={[styles.typeStat, { backgroundColor: colors.input, width: statWidth }]}>
-            <View style={styles.typeStatIconContainer}>{stat.icon}</View>
-            <Text style={[styles.typeStatValue, { color: colors.text }]}>{stat.value}</Text>
-            <Text style={[styles.typeStatLabel, { color: colors.textSecondary }]}>{stat.label}</Text>
+        {stats.map((stat) => (
+          <View
+            key={stat.label}
+            style={[styles.typeStat, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <View style={styles.typeStatTopRow}>
+              <View style={[styles.typeStatIconContainer, { backgroundColor: colors.primarySubtle }]}>{stat.icon}</View>
+              <AppText variant="small" color={colors.textSecondary} style={styles.typeStatLabel}>
+                {stat.label}
+              </AppText>
+            </View>
+
+            <AppText variant={stat.valueVariant ?? "title"} tabularNums style={styles.typeStatValue}>
+              {stat.value}
+            </AppText>
           </View>
         ))}
       </View>
-    </View>
+    </Card>
   );
 };
 
+const formatDurationLabel = (valueMs: number) => {
+  if (valueMs <= 0) {
+    return "0s";
+  }
+
+  const totalSeconds = Math.floor(valueMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
+};
+
 const styles = StyleSheet.create({
-  typeStatsSection: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
   typeStatsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 10,
+    gap: Spacing.sm,
   },
   typeStat: {
-    padding: 12,
-    borderRadius: 8,
+    flexBasis: "47%",
+    flexGrow: 1,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.md,
+    minHeight: 112,
+    justifyContent: "space-between",
+  },
+  typeStatTopRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    gap: Spacing.sm,
   },
   typeStatIconContainer: {
-    marginBottom: 8,
-  },
-  typeStatValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
   },
   typeStatLabel: {
-    fontSize: 12,
-    textAlign: "center",
+    flex: 1,
+  },
+  typeStatValue: {
+    paddingLeft: Spacing.xs,
   },
 });
 

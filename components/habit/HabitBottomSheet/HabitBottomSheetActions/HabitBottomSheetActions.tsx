@@ -32,7 +32,7 @@ export default function HabitBottomSheetActions({
   return (
     <View style={styles.container}>
       {habit.completion.type === "repetitions" && (
-        <View style={[styles.repetitionRow, { backgroundColor: colors.surface }, getElevation(1, colors.shadow)]}>
+        <View style={[styles.repetitionRow, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}>
           <TouchableOpacity
             style={styles.repButton}
             onPress={handleDecrement}
@@ -56,7 +56,7 @@ export default function HabitBottomSheetActions({
 
       <View style={styles.actionsContainer}>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.surface }, getElevation(1, colors.shadow)]}
+          style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
           onPress={handleEdit}
           activeOpacity={0.7}
         >
@@ -65,7 +65,7 @@ export default function HabitBottomSheetActions({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.surface }, getElevation(1, colors.shadow)]}
+          style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
           onPress={handleDelete}
           activeOpacity={0.7}
         >
@@ -75,7 +75,7 @@ export default function HabitBottomSheetActions({
 
         {!isCompleted ? (
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.surface }, getElevation(1, colors.shadow)]}
+            style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
             onPress={handleComplete}
             activeOpacity={0.7}
           >
@@ -84,7 +84,7 @@ export default function HabitBottomSheetActions({
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.surface }, getElevation(1, colors.shadow)]}
+            style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
             onPress={handleReset}
             activeOpacity={0.7}
           >

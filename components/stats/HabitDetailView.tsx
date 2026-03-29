@@ -1,69 +1,52 @@
+import { Card } from "@/components/ui";
+import { Spacing } from "@/constants/Spacing";
+import type { Habit, HabitChartData, HabitStats as HabitStatsData } from "@/types/habit";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { useTheme } from "../../hooks/useTheme";
-import type { Habit, HabitStats as HabitStatsData } from "../../types/habit";
-import HabitTypeIndicator from "./HabitTypeIndicator";
-import SimpleHabitChart from "./charts/SimpleHabitChart";
+import { StyleSheet, View } from "react-native";
+
+import HabitStats from "./HabitStats";
 import PerformanceLineChart from "./charts/PerformanceLineChart";
 import ProgressCircle from "./charts/ProgressCircle";
-import HabitStats from "./HabitStats";
+import SimpleHabitChart from "./charts/SimpleHabitChart";
 
 interface HabitDetailViewProps {
   habit: Habit;
-  lineChartData: {
-    labels: string[];
-    datasets: { data: number[] }[];
-  };
-  progressData: {
-    labels?: string[];
-    data: number[];
-  };
+  chartData: HabitChartData;
   habitStats: HabitStatsData;
 }
 
-const HabitDetailView: React.FC<HabitDetailViewProps> = ({ habit, lineChartData, progressData, habitStats }) => {
-  const { colors } = useTheme();
-
+const HabitDetailView: React.FC<HabitDetailViewProps> = ({ habit, chartData, habitStats }) => {
   if (!habit) return null;
 
   return (
-    <View style={styles.chartContainer}>
-      <View style={styles.habitHeaderContainer}>
-        <Text style={[styles.habitTitle, { color: colors.text }]}>
-          {habit.icon} {habit.title}
-        </Text>
-        <HabitTypeIndicator completionType={habit.completion.type} />
-      </View>
-
-      {/* Chart based on habit type */}
-      {habit.completion.type === "simple" ? (
-        <SimpleHabitChart labels={lineChartData.labels} data={lineChartData.datasets[0].data} />
-      ) : (
-        <PerformanceLineChart lineChartData={lineChartData} />
-      )}
-
-      {/* Progress circle for all habit types */}
-      <ProgressCircle progressData={progressData} completionType={habit.completion.type} stats={habitStats} />
-
-      {/* Type-specific stats */}
+    <View style={styles.stack}>
       <HabitStats completionType={habit.completion.type} habitStats={habitStats} />
+
+      <Card
+        title="Recent performance"
+        subtitle="A roomier view of the last seven scheduled days."
+        contentStyle={styles.performanceContent}
+      >
+        {habit.completion.type === "simple" ? (
+          <SimpleHabitChart days={chartData.days} />
+        ) : (
+          <PerformanceLineChart days={chartData.days} completionType={habit.completion.type} />
+        )}
+      </Card>
+
+      <Card title="Consistency" subtitle="Since creation.">
+        <ProgressCircle stats={habitStats} />
+      </Card>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  chartContainer: {
-    marginTop: 10,
+  stack: {
+    gap: Spacing.base,
   },
-  habitHeaderContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  habitTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
+  performanceContent: {
+    paddingVertical: Spacing.xl,
   },
 });
 

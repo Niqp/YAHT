@@ -1,8 +1,10 @@
+import { AppText } from "@/components/ui";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { useTheme } from "@/hooks/useTheme";
+import { CompletionType } from "@/types/habit";
+import { CheckSquare, Clock3, RotateCcw } from "lucide-react-native";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { CheckSquare, RotateCcw, Clock } from "lucide-react-native";
-import { useTheme } from "../../hooks/useTheme";
-import { CompletionType } from "../../types/habit";
+import { StyleSheet, View } from "react-native";
 
 interface HabitTypeIndicatorProps {
   completionType: CompletionType;
@@ -11,28 +13,30 @@ interface HabitTypeIndicatorProps {
 const HabitTypeIndicator: React.FC<HabitTypeIndicatorProps> = ({ completionType }) => {
   const { colors } = useTheme();
 
-  let icon;
-  let label;
+  let icon: React.ReactNode = null;
+  let label = "";
 
   switch (completionType) {
     case "simple":
-      icon = <CheckSquare size={16} color={colors.textSecondary} />;
+      icon = <CheckSquare size={16} color={colors.primary} />;
       label = "Simple";
       break;
     case "repetitions":
-      icon = <RotateCcw size={16} color={colors.textSecondary} />;
-      label = "Repetitions";
+      icon = <RotateCcw size={16} color={colors.primary} />;
+      label = "Count";
       break;
     case "timed":
-      icon = <Clock size={16} color={colors.textSecondary} />;
-      label = "Timed";
+      icon = <Clock3 size={16} color={colors.primary} />;
+      label = "Timer";
       break;
   }
 
   return (
-    <View style={[styles.habitTypeTag, { backgroundColor: colors.input }]}>
+    <View style={[styles.habitTypeTag, { backgroundColor: colors.primarySubtle }]}>
       {icon}
-      <Text style={[styles.habitTypeTagText, { color: colors.textSecondary }]}>{label}</Text>
+      <AppText variant="small" color={colors.primary}>
+        {label}
+      </AppText>
     </View>
   );
 };
@@ -41,13 +45,10 @@ const styles = StyleSheet.create({
   habitTypeTag: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 20,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  habitTypeTagText: {
-    fontSize: 12,
-    marginLeft: 4,
+    gap: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
 });
 

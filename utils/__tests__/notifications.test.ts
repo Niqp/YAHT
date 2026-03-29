@@ -2,9 +2,12 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
 import {
+  prepareReminderNotifications,
   cancelAllTimerNotifications,
   cancelTimerNotification,
   prepareTimerNotifications,
+  schedulePreparedReminderNotification,
+  scheduleReminderNotification,
   scheduleTimerNotification,
 } from "@/utils/notifications";
 
@@ -19,8 +22,8 @@ const mockDismissAllNotificationsAsync = jest.fn();
 
 jest.mock("expo-notifications", () => ({
   __esModule: true,
-  AndroidImportance: { MAX: "max" },
-  AndroidNotificationPriority: { MAX: "max" },
+  AndroidImportance: { MAX: "max", HIGH: "high" },
+  AndroidNotificationPriority: { MAX: "max", HIGH: "high" },
   SchedulableTriggerInputTypes: { DATE: "date" },
   getPermissionsAsync: (...args: unknown[]) => mockGetPermissionsAsync(...args),
   requestPermissionsAsync: (...args: unknown[]) => mockRequestPermissionsAsync(...args),
@@ -87,6 +90,25 @@ describe("prepareTimerNotifications", () => {
 
     await expect(prepareTimerNotifications({ openAlarmSettings: false })).resolves.toBe(false);
     expect(mockOpenSettings).not.toHaveBeenCalled();
+  });
+});
+
+describe("prepareReminderNotifications", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetPermissionsAsync.mockResolvedValue({ granted: true });
+    mockRequestPermissionsAsync.mockResolvedValue({ granted: true });
+    mockSetNotificationChannelAsync.mockResolvedValue(undefined);
+    mockCanScheduleExactAlarms.mockResolvedValue(true);
+  });
+
+  it("returns true when reminder notification permissions are available", async () => {
+    await expect(prepareReminderNotifications()).resolves.toBe(true);
+    expect(mockSetNotificationChannelAsync).toHaveBeenCalledWith("reminders", {
+      name: "Reminders",
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+    });
   });
 });
 
@@ -176,5 +198,67 @@ describe("timer notification cancellation", () => {
 
     expect(mockCancelAllScheduledNotificationsAsync).toHaveBeenCalledTimes(1);
     expect(mockDismissAllNotificationsAsync).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("scheduleReminderNotification", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetPermissionsAsync.mockResolvedValue({ granted: true });
+    mockRequestPermissionsAsync.mockResolvedValue({ granted: true });
+    mockSetNotificationChannelAsync.mockResolvedValue(undefined);
+    mockCanScheduleExactAlarms.mockResolvedValue(true);
+    mockScheduleNotificationAsync.mockResolvedValue("reminder-h1-123");
+  });
+
+  it("schedules a date-based reminder notification with a stable identifier", async () => {
+    const result = await scheduleReminderNotification("h1", "Stretch", 123_000);
+
+    expect(result).toBe("reminder-h1-123");
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
+      identifier: "reminder-h1-123000",
+      content: {
+        title: "Friendly Reminder",
+        body: "It's time for: Stretch",
+        sound: "default",
+        color: "#023c69",
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(123_000),
+        channelId: "reminders",
+      },
+    });
+  });
+
+  it("schedules a prepared reminder without repeating permission setup", async () => {
+    await schedulePreparedReminderNotification("h1", "Stretch", 123_000);
+
+    expect(mockGetPermissionsAsync).not.toHaveBeenCalled();
+    expect(mockRequestPermissionsAsync).not.toHaveBeenCalled();
+    expect(mockCanScheduleExactAlarms).not.toHaveBeenCalled();
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
+      identifier: "reminder-h1-123000",
+      content: {
+        title: "Friendly Reminder",
+        body: "It's time for: Stretch",
+        sound: "default",
+        color: "#023c69",
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: new Date(123_000),
+        channelId: "reminders",
+      },
+    });
+  });
+
+  it("returns undefined when reminder exact alarms are unavailable", async () => {
+    mockCanScheduleExactAlarms.mockResolvedValue(false);
+
+    await expect(scheduleReminderNotification("h1", "Stretch", 123_000)).resolves.toBeUndefined();
+    expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
   });
 });

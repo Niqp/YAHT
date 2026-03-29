@@ -38,6 +38,7 @@ const DEFAULT_TIMED_GOAL_MS = 1 * 60 * 1000;
 const WEEKDAY_SHORT_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type AddSheetKey = "completion" | "repetition" | "reminder";
+const TODAY_ROUTE = "/(tabs)/today";
 
 const formatCountLabel = (count: number, singular: string, plural: string) => {
   return `${count} ${count === 1 ? singular : plural}`;
@@ -237,6 +238,15 @@ export default function AddEditHabitScreen() {
 
   const navigation = useNavigation();
 
+  const navigateBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace(TODAY_ROUTE);
+  }, []);
+
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       // If a bottom sheet is active, prevent back navigation and close the sheet
@@ -288,9 +298,7 @@ export default function AddEditHabitScreen() {
         Alert.alert("Habit Not Found", "This habit no longer exists.", [
           {
             text: "OK",
-            onPress: () => {
-              router.replace("/today");
-            },
+            onPress: navigateBack,
           },
         ]);
       }
@@ -417,11 +425,22 @@ export default function AddEditHabitScreen() {
   }, []);
 
   const handleReminderEnabledChange = useCallback((value: boolean) => {
-    setReminderEnabled(value);
-    setIsDirty(true);
-    if (value) {
-      void prepareReminderNotifications();
+    if (!value) {
+      setReminderEnabled(false);
+      setIsDirty(true);
+      return;
     }
+
+    void (async () => {
+      const canEnableReminder = await prepareReminderNotifications();
+      if (!canEnableReminder) {
+        setReminderEnabled(false);
+        return;
+      }
+
+      setReminderEnabled(true);
+      setIsDirty(true);
+    })();
   }, []);
 
   const handleReminderHourChange = useCallback((value: number) => {
@@ -462,15 +481,6 @@ export default function AddEditHabitScreen() {
     reminderRepeatIntervalMs
   );
   const reminderHelperText = getReminderHelperText(reminderEnabled);
-
-  const navigateBack = useCallback(() => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace("/today");
-  }, []);
 
   const handleCancel = useCallback(() => {
     if (!hasUnsavedChanges) {
@@ -561,7 +571,7 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      router.replace("/today");
+      navigateBack();
     } finally {
       setIsSubmitting(false);
     }
@@ -583,11 +593,11 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      router.replace("/today");
+      navigateBack();
     } finally {
       setIsSubmitting(false);
     }
-  }, [deleteHabit, habitId, isSubmitting]);
+  }, [deleteHabit, habitId, isSubmitting, navigateBack]);
 
   const handleDelete = useCallback(() => {
     if (!isEditMode || !habitId) {

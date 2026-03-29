@@ -21,33 +21,33 @@ export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionS
       if (!habit) return;
 
       const currentCompletion = habit.completionHistory[date] || { isCompleted: false, value: 0 };
+      const currentValue = currentCompletion.value ?? 0;
       let newCompleted = currentCompletion.isCompleted;
+      let newValue = currentValue;
 
       // Determine new completion state
       if (habit.completion.type === "simple") {
         newCompleted = !newCompleted;
-      }
-      if (["repetitions", "timed"].includes(habit.completion.type)) {
-        newCompleted = value !== undefined && value >= (habit.completion.goal || 0);
-      }
-
-      // Determine new value
-      let newValue = value || 0;
-      if (habit.completion.type === "timed" && newValue === undefined) {
-        newValue = currentCompletion?.value || 0;
+        newValue = 0;
+      } else if (["repetitions", "timed"].includes(habit.completion.type)) {
+        newValue = value ?? currentValue;
+        newCompleted = newValue >= (habit.completion.goal || 0);
       }
 
       let newCompletionHistory = { ...habit.completionHistory };
       const isTimerRunning = !!activeTimers[id]?.[date];
-      if (!currentCompletion.isCompleted || isTimerRunning) {
-        // If the habit was not completed, update the completion history
+      const shouldDeleteEntry =
+        habit.completion.type === "simple"
+          ? currentCompletion.isCompleted && !newCompleted && !isTimerRunning
+          : newValue <= 0 && !newCompleted && !isTimerRunning;
+
+      if (shouldDeleteEntry) {
+        delete newCompletionHistory[date];
+      } else {
         newCompletionHistory[date] = {
           isCompleted: newCompleted,
-          value: newValue || 0,
+          value: newValue,
         };
-      } else {
-        // If the habit was completed, reset the completion in history
-        delete newCompletionHistory[date];
       }
 
       const updatedHabit = {

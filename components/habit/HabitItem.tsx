@@ -134,7 +134,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         accessibilityState={{ checked: isCompleted }}
       >
         {/* Left section - Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: colors.surface }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primarySubtle }]}>
           <Text style={styles.iconText}>{habit.icon}</Text>
         </View>
 
@@ -184,7 +184,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         styles.container,
         animatedStyle,
         {
-          borderColor: colors.border,
+          borderColor: isCompleted ? colors.success : colors.border,
           ...getElevation(1, colors.shadow),
         },
       ]}

@@ -1,1 +1,0 @@
-export { WeekSettings } from "./WeekSettings";

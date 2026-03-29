@@ -17,7 +17,7 @@ export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habi
 
   return (
     <View style={styles.headerContainer}>
-      <View style={[styles.iconContainer, { backgroundColor: colors.surface }]}>
+      <View style={[styles.iconContainer, { backgroundColor: colors.primarySubtle, borderWidth: 1, borderColor: colors.border }]}>
         <Text style={styles.habitIcon}>{habit.icon}</Text>
       </View>
       <View style={styles.habitInfoContainer}>
@@ -30,7 +30,7 @@ export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habi
               : `Goal: ${formattedTimeGoal}`}
         </Text>
       </View>
-      <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.surface }]} onPress={onClose}>
+      <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border }]} onPress={onClose}>
         <ChevronUp size={20} color={colors.textSecondary} />
       </TouchableOpacity>
     </View>

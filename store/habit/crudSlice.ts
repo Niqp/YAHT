@@ -66,10 +66,13 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
     try {
       set((state) => {
         const updatedMap = { ...state.habits };
+        const updatedTimers = { ...state.activeTimers };
         delete updatedMap[id];
+        delete updatedTimers[id];
 
         return {
           habits: updatedMap,
+          activeTimers: updatedTimers,
           error: null,
         };
       });

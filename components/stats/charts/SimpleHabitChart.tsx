@@ -1,37 +1,82 @@
+import { AppText } from "@/components/ui";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { useTheme } from "@/hooks/useTheme";
+import type { ChartDay } from "@/types/habit";
+import { Check, Minus, X } from "lucide-react-native";
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import { CheckSquare } from "lucide-react-native";
-import { useTheme } from "../../../hooks/useTheme";
+import { StyleSheet, View } from "react-native";
 
 interface SimpleHabitChartProps {
-  labels: string[];
-  data: number[];
+  days: ChartDay[];
 }
 
-const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ labels, data }) => {
+const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
   const { colors } = useTheme();
-  const screenWidth = Dimensions.get("window").width;
 
   return (
     <View style={styles.activityMapSection}>
-      <Text style={[styles.chartTitle, { color: colors.textSecondary }]}>Weekly Completion</Text>
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+            <Check size={12} color={colors.buttonPrimaryText} />
+          </View>
+          <AppText variant="small" color={colors.textSecondary}>
+            Done
+          </AppText>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <X size={12} color={colors.textSecondary} />
+          </View>
+          <AppText variant="small" color={colors.textSecondary}>
+            Missed
+          </AppText>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.input, borderColor: colors.border }]}>
+            <Minus size={12} color={colors.textTertiary} />
+          </View>
+          <AppText variant="small" color={colors.textSecondary}>
+            Off day
+          </AppText>
+        </View>
+      </View>
+
       <View style={styles.simpleHabitChartContainer}>
-        {labels.map((day, index) => {
-          const isCompleted = data[index] > 0;
+        {days.map((day) => {
+          const isCompleted = day.isDue && day.isCompleted;
+          const isOffDay = !day.isDue;
+          const iconColor = isCompleted
+            ? colors.buttonPrimaryText
+            : isOffDay
+              ? colors.textTertiary
+              : colors.textSecondary;
+
           return (
-            <View key={index} style={styles.dayColumn}>
-              <Text style={[styles.dayName, { color: colors.textSecondary }]}>{day}</Text>
+            <View key={day.date} style={styles.dayColumn}>
+              <AppText variant="small" color={colors.textSecondary}>
+                {day.label}
+              </AppText>
               <View
                 style={[
                   styles.completionIndicator,
                   {
-                    backgroundColor: isCompleted ? colors.primary : colors.input,
+                    backgroundColor: isCompleted ? colors.primary : isOffDay ? colors.input : colors.surface,
                     borderColor: isCompleted ? colors.primary : colors.border,
                   },
                 ]}
               >
-                {isCompleted && <CheckSquare size={16} color="#fff" />}
+                {isCompleted ? (
+                  <Check size={18} color={iconColor} />
+                ) : isOffDay ? (
+                  <Minus size={18} color={iconColor} />
+                ) : (
+                  <X size={18} color={iconColor} />
+                )}
               </View>
+              <AppText variant="tiny" color={colors.textSecondary}>
+                {isCompleted ? "Done" : isOffDay ? "Off" : "Missed"}
+              </AppText>
             </View>
           );
         })}
@@ -40,37 +85,42 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ labels, data }) => 
   );
 };
 
-const screenWidth = Dimensions.get("window").width;
-
 const styles = StyleSheet.create({
   activityMapSection: {
-    marginBottom: 24,
-    paddingHorizontal: 8,
+    gap: Spacing.base,
   },
-  chartTitle: {
-    fontSize: 14,
-    marginBottom: 10,
+  legendRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  legendSwatch: {
+    width: 22,
+    height: 22,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   simpleHabitChartContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 12,
-    paddingHorizontal: 8,
+    gap: Spacing.sm,
   },
   dayColumn: {
+    flex: 1,
     alignItems: "center",
-    width: (screenWidth - 100) / 7,
-  },
-  dayName: {
-    fontSize: 12,
-    marginBottom: 8,
-    fontWeight: "500",
+    gap: Spacing.sm,
   },
   completionIndicator: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,

@@ -1,39 +1,30 @@
 import { useCallback, useMemo, useState } from "react";
 import { useHabitStore } from "../store/habitStore";
-import type { Habit, HabitStats } from "../types/habit";
+import type { Habit, HabitChartData, HabitStats, OverallStats } from "../types/habit";
 import { calculateHabitStats, calculateOverallStats, generateChartData } from "../utils/statsUtils";
 
-const EMPTY_OVERALL_STATS = {
-  totalHabits: 0,
+const EMPTY_OVERALL_STATS: OverallStats = {
+  activeHabits: 0,
+  dueToday: 0,
   completedToday: 0,
-  completionRate: 0,
-  currentStreak: 0,
-  bestStreak: 0,
+  todayAdherence: 0,
+  last7DayAdherence: 0,
 };
 
-const EMPTY_LINE_CHART_DATA = {
-  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  datasets: [{ data: [0, 0, 0, 0, 0, 0, 0] }],
-};
+const EMPTY_CHART_DATA: HabitChartData = { days: [] };
 
 const EMPTY_HABIT_STATS: HabitStats = {
-  completionRate: 0,
+  dueDaysSinceCreation: 0,
+  completedDueDays: 0,
+  adherenceSinceCreation: 0,
   currentStreak: 0,
   bestStreak: 0,
   totalCompletions: 0,
-  lastCompletionDate: "",
-  averageRepetitions: 0,
-  bestRepetitions: 0,
-  goalAchievementRate: 0,
+  lastCompletedDate: "",
+  goalHitRate: 0,
   totalRepetitions: 0,
   totalTimeSpent: 0,
-  averageTimePerSession: 0,
-  longestSession: 0,
-  completionSinceCreation: 0,
-};
-
-const EMPTY_PROGRESS_DATA = {
-  data: [0],
+  bestDayValue: 0,
 };
 
 export function useStats() {
@@ -63,9 +54,9 @@ export function useStats() {
     return calculateOverallStats(habits);
   }, [habitArray.length, habits]);
 
-  const lineChartData = useMemo(() => {
+  const chartData = useMemo(() => {
     if (!selectedHabit) {
-      return EMPTY_LINE_CHART_DATA;
+      return EMPTY_CHART_DATA;
     }
 
     return generateChartData(selectedHabit);
@@ -79,17 +70,6 @@ export function useStats() {
     return calculateHabitStats(selectedHabit);
   }, [selectedHabit]);
 
-  const progressData = useMemo(() => {
-    if (!selectedHabit) {
-      return EMPTY_PROGRESS_DATA;
-    }
-
-    const progressValue = habitStats.completionSinceCreation / 100;
-    return {
-      data: [Math.min(1, Math.max(0, progressValue))],
-    };
-  }, [habitStats.completionSinceCreation, selectedHabit]);
-
   const handleSelectHabit = useCallback((habit: Habit) => {
     setSelectedHabitId(habit.id);
   }, []);
@@ -100,8 +80,7 @@ export function useStats() {
     isHydrated,
     selectedHabit,
     overallStats,
-    lineChartData,
-    progressData,
+    chartData,
     habitStats,
     handleSelectHabit,
   };

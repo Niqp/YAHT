@@ -104,6 +104,38 @@ describe("createCompletionSlice behavior", () => {
     expect(harness.getState().habits.h1.completionHistory[DATE]).toEqual({ isCompleted: true, value: 5 });
   });
 
+  it("keeps the repetition entry when decreasing below goal after completion", async () => {
+    const harness = createHarness({
+      h1: makeHabit({
+        id: "h1",
+        completion: { type: CompletionType.REPETITIONS, goal: 5 },
+        completionHistory: {
+          [DATE]: { isCompleted: true, value: 5 },
+        },
+      }),
+    });
+
+    await harness.slice.updateCompletion({ id: "h1", date: DATE, value: 4 });
+
+    expect(harness.getState().habits.h1.completionHistory[DATE]).toEqual({ isCompleted: false, value: 4 });
+  });
+
+  it("removes repetition entries when resetting to zero", async () => {
+    const harness = createHarness({
+      h1: makeHabit({
+        id: "h1",
+        completion: { type: CompletionType.REPETITIONS, goal: 5 },
+        completionHistory: {
+          [DATE]: { isCompleted: false, value: 2 },
+        },
+      }),
+    });
+
+    await harness.slice.updateCompletion({ id: "h1", date: DATE, value: 0 });
+
+    expect(harness.getState().habits.h1.completionHistory[DATE]).toBeUndefined();
+  });
+
   it("updates multiple completions sequentially", async () => {
     const harness = createHarness({ h1: makeHabit({ id: "h1" }) });
 

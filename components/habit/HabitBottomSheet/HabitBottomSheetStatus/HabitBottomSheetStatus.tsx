@@ -23,7 +23,7 @@ const HabitBottomSheetStatus = ({ habit, isCompleted, selectedDate }: HabitBotto
 
   if (!habit) return null;
 
-  const { totalCompletions, completionRate, currentStreak } = habitStats;
+  const { totalCompletions, adherenceSinceCreation, currentStreak } = habitStats;
 
   return (
     <View style={[styles.statusSection, { backgroundColor: colors.surface }]}>
@@ -34,8 +34,8 @@ const HabitBottomSheetStatus = ({ habit, isCompleted, selectedDate }: HabitBotto
         </View>
 
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.text }]}>{completionRate}%</Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Completion Rate</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{adherenceSinceCreation}%</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Adherence</Text>
         </View>
 
         <View style={styles.statItem}>

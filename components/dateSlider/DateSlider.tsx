@@ -60,7 +60,7 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   // Create styles with theme colors
   const containerStyle = [
     styles.dateItem,
-    { backgroundColor: colors.input },
+    { backgroundColor: colors.input, borderColor: colors.border },
     isSelected && {
       backgroundColor: colors.primarySubtle,
       borderColor: colors.primary,
@@ -327,7 +327,7 @@ export default function DateSlider() {
             </TouchableOpacity>
           </Animated.View>
           {/* Streak pill — always visible */}
-          <View style={[styles.streakPill, { backgroundColor: colors.input }]}>
+          <View style={[styles.streakPill, { backgroundColor: colors.primarySubtle }]}>
             <Text style={styles.streakEmoji}>🔥</Text>
             <Text style={[styles.streakText, { color: colors.text }]}>{streak}</Text>
           </View>

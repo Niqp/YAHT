@@ -1,1 +1,0 @@
-export { SettingsFooter } from "./SettingsFooter";

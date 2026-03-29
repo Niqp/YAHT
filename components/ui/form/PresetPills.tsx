@@ -55,7 +55,7 @@ function PresetPills<T extends string | number>(props: PresetPillsProps<T>) {
             style={({ pressed }) => [
               styles.pill,
               {
-                backgroundColor: isActive ? colors.primarySubtle : colors.input,
+                backgroundColor: isActive ? colors.primarySubtle : colors.cardBackground,
                 borderColor: isActive ? colors.primary : colors.inputBorder,
               },
               pressed ? styles.pillPressed : null,

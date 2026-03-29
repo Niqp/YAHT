@@ -1,11 +1,11 @@
 import React, { memo } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 
 import { AppText } from "@/components/ui";
-import { FormInput, FormSection } from "@/components/ui/form";
+import { EmojiPickerField, FormInput, FormSection } from "@/components/ui/form";
 
 interface BasicInfoSectionProps {
   title: string;
@@ -21,26 +21,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
   return (
     <FormSection label="Basic info" description="Name your habit and give it an icon.">
       <View style={styles.row}>
-        <View
-          style={[
-            styles.iconContainer,
-            {
-              backgroundColor: colors.surface,
-            },
-          ]}
-        >
-          <TextInput
-            style={[styles.emojiInput, { color: colors.text }]}
-            value={icon}
-            onChangeText={setIcon}
-            maxLength={2}
-            placeholder="✨"
-            placeholderTextColor={colors.textTertiary}
-            accessibilityLabel="Habit emoji"
-            accessibilityHint="Enter a one-emoji icon for this habit"
-            selectionColor={colors.primary}
-          />
-        </View>
+        <EmojiPickerField value={icon} onChange={setIcon} />
 
         <View style={styles.titleField}>
           <FormInput
@@ -75,22 +56,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
-  },
-  iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emojiInput: {
-    width: "100%",
-    height: "100%",
-    paddingVertical: 0,
-    textAlign: "center",
-    textAlignVertical: "center",
-    fontSize: 22,
-    lineHeight: 26,
   },
   titleField: {
     flex: 1,

@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
     width: 45,
     height: 70,
-    borderRadius: 22.5,
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
     borderColor: "transparent",
   },
