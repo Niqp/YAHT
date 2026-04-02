@@ -21,12 +21,12 @@ const styles = StyleSheet.create({
   pillRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
   },
   todayButtonContainer: {
     height: 28,
     overflow: "hidden",
     justifyContent: "center",
+    borderRadius: BorderRadius.full,
   },
   streakPill: {
     flexDirection: "row",
@@ -47,16 +47,20 @@ const styles = StyleSheet.create({
   todayButton: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     width: 76,
     height: 28,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.full,
+  },
+  todayButtonIcon: {
+    width: 28,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
   todayButtonText: {
     fontSize: 12,
     fontWeight: "600",
-    marginLeft: 2,
+    paddingRight: Spacing.sm,
   },
   flatListContent: {
     paddingHorizontal: Spacing.base,

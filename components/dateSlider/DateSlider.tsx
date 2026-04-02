@@ -1,7 +1,7 @@
-import { TimingConfig } from "@/constants/Animation";
 import { useAllHabitsStreak } from "@/hooks/useAllHabitsStreak";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
+import { Spacing } from "@/constants/Spacing";
 import {
   addDays,
   formatDate,
@@ -26,10 +26,12 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  cancelAnimation,
+  Easing,
+  interpolate,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { DataProvider, LayoutProvider, RecyclerListView } from "recyclerlistview";
@@ -56,6 +58,9 @@ const ITEM_HEIGHT = 70;
 const BUFFER_ITEMS = 15; // Number of items to load before/after visible range
 const TODAY_PILL_WIDTH = 76;
 const TODAY_PILL_HEIGHT = 28;
+const TODAY_PILL_GAP = Spacing.sm;
+const TODAY_PILL_SHOW_DURATION = 260;
+const TODAY_PILL_HIDE_DURATION = 200;
 
 // Memoize the DateItem component to prevent unnecessary re-renders
 const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) => {
@@ -158,8 +163,8 @@ export default function DateSlider() {
   // Show Today button if selected date is not today OR the today pill scrolled out of view
   const showTodayButton = selectedDate !== today || !isTodayPillVisible;
 
-  // Animated expand/collapse for the Today pill
-  const todayPillAnim = useSharedValue(0);
+  // Single progress value drives the whole Today pill transition.
+  const todayPillProgress = useSharedValue(0);
 
   useEffect(() => {
     setListWidth(Math.max(1, Math.round(viewportWidth)));
@@ -205,20 +210,41 @@ export default function DateSlider() {
   }, [syncTodayState]);
 
   useEffect(() => {
+    cancelAnimation(todayPillProgress);
+
     if (showTodayButton) {
-      // Expand: spring for a natural "pop" feel
-      todayPillAnim.value = reducedMotion ? 1 : withSpring(1, { damping: 18, stiffness: 200, mass: 0.8 });
+      if (reducedMotion) {
+        todayPillProgress.value = 1;
+        return;
+      }
+
+      todayPillProgress.value = withTiming(1, {
+        duration: TODAY_PILL_SHOW_DURATION,
+        easing: Easing.bezier(0.22, 1, 0.36, 1),
+      });
     } else {
-      // Collapse: timing ease-in for a quick tuck-away
-      todayPillAnim.value = reducedMotion ? 0 : withTiming(0, TimingConfig.itemDismiss);
+      if (reducedMotion) {
+        todayPillProgress.value = 0;
+        return;
+      }
+
+      todayPillProgress.value = withTiming(0, {
+        duration: TODAY_PILL_HIDE_DURATION,
+        easing: Easing.bezier(0.4, 0, 0.2, 1),
+      });
     }
-  }, [showTodayButton, reducedMotion]);
+  }, [reducedMotion, showTodayButton, todayPillProgress]);
 
   const todayPillStyle = useAnimatedStyle(() => ({
-    width: TODAY_PILL_WIDTH * todayPillAnim.value,
+    width: interpolate(todayPillProgress.value, [0, 0.3, 1], [0, TODAY_PILL_HEIGHT, TODAY_PILL_WIDTH]),
     height: TODAY_PILL_HEIGHT,
-    opacity: todayPillAnim.value,
-    transform: [{ translateX: (1 - todayPillAnim.value) * 8 }],
+    opacity: interpolate(todayPillProgress.value, [0, 0.12, 1], [0, 1, 1]),
+    marginRight: interpolate(todayPillProgress.value, [0, 1], [0, TODAY_PILL_GAP]),
+  }));
+
+  const todayTextStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(todayPillProgress.value, [0, 0.55, 0.8, 1], [0, 0, 0.85, 1]),
+    transform: [{ translateX: interpolate(todayPillProgress.value, [0, 0.55, 1], [-6, -6, 0]) }],
   }));
 
   // State to track the visible month and year as user scrolls
@@ -357,15 +383,19 @@ export default function DateSlider() {
         <Text style={[styles.monthText, { color: colors.textOnSurfaceDark }]}>{visibleMonthYear}</Text>
         <View style={styles.pillRow}>
           {/* Today button — animated expand/collapse */}
-          <Animated.View style={[styles.todayButtonContainer, todayPillStyle]}>
+          <Animated.View pointerEvents={showTodayButton ? "auto" : "none"} style={[styles.todayButtonContainer, todayPillStyle]}>
             <TouchableOpacity
               style={[styles.todayButton, { backgroundColor: colors.primary }]}
               onPress={scrollToToday}
               accessibilityRole="button"
               accessibilityLabel="Go to today"
             >
-              <ChevronLeft size={14} color={colors.textInverse} />
-              <Text style={[styles.todayButtonText, { color: colors.textInverse }]}>Today</Text>
+              <View style={styles.todayButtonIcon}>
+                <ChevronLeft size={14} color={colors.textInverse} />
+              </View>
+              <Animated.View style={todayTextStyle}>
+                <Text style={[styles.todayButtonText, { color: colors.textInverse }]}>Today</Text>
+              </Animated.View>
             </TouchableOpacity>
           </Animated.View>
           {/* Streak pill — always visible */}

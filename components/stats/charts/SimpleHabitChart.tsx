@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   legendSwatch: {
     width: Spacing.base,
     height: Spacing.base,
-    borderRadius: BorderRadius.xs,
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   completionIndicator: {
     width: Spacing.xxl,
     height: Spacing.xxl,
-    borderRadius: BorderRadius.sm,
+    borderRadius: BorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,

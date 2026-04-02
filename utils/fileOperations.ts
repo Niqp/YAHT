@@ -1,5 +1,4 @@
-// Note: You'll need to install these packages:
-// expo install expo-file-system expo-sharing
+// Note: This utility depends on expo-file-system and expo-sharing.
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { Alert } from "react-native";
@@ -51,7 +50,7 @@ export const exportData = async (): Promise<void> => {
 
 /**
  * Imports habit data from a JSON file and updates the app state
- * Requires: expo-file-system, expo-document-picker
+ * Requires: expo-file-system
  */
 export const importData = async (): Promise<void> => {
   try {
