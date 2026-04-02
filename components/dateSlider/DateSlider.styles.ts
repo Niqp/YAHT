@@ -23,6 +23,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.sm,
   },
+  todayButtonContainer: {
+    height: 28,
+    overflow: "hidden",
+    justifyContent: "center",
+  },
   streakPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -42,8 +47,10 @@ const styles = StyleSheet.create({
   todayButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    width: 76,
+    height: 28,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.lg,
   },
   todayButtonText: {

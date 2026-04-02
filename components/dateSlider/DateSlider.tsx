@@ -16,7 +16,15 @@ import { useIsFocused } from "@react-navigation/native";
 import type { ConfigType as DayjsConfigType } from "dayjs";
 import { ChevronLeft } from "lucide-react-native";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Text, TouchableOpacity, useWindowDimensions, type LayoutChangeEvent, View } from "react-native";
+import {
+  AppState,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  type AppStateStatus,
+  type LayoutChangeEvent,
+  View,
+} from "react-native";
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -46,6 +54,8 @@ interface DateItemProps {
 const ITEM_WIDTH = 57; // Width of each date item including margins
 const ITEM_HEIGHT = 70;
 const BUFFER_ITEMS = 15; // Number of items to load before/after visible range
+const TODAY_PILL_WIDTH = 76;
+const TODAY_PILL_HEIGHT = 28;
 
 // Memoize the DateItem component to prevent unnecessary re-renders
 const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) => {
@@ -134,6 +144,7 @@ export default function DateSlider() {
   const recyclerListRef = useRef<React.ElementRef<typeof RecyclerListView> | null>(null);
   const initialScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRangeExtensionAtRef = useRef<string | null>(null);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   const [listWidth, setListWidth] = useState(() => Math.max(1, Math.round(viewportWidth)));
   const [today, setToday] = useState(() => formatDate(getCurrentDateDayjs()));
@@ -154,6 +165,16 @@ export default function DateSlider() {
     setListWidth(Math.max(1, Math.round(viewportWidth)));
   }, [viewportWidth]);
 
+  const syncTodayState = useCallback(() => {
+    const currentToday = formatDate(getCurrentDateDayjs());
+    setToday((previousToday) => (previousToday === currentToday ? previousToday : currentToday));
+
+    const currentSelectedDate = useHabitStore.getState().selectedDate;
+    if (currentToday > currentSelectedDate) {
+      setSelectedDate(currentToday);
+    }
+  }, [setSelectedDate]);
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       const currentToday = formatDate(getCurrentDateDayjs());
@@ -162,6 +183,26 @@ export default function DateSlider() {
 
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      syncTodayState();
+    }
+  }, [isFocused, syncTodayState]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      const previousAppState = appStateRef.current;
+      appStateRef.current = nextAppState;
+
+      const wasBackgrounded = previousAppState === "background" || previousAppState === "inactive";
+      if (wasBackgrounded && nextAppState === "active") {
+        syncTodayState();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [syncTodayState]);
 
   useEffect(() => {
     if (showTodayButton) {
@@ -174,9 +215,10 @@ export default function DateSlider() {
   }, [showTodayButton, reducedMotion]);
 
   const todayPillStyle = useAnimatedStyle(() => ({
-    maxWidth: todayPillAnim.value * 100,
+    width: TODAY_PILL_WIDTH * todayPillAnim.value,
+    height: TODAY_PILL_HEIGHT,
     opacity: todayPillAnim.value,
-    overflow: "hidden" as const,
+    transform: [{ translateX: (1 - todayPillAnim.value) * 8 }],
   }));
 
   // State to track the visible month and year as user scrolls
@@ -315,7 +357,7 @@ export default function DateSlider() {
         <Text style={[styles.monthText, { color: colors.textOnSurfaceDark }]}>{visibleMonthYear}</Text>
         <View style={styles.pillRow}>
           {/* Today button — animated expand/collapse */}
-          <Animated.View style={todayPillStyle}>
+          <Animated.View style={[styles.todayButtonContainer, todayPillStyle]}>
             <TouchableOpacity
               style={[styles.todayButton, { backgroundColor: colors.primary }]}
               onPress={scrollToToday}

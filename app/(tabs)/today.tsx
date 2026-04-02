@@ -5,8 +5,7 @@ import HabitBottomSheet from "@/components/habit/HabitBottomSheet/HabitBottomShe
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import type { Habit } from "@/types/habit";
-import { getCurrentDateStamp } from "@/utils/date";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
@@ -19,7 +18,6 @@ export default function TodayScreen() {
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
 
   const isHydrated = useHabitStore((state) => state._hasHydrated);
-  const setSelectedDate = useHabitStore((state) => state.setSelectedDate);
 
   // Prevent loading flash: only hide the spinner after MIN_LOADING_MS has passed
   const [showContent, setShowContent] = useState(false);
@@ -44,17 +42,6 @@ export default function TodayScreen() {
       }
     }
   }, [isHydrated]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const currentDate = getCurrentDateStamp();
-      const currentSelectedDate = useHabitStore.getState().selectedDate;
-
-      if (currentSelectedDate !== currentDate) {
-        setSelectedDate(currentDate);
-      }
-    }, [setSelectedDate])
-  );
 
   const navigateToAddHabit = useCallback(() => {
     router.push("/add");

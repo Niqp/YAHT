@@ -1,12 +1,12 @@
 import React, { type ReactNode } from "react";
-import { StyleSheet } from "react-native";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { AppState, StyleSheet } from "react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import DateSlider from "@/components/dateSlider/DateSlider";
 
 const TODAY = "2026-02-21";
 const PREVIOUS_DAY = "2026-02-20";
-const PRIMARY_COLOR = "#4a67ff";
+const NEXT_DAY = "2026-02-22";
 const PRIMARY_SUBTLE_COLOR = "#e0e7ff";
 
 type MockHabitStoreState = {
@@ -33,6 +33,8 @@ type MockRecyclerListViewProps = {
 };
 
 let mockStore: UseBoundStore<StoreApi<MockHabitStoreState>>;
+let mockCurrentDate = TODAY;
+let appStateChangeListener: ((state: string) => void) | null = null;
 
 const createMockStore = () =>
   create<MockHabitStoreState>((set) => ({
@@ -63,6 +65,8 @@ jest.mock("@/hooks/useTheme", () => ({
       textInverse: "#ffffff",
       text: "#0f0f0f",
       surface: "#101010",
+      surfaceDark: "#101010",
+      textOnSurfaceDark: "#ffffff",
     },
   }),
 }));
@@ -81,7 +85,7 @@ jest.mock("@/utils/date", () => {
 
   return {
     ...actual,
-    getCurrentDateDayjs: () => mockDayjs("2026-02-21"),
+    getCurrentDateDayjs: () => mockDayjs(mockCurrentDate),
   };
 });
 
@@ -155,7 +159,21 @@ const getBackgroundColor = (testId: string) => {
 
 describe("DateSlider", () => {
   beforeEach(() => {
+    jest.restoreAllMocks();
+    mockCurrentDate = TODAY;
+    appStateChangeListener = null;
     mockStore = createMockStore();
+    jest.spyOn(AppState, "addEventListener").mockImplementation((_eventType, listener) => {
+      appStateChangeListener = listener as (state: string) => void;
+
+      return {
+        remove: jest.fn(() => {
+          if (appStateChangeListener === listener) {
+            appStateChangeListener = null;
+          }
+        }),
+      };
+    });
   });
 
   it("updates selected date and selected-item UI when a date is pressed", () => {
@@ -183,5 +201,20 @@ describe("DateSlider", () => {
 
     expect(setSelectedDateMock).toHaveBeenCalledWith(PREVIOUS_DAY);
     expect(mockStore.getState().selectedDate).toBe(PREVIOUS_DAY);
+  });
+
+  it("advances to the new current day when the app returns to foreground", () => {
+    render(<DateSlider />);
+
+    const setSelectedDateMock = mockStore.getState().setSelectedDate as jest.Mock;
+    mockCurrentDate = NEXT_DAY;
+
+    act(() => {
+      appStateChangeListener?.("background");
+      appStateChangeListener?.("active");
+    });
+
+    expect(setSelectedDateMock).toHaveBeenCalledWith(NEXT_DAY);
+    expect(mockStore.getState().selectedDate).toBe(NEXT_DAY);
   });
 });
