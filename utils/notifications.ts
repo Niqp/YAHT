@@ -7,9 +7,43 @@ const TIMER_CHANNEL_NAME = "Timers";
 
 const REMINDER_CHANNEL_ID = "reminders";
 const REMINDER_CHANNEL_NAME = "Reminders";
+const REMINDER_NOTIFICATION_CATEGORY_ID = "habitReminderActions";
+const REMINDER_NOTIFICATION_PREFIX = "reminder-";
+const REMINDER_KIND = "habitReminder";
+
+export const DEFAULT_REMINDER_SNOOZE_MS = 15 * 60 * 1000;
+export const MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE = 3;
+
+export const REMINDER_ACTION_DONE_IDENTIFIER = "habitReminderDone";
+export const REMINDER_ACTION_SNOOZE_IDENTIFIER = "habitReminderSnooze";
+export const REMINDER_ACTION_OPEN_IDENTIFIER = "habitReminderOpen";
+
+export type ReminderNotificationData = {
+  kind: typeof REMINDER_KIND;
+  habitId: string;
+  habitTitle: string;
+  reminderDate: string;
+  reminderSeriesId: string;
+  scheduledFor: number;
+  attemptNumber: number;
+  maxAttempts: number;
+  repeatIntervalMs?: number;
+};
+
+export type ReminderScheduleParams = {
+  habitId: string;
+  habitTitle: string;
+  timestamp: number;
+  reminderDate: string;
+  reminderSeriesId?: string;
+  attemptNumber?: number;
+  maxAttempts?: number;
+  repeatIntervalMs?: number;
+};
 
 const getTimerNotificationId = (timerId: string) => `timer-${timerId}`;
-const getReminderNotificationId = (habitId: string, timestamp: number) => `reminder-${habitId}-${timestamp}`;
+const getReminderNotificationId = (reminderSeriesId: string, timestamp: number) =>
+  `${REMINDER_NOTIFICATION_PREFIX}${reminderSeriesId}-${timestamp}`;
 
 const ensureNotificationPermission = async (): Promise<boolean> => {
   try {
@@ -42,6 +76,34 @@ const ensureChannel = async (
   }
 };
 
+const ensureReminderCategory = async () => {
+  if (Platform.OS === "web") {
+    return;
+  }
+
+  try {
+    await Notifications.setNotificationCategoryAsync(REMINDER_NOTIFICATION_CATEGORY_ID, [
+      {
+        identifier: REMINDER_ACTION_DONE_IDENTIFIER,
+        buttonTitle: "Done",
+        options: { opensAppToForeground: true },
+      },
+      {
+        identifier: REMINDER_ACTION_SNOOZE_IDENTIFIER,
+        buttonTitle: "Snooze",
+        options: { opensAppToForeground: true },
+      },
+      {
+        identifier: REMINDER_ACTION_OPEN_IDENTIFIER,
+        buttonTitle: "Open",
+        options: { opensAppToForeground: true },
+      },
+    ]);
+  } catch (error) {
+    console.error("Error creating reminder notification category:", error);
+  }
+};
+
 const prepareNotificationsBase = async (
   channelId: string,
   channelConfig: Notifications.NotificationChannelInput,
@@ -54,6 +116,10 @@ const prepareNotificationsBase = async (
   }
 
   await ensureChannel(channelId, channelConfig, logContext);
+
+  if (channelId === REMINDER_CHANNEL_ID) {
+    await ensureReminderCategory();
+  }
 
   if (Platform.OS !== "android") {
     return true;
@@ -73,6 +139,118 @@ const prepareNotificationsBase = async (
   }
 
   return false;
+};
+
+const cancelNotificationIdentifiers = async (identifiers: string[]) => {
+  if (identifiers.length === 0) {
+    return;
+  }
+
+  const cancelResults = await Promise.allSettled(
+    identifiers.map((identifier) => Notifications.cancelScheduledNotificationAsync(identifier))
+  );
+  cancelResults.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error("Failed to cancel scheduled reminder notification:", result.reason);
+    }
+  });
+};
+
+const dismissNotificationIdentifiers = async (identifiers: string[]) => {
+  if (identifiers.length === 0 || Platform.OS === "web") {
+    return;
+  }
+
+  const dismissResults = await Promise.allSettled(
+    identifiers.map((identifier) => Notifications.dismissNotificationAsync(identifier))
+  );
+  dismissResults.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error("Failed to dismiss delivered reminder notification:", result.reason);
+    }
+  });
+};
+
+export const getReminderNotificationSeriesId = (habitId: string, reminderDate: string) =>
+  `series-${habitId}-${reminderDate}`;
+
+export const isReminderNotificationData = (data: unknown): data is ReminderNotificationData => {
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  const candidate = data as Partial<ReminderNotificationData>;
+  return (
+    candidate.kind === REMINDER_KIND &&
+    typeof candidate.habitId === "string" &&
+    typeof candidate.habitTitle === "string" &&
+    typeof candidate.reminderDate === "string" &&
+    typeof candidate.reminderSeriesId === "string" &&
+    typeof candidate.scheduledFor === "number" &&
+    typeof candidate.attemptNumber === "number" &&
+    typeof candidate.maxAttempts === "number"
+  );
+};
+
+export const getReminderNotificationData = (
+  response: Pick<Notifications.NotificationResponse, "notification">
+): ReminderNotificationData | undefined => {
+  const data = response.notification.request.content.data;
+  return isReminderNotificationData(data) ? data : undefined;
+};
+
+export const clearReminderNotifications = async () => {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const reminderIdentifiers = scheduled
+      .filter((notification) => notification.identifier.startsWith(REMINDER_NOTIFICATION_PREFIX))
+      .map((notification) => notification.identifier);
+
+    await cancelNotificationIdentifiers(reminderIdentifiers);
+
+    if (Platform.OS !== "web") {
+      const delivered = await Notifications.getPresentedNotificationsAsync();
+      const deliveredReminderIdentifiers = delivered
+        .filter((notification) => notification.request.identifier.startsWith(REMINDER_NOTIFICATION_PREFIX))
+        .map((notification) => notification.request.identifier);
+
+      await dismissNotificationIdentifiers(deliveredReminderIdentifiers);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Error clearing reminder notifications: ${error.message}`, error);
+    }
+  }
+};
+
+export const cancelReminderNotificationSeries = async (reminderSeriesId: string) => {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const scheduledIdentifiers = scheduled
+      .filter((notification) => {
+        const data = notification.content.data;
+        return isReminderNotificationData(data) && data.reminderSeriesId === reminderSeriesId;
+      })
+      .map((notification) => notification.identifier);
+
+    await cancelNotificationIdentifiers(scheduledIdentifiers);
+
+    if (Platform.OS !== "web") {
+      const delivered = await Notifications.getPresentedNotificationsAsync();
+      const deliveredIdentifiers = delivered
+        .filter((notification) => {
+          const data = notification.request.content.data;
+          return isReminderNotificationData(data) && data.reminderSeriesId === reminderSeriesId;
+        })
+        .map((notification) => notification.request.identifier);
+
+      await dismissNotificationIdentifiers(deliveredIdentifiers);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Error cancelling reminder notification series: ${error.message}`, error);
+    }
+  }
 };
 
 export const prepareTimerNotifications = async ({
@@ -167,29 +345,70 @@ export const prepareReminderNotifications = async ({
   );
 };
 
-export const scheduleReminderNotification = async (habitId: string, habitTitle: string, timestamp: number) => {
+export const scheduleReminderNotification = async ({
+  habitId,
+  habitTitle,
+  timestamp,
+  reminderDate,
+  reminderSeriesId,
+  attemptNumber,
+  maxAttempts,
+  repeatIntervalMs,
+}: ReminderScheduleParams) => {
   try {
     const canSchedule = await prepareReminderNotifications({ openAlarmSettings: false });
     if (!canSchedule) {
       return undefined;
     }
 
-    return schedulePreparedReminderNotification(habitId, habitTitle, timestamp);
+    return schedulePreparedReminderNotification({
+      habitId,
+      habitTitle,
+      timestamp,
+      reminderDate,
+      reminderSeriesId,
+      attemptNumber,
+      maxAttempts,
+      repeatIntervalMs,
+    });
   } catch (error) {
     console.error("Error scheduling reminder notification:", error);
     return undefined;
   }
 };
 
-export const schedulePreparedReminderNotification = async (habitId: string, habitTitle: string, timestamp: number) => {
+export const schedulePreparedReminderNotification = async ({
+  habitId,
+  habitTitle,
+  timestamp,
+  reminderDate,
+  reminderSeriesId = getReminderNotificationSeriesId(habitId, reminderDate),
+  attemptNumber = 0,
+  maxAttempts = 1,
+  repeatIntervalMs,
+}: ReminderScheduleParams) => {
   try {
-    const notificationId = getReminderNotificationId(habitId, timestamp);
+    const notificationId = getReminderNotificationId(reminderSeriesId, timestamp);
+    const reminderData: ReminderNotificationData = {
+      kind: REMINDER_KIND,
+      habitId,
+      habitTitle,
+      reminderDate,
+      reminderSeriesId,
+      scheduledFor: timestamp,
+      attemptNumber,
+      maxAttempts,
+      repeatIntervalMs,
+    };
+
     const content: Notifications.NotificationContentInput = {
-      title: "Friendly Reminder",
-      body: `It's time for: ${habitTitle}`,
+      title: attemptNumber > 0 ? "Still waiting" : "Friendly Reminder",
+      body: attemptNumber > 0 ? `${habitTitle} still needs attention.` : `It's time for: ${habitTitle}`,
       sound: "default",
       color: "#023c69",
       priority: Notifications.AndroidNotificationPriority.HIGH,
+      categoryIdentifier: REMINDER_NOTIFICATION_CATEGORY_ID,
+      data: reminderData as unknown as Record<string, unknown>,
     };
 
     return Notifications.scheduleNotificationAsync({

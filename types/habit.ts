@@ -38,6 +38,8 @@ export interface ReminderConfig {
   minute: number; // 0-59
   repeatIfNotCompleted: boolean;
   repeatIntervalMs?: number;
+  snoozedDate?: string;
+  snoozedUntilMs?: number;
 }
 
 export interface Habit {
@@ -88,3 +90,4 @@ export interface ChartDay {
 export interface HabitChartData {
   days: ChartDay[];
 }
+

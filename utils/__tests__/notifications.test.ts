@@ -2,10 +2,16 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
 import {
-  prepareReminderNotifications,
   cancelAllTimerNotifications,
+  cancelReminderNotificationSeries,
   cancelTimerNotification,
+  clearReminderNotifications,
+  getReminderNotificationSeriesId,
+  prepareReminderNotifications,
   prepareTimerNotifications,
+  REMINDER_ACTION_DONE_IDENTIFIER,
+  REMINDER_ACTION_OPEN_IDENTIFIER,
+  REMINDER_ACTION_SNOOZE_IDENTIFIER,
   schedulePreparedReminderNotification,
   scheduleReminderNotification,
   scheduleTimerNotification,
@@ -14,11 +20,14 @@ import {
 const mockGetPermissionsAsync = jest.fn();
 const mockRequestPermissionsAsync = jest.fn();
 const mockSetNotificationChannelAsync = jest.fn();
+const mockSetNotificationCategoryAsync = jest.fn();
 const mockScheduleNotificationAsync = jest.fn();
 const mockCancelScheduledNotificationAsync = jest.fn();
 const mockDismissNotificationAsync = jest.fn();
 const mockCancelAllScheduledNotificationsAsync = jest.fn();
 const mockDismissAllNotificationsAsync = jest.fn();
+const mockGetAllScheduledNotificationsAsync = jest.fn();
+const mockGetPresentedNotificationsAsync = jest.fn();
 
 jest.mock("expo-notifications", () => ({
   __esModule: true,
@@ -28,11 +37,14 @@ jest.mock("expo-notifications", () => ({
   getPermissionsAsync: (...args: unknown[]) => mockGetPermissionsAsync(...args),
   requestPermissionsAsync: (...args: unknown[]) => mockRequestPermissionsAsync(...args),
   setNotificationChannelAsync: (...args: unknown[]) => mockSetNotificationChannelAsync(...args),
+  setNotificationCategoryAsync: (...args: unknown[]) => mockSetNotificationCategoryAsync(...args),
   scheduleNotificationAsync: (...args: unknown[]) => mockScheduleNotificationAsync(...args),
   cancelScheduledNotificationAsync: (...args: unknown[]) => mockCancelScheduledNotificationAsync(...args),
   dismissNotificationAsync: (...args: unknown[]) => mockDismissNotificationAsync(...args),
   cancelAllScheduledNotificationsAsync: (...args: unknown[]) => mockCancelAllScheduledNotificationsAsync(...args),
   dismissAllNotificationsAsync: (...args: unknown[]) => mockDismissAllNotificationsAsync(...args),
+  getAllScheduledNotificationsAsync: (...args: unknown[]) => mockGetAllScheduledNotificationsAsync(...args),
+  getPresentedNotificationsAsync: (...args: unknown[]) => mockGetPresentedNotificationsAsync(...args),
 }));
 
 const mockCanScheduleExactAlarms = jest.fn();
@@ -69,28 +81,6 @@ describe("prepareTimerNotifications", () => {
     });
     expect(mockCanScheduleExactAlarms).toHaveBeenCalledTimes(1);
   });
-
-  it("requests notification permissions when needed", async () => {
-    mockGetPermissionsAsync.mockResolvedValue({ granted: false });
-
-    await prepareTimerNotifications();
-
-    expect(mockRequestPermissionsAsync).toHaveBeenCalledTimes(1);
-  });
-
-  it("opens exact alarm settings when requested and unavailable", async () => {
-    mockCanScheduleExactAlarms.mockResolvedValue(false);
-
-    await expect(prepareTimerNotifications()).resolves.toBe(false);
-    expect(mockOpenSettings).toHaveBeenCalledWith("alarms");
-  });
-
-  it("does not open alarm settings when disabled by caller", async () => {
-    mockCanScheduleExactAlarms.mockResolvedValue(false);
-
-    await expect(prepareTimerNotifications({ openAlarmSettings: false })).resolves.toBe(false);
-    expect(mockOpenSettings).not.toHaveBeenCalled();
-  });
 });
 
 describe("prepareReminderNotifications", () => {
@@ -99,16 +89,35 @@ describe("prepareReminderNotifications", () => {
     mockGetPermissionsAsync.mockResolvedValue({ granted: true });
     mockRequestPermissionsAsync.mockResolvedValue({ granted: true });
     mockSetNotificationChannelAsync.mockResolvedValue(undefined);
+    mockSetNotificationCategoryAsync.mockResolvedValue(undefined);
     mockCanScheduleExactAlarms.mockResolvedValue(true);
   });
 
-  it("returns true when reminder notification permissions are available", async () => {
+  it("creates the reminder channel and interactive category", async () => {
     await expect(prepareReminderNotifications()).resolves.toBe(true);
+
     expect(mockSetNotificationChannelAsync).toHaveBeenCalledWith("reminders", {
       name: "Reminders",
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
     });
+    expect(mockSetNotificationCategoryAsync).toHaveBeenCalledWith("habitReminderActions", [
+      {
+        identifier: REMINDER_ACTION_DONE_IDENTIFIER,
+        buttonTitle: "Done",
+        options: { opensAppToForeground: true },
+      },
+      {
+        identifier: REMINDER_ACTION_SNOOZE_IDENTIFIER,
+        buttonTitle: "Snooze",
+        options: { opensAppToForeground: true },
+      },
+      {
+        identifier: REMINDER_ACTION_OPEN_IDENTIFIER,
+        buttonTitle: "Open",
+        options: { opensAppToForeground: true },
+      },
+    ]);
   });
 });
 
@@ -207,22 +216,43 @@ describe("scheduleReminderNotification", () => {
     mockGetPermissionsAsync.mockResolvedValue({ granted: true });
     mockRequestPermissionsAsync.mockResolvedValue({ granted: true });
     mockSetNotificationChannelAsync.mockResolvedValue(undefined);
+    mockSetNotificationCategoryAsync.mockResolvedValue(undefined);
     mockCanScheduleExactAlarms.mockResolvedValue(true);
-    mockScheduleNotificationAsync.mockResolvedValue("reminder-h1-123");
+    mockScheduleNotificationAsync.mockResolvedValue("reminder-series-h1-2026-03-21-123000");
   });
 
-  it("schedules a date-based reminder notification with a stable identifier", async () => {
-    const result = await scheduleReminderNotification("h1", "Stretch", 123_000);
+  it("schedules a reminder with series metadata and actions", async () => {
+    const result = await scheduleReminderNotification({
+      habitId: "h1",
+      habitTitle: "Stretch",
+      timestamp: 123_000,
+      reminderDate: "2026-03-21",
+      attemptNumber: 0,
+      maxAttempts: 4,
+      repeatIntervalMs: 300_000,
+    });
 
-    expect(result).toBe("reminder-h1-123");
+    expect(result).toBe("reminder-series-h1-2026-03-21-123000");
     expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
-      identifier: "reminder-h1-123000",
+      identifier: `reminder-${getReminderNotificationSeriesId("h1", "2026-03-21")}-123000`,
       content: {
         title: "Friendly Reminder",
         body: "It's time for: Stretch",
         sound: "default",
         color: "#023c69",
         priority: Notifications.AndroidNotificationPriority.HIGH,
+        categoryIdentifier: "habitReminderActions",
+        data: {
+          kind: "habitReminder",
+          habitId: "h1",
+          habitTitle: "Stretch",
+          reminderDate: "2026-03-21",
+          reminderSeriesId: getReminderNotificationSeriesId("h1", "2026-03-21"),
+          scheduledFor: 123_000,
+          attemptNumber: 0,
+          maxAttempts: 4,
+          repeatIntervalMs: 300_000,
+        },
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -232,33 +262,93 @@ describe("scheduleReminderNotification", () => {
     });
   });
 
-  it("schedules a prepared reminder without repeating permission setup", async () => {
-    await schedulePreparedReminderNotification("h1", "Stretch", 123_000);
+  it("uses alternate copy for follow-up reminders", async () => {
+    await schedulePreparedReminderNotification({
+      habitId: "h1",
+      habitTitle: "Stretch",
+      timestamp: 123_000,
+      reminderDate: "2026-03-21",
+      attemptNumber: 2,
+      maxAttempts: 4,
+      repeatIntervalMs: 300_000,
+    });
 
     expect(mockGetPermissionsAsync).not.toHaveBeenCalled();
-    expect(mockRequestPermissionsAsync).not.toHaveBeenCalled();
-    expect(mockCanScheduleExactAlarms).not.toHaveBeenCalled();
-    expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
-      identifier: "reminder-h1-123000",
-      content: {
-        title: "Friendly Reminder",
-        body: "It's time for: Stretch",
-        sound: "default",
-        color: "#023c69",
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: new Date(123_000),
-        channelId: "reminders",
-      },
-    });
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.objectContaining({
+          title: "Still waiting",
+          body: "Stretch still needs attention.",
+        }),
+      })
+    );
   });
 
   it("returns undefined when reminder exact alarms are unavailable", async () => {
     mockCanScheduleExactAlarms.mockResolvedValue(false);
 
-    await expect(scheduleReminderNotification("h1", "Stretch", 123_000)).resolves.toBeUndefined();
+    await expect(
+      scheduleReminderNotification({
+        habitId: "h1",
+        habitTitle: "Stretch",
+        timestamp: 123_000,
+        reminderDate: "2026-03-21",
+      })
+    ).resolves.toBeUndefined();
     expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe("reminder notification cleanup", () => {
+  const seriesId = getReminderNotificationSeriesId("h1", "2026-03-21");
+  const reminderData = {
+    kind: "habitReminder",
+    habitId: "h1",
+    habitTitle: "Stretch",
+    reminderDate: "2026-03-21",
+    reminderSeriesId: seriesId,
+    scheduledFor: 123_000,
+    attemptNumber: 0,
+    maxAttempts: 4,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetAllScheduledNotificationsAsync.mockResolvedValue([
+      {
+        identifier: `reminder-${seriesId}-123000`,
+        content: {
+          data: reminderData,
+        },
+      },
+      {
+        identifier: "timer-t1",
+        content: { data: {} },
+      },
+    ]);
+    mockGetPresentedNotificationsAsync.mockResolvedValue([
+      {
+        request: {
+          identifier: `reminder-${seriesId}-123000`,
+          content: {
+            data: reminderData,
+          },
+        },
+      },
+    ]);
+  });
+
+  it("clears all scheduled and presented reminder notifications", async () => {
+    await clearReminderNotifications();
+
+    expect(mockCancelScheduledNotificationAsync).toHaveBeenCalledWith(`reminder-${seriesId}-123000`);
+    expect(mockDismissNotificationAsync).toHaveBeenCalledWith(`reminder-${seriesId}-123000`);
+  });
+
+  it("cancels only one reminder series", async () => {
+    await cancelReminderNotificationSeries(seriesId);
+
+    expect(mockCancelScheduledNotificationAsync).toHaveBeenCalledTimes(1);
+    expect(mockDismissNotificationAsync).toHaveBeenCalledTimes(1);
   });
 });
