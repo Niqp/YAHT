@@ -71,6 +71,8 @@ export interface OverallStats {
   dueToday: number;
   completedToday: number;
   todayAdherence: number;
+  dueLast7Days: number;
+  completedLast7Days: number;
   last7DayAdherence: number;
 }
 

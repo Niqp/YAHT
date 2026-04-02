@@ -6,6 +6,8 @@ import { ChevronDown } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
+import HabitTypeIndicator from "./HabitTypeIndicator";
+
 interface HabitSelectorProps {
   selectedHabit: Habit | null;
   onPress: () => void;
@@ -17,53 +19,46 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ selectedHabit, onPress })
   if (!selectedHabit) return null;
 
   return (
-    <View style={styles.section}>
-      <AppText variant="label" color={colors.textSecondary}>
-        Viewing detailed stats for
-      </AppText>
-
-      <PressableCard
-        onPress={onPress}
-        backgroundColor={colors.cardBackground}
-        bordered
-        style={styles.selectorButton}
-        accessibilityLabel={`Choose habit. Currently selected: ${selectedHabit.title}`}
-        accessibilityHint="Opens the habit list"
-      >
-        <View style={styles.selectorRow}>
-          <View style={styles.selectedHabitContainer}>
-            <View style={[styles.selectedHabitIconContainer, { backgroundColor: colors.primarySubtle }]}>
-              <AppText style={styles.selectedHabitIcon}>{selectedHabit.icon}</AppText>
-            </View>
-
-            <View style={styles.selectedHabitTextBlock}>
-              <AppText variant="body">{selectedHabit.title}</AppText>
-              <AppText variant="caption" color={colors.textSecondary}>
-                Switch habit to update all cards below.
-              </AppText>
-            </View>
+    <PressableCard
+      onPress={onPress}
+      backgroundColor={colors.cardBackground}
+      bordered
+      style={styles.selectorButton}
+      accessibilityLabel={`Choose habit. Currently selected: ${selectedHabit.title}`}
+      accessibilityHint="Opens the habit list"
+    >
+      <View style={styles.selectorRow}>
+        <View style={styles.selectedHabitContainer}>
+          <View style={[styles.selectedHabitIconContainer, { backgroundColor: colors.primarySubtle }]}>
+            <AppText style={styles.selectedHabitIcon}>{selectedHabit.icon}</AppText>
           </View>
 
-          <ChevronDown size={20} color={colors.icon} />
+          <View style={styles.selectedHabitTextBlock}>
+            <AppText variant="bodyMedium" numberOfLines={1}>
+              {selectedHabit.title}
+            </AppText>
+            <HabitTypeIndicator completionType={selectedHabit.completion.type} />
+          </View>
         </View>
-      </PressableCard>
-    </View>
+
+        <View style={styles.chevronContainer}>
+          <ChevronDown size={18} color={colors.icon} strokeWidth={2} />
+        </View>
+      </View>
+    </PressableCard>
   );
 };
 
 const styles = StyleSheet.create({
-  section: {
-    gap: Spacing.sm,
-  },
   selectorButton: {
-    minHeight: 72,
+    minHeight: 60,
   },
   selectorRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     gap: Spacing.md,
   },
   selectedHabitContainer: {
@@ -73,19 +68,23 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   selectedHabitIconContainer: {
-    width: 48,
-    height: 48,
+    width: Spacing.xxl,
+    height: Spacing.xxl,
     borderRadius: BorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
   },
   selectedHabitIcon: {
-    fontSize: 22,
-    lineHeight: 24,
+    fontSize: 20,
+    lineHeight: 22,
   },
   selectedHabitTextBlock: {
     flex: 1,
     gap: Spacing.xxs,
+  },
+  chevronContainer: {
+    width: Spacing.base,
+    alignItems: "flex-end",
   },
 });
 

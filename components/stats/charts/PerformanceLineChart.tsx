@@ -11,7 +11,7 @@ interface PerformanceLineChartProps {
   completionType: CompletionType;
 }
 
-const BAR_HEIGHT = 88;
+const BAR_HEIGHT = 80;
 
 const formatCompactDuration = (valueMs: number) => {
   const totalSeconds = Math.floor(valueMs / 1000);
@@ -51,30 +51,30 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-            <Check size={12} color={colors.buttonPrimaryText} />
+            <Check size={12} color={colors.buttonPrimaryText} strokeWidth={2} />
           </View>
-          <AppText variant="small" color={colors.textSecondary}>
-            Goal hit
+          <AppText variant="tiny" color={colors.textSecondary}>
+            Goal met
           </AppText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.accent, borderColor: colors.accent }]} />
-          <AppText variant="small" color={colors.textSecondary}>
-            Progress
+          <AppText variant="tiny" color={colors.textSecondary}>
+            Logged
           </AppText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendGoalMarker, { backgroundColor: colors.textTertiary }]} />
-          <AppText variant="small" color={colors.textSecondary}>
+          <AppText variant="tiny" color={colors.textSecondary}>
             Goal
           </AppText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.input, borderColor: colors.border }]}>
-            <Minus size={12} color={colors.textTertiary} />
+            <Minus size={12} color={colors.textTertiary} strokeWidth={2} />
           </View>
-          <AppText variant="small" color={colors.textSecondary}>
-            Off day
+          <AppText variant="tiny" color={colors.textSecondary}>
+            Not due
           </AppText>
         </View>
       </View>
@@ -125,12 +125,12 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
                     />
                   ) : (
                     <View style={styles.skipState}>
-                      <Minus size={16} color={colors.textTertiary} />
+                      <Minus size={16} color={colors.textTertiary} strokeWidth={2} />
                     </View>
                   )
                 ) : (
                   <View style={styles.skipState}>
-                    <Minus size={16} color={colors.textTertiary} />
+                    <Minus size={16} color={colors.textTertiary} strokeWidth={2} />
                   </View>
                 )}
               </View>
@@ -148,7 +148,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
 
 const styles = StyleSheet.create({
   chartSection: {
-    gap: Spacing.base,
+    gap: Spacing.lg,
   },
   legendRow: {
     flexDirection: "row",
@@ -161,9 +161,9 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   legendSwatch: {
-    width: 22,
-    height: 22,
-    borderRadius: BorderRadius.full,
+    width: Spacing.base,
+    height: Spacing.base,
+    borderRadius: BorderRadius.xs,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -176,20 +176,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    gap: Spacing.sm,
+    gap: Spacing.xs,
+    paddingTop: Spacing.sm,
   },
   dayColumn: {
     flex: 1,
     alignItems: "center",
+    gap: Spacing.base,
   },
   valueLabel: {
-    marginBottom: Spacing.sm,
+    minHeight: Spacing.base,
   },
   barTrack: {
-    width: "100%",
-    maxWidth: 28,
+    width: Spacing.xl,
     height: BAR_HEIGHT,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.sm,
     borderWidth: 1,
     justifyContent: "flex-end",
     overflow: "hidden",
@@ -204,7 +205,6 @@ const styles = StyleSheet.create({
   },
   barFill: {
     width: "100%",
-    borderRadius: BorderRadius.lg,
   },
   skipState: {
     flex: 1,

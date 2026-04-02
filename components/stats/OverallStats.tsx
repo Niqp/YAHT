@@ -1,9 +1,8 @@
-import { AppText, Card } from "@/components/ui";
-import { BorderRadius, Spacing } from "@/constants/Spacing";
+import { AppText, Card, ProgressBar } from "@/components/ui";
+import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import type { OverallStats as OverallStatsData } from "@/types/habit";
-import { LinearGradient } from "expo-linear-gradient";
-import { CalendarDays, CheckCheck, TrendingUp } from "lucide-react-native";
+import { CalendarDays, CheckCheck, CheckSquare, X } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -11,123 +10,186 @@ interface OverallStatsProps {
   stats: OverallStatsData;
 }
 
+interface OverviewCardProps {
+  title: string;
+  accentValue: string;
+  heroValue: string;
+  heroLabel: string;
+  progressValue: number;
+  metrics: Array<{
+    key: string;
+    label: string;
+    value: string;
+    icon: React.ReactElement;
+  }>;
+}
+
 const OverallStats: React.FC<OverallStatsProps> = ({ stats }) => {
   const { colors } = useTheme();
-  const todayMessage =
-    stats.dueToday === 0
-      ? "Nothing is scheduled for today."
-      : `${stats.completedToday} of ${stats.dueToday} due habits are complete.`;
+  const remainingToday = Math.max(stats.dueToday - stats.completedToday, 0);
+  const missedLast7Days = Math.max(stats.dueLast7Days - stats.completedLast7Days, 0);
+
+  return (
+    <View style={styles.stack}>
+      <OverviewCard
+        title="Today"
+        accentValue={`${stats.todayAdherence}%`}
+        heroValue={stats.dueToday === 0 ? "0/0" : `${stats.completedToday}/${stats.dueToday}`}
+        heroLabel={stats.dueToday === 0 ? "Nothing scheduled today" : "Completed"}
+        progressValue={stats.todayAdherence}
+        metrics={[
+          {
+            key: "activeHabits",
+            label: "Active habits",
+            value: stats.activeHabits.toString(),
+            icon: <CheckSquare size={16} color={colors.icon} strokeWidth={2} />,
+          },
+          {
+            key: "dueToday",
+            label: "Due today",
+            value: stats.dueToday.toString(),
+            icon: <CalendarDays size={16} color={colors.icon} strokeWidth={2} />,
+          },
+          {
+            key: "remainingToday",
+            label: "Remaining",
+            value: remainingToday.toString(),
+            icon: <X size={16} color={colors.icon} strokeWidth={2} />,
+          },
+        ]}
+      />
+
+      <OverviewCard
+        title="Last 7 days"
+        accentValue={`${stats.last7DayAdherence}%`}
+        heroValue={stats.dueLast7Days === 0 ? "0/0" : `${stats.completedLast7Days}/${stats.dueLast7Days}`}
+        heroLabel={stats.dueLast7Days === 0 ? "Nothing scheduled yet" : "Completed"}
+        progressValue={stats.last7DayAdherence}
+        metrics={[
+          {
+            key: "dueLast7Days",
+            label: "Habit checks",
+            value: stats.dueLast7Days.toString(),
+            icon: <CalendarDays size={16} color={colors.icon} strokeWidth={2} />,
+          },
+          {
+            key: "completedLast7Days",
+            label: "Completed",
+            value: stats.completedLast7Days.toString(),
+            icon: <CheckCheck size={16} color={colors.icon} strokeWidth={2} />,
+          },
+          {
+            key: "missedLast7Days",
+            label: "Missed",
+            value: missedLast7Days.toString(),
+            icon: <X size={16} color={colors.icon} strokeWidth={2} />,
+          },
+        ]}
+      />
+    </View>
+  );
+};
+
+const OverviewCard = ({ title, accentValue, heroValue, heroLabel, progressValue, metrics }: OverviewCardProps) => {
+  const { colors } = useTheme();
 
   return (
     <Card padding="none">
-      <LinearGradient
-        colors={[colors.gradientHeaderStart, colors.gradientHeaderEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.gradient}
-      >
+      <View style={styles.section}>
         <View style={styles.headerRow}>
-          <AppText variant="title">Today at a glance</AppText>
-
-          <View style={[styles.badge, { backgroundColor: colors.primarySubtle }]}>
-            <AppText variant="small" color={colors.primary} tabularNums>
-              {stats.todayAdherence}% adherence
-            </AppText>
-          </View>
+          <AppText variant="title">{title}</AppText>
+          <AppText variant="title" color={colors.primary} tabularNums>
+            {accentValue}
+          </AppText>
         </View>
 
-        <View style={styles.heroCopy}>
-          <AppText variant="display" tabularNums>
-            {`${stats.completedToday}/${stats.dueToday}`}
-          </AppText>
-          <AppText variant="body" color={colors.textSecondary}>
-            completed today
+        <View style={styles.heroRow}>
+          <AppText variant="display" tabularNums style={styles.heroValue}>
+            {heroValue}
           </AppText>
           <AppText variant="caption" color={colors.textSecondary}>
-            {todayMessage}
+            {heroLabel}
           </AppText>
         </View>
 
-        <View style={styles.metricsRow}>
-          <View style={[styles.metricTile, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-            <View style={[styles.metricIcon, { backgroundColor: colors.primarySubtle }]}>
-              <CheckCheck size={16} color={colors.primary} />
-            </View>
-            <AppText variant="title" tabularNums>
-              {stats.activeHabits}
-            </AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              Active habits
-            </AppText>
-          </View>
+        <ProgressBar value={progressValue} />
 
-          <View style={[styles.metricTile, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-            <View style={[styles.metricIcon, { backgroundColor: colors.primarySubtle }]}>
-              <CalendarDays size={16} color={colors.primary} />
+        <View style={styles.metricList}>
+          {metrics.map((metric, index) => (
+            <View key={metric.key}>
+              <View style={styles.metricRow}>
+                <View style={styles.metricLabel}>
+                  <View style={styles.metricIcon}>{metric.icon}</View>
+                  <AppText variant="body" color={colors.textSecondary} style={styles.metricLabelText}>
+                    {metric.label}
+                  </AppText>
+                </View>
+                <AppText variant="bodyMedium" tabularNums style={styles.metricValue}>
+                  {metric.value}
+                </AppText>
+              </View>
+              {index < metrics.length - 1 ? (
+                <View style={[styles.metricDivider, { backgroundColor: colors.divider }]} />
+              ) : null}
             </View>
-            <AppText variant="title" tabularNums>
-              {stats.dueToday}
-            </AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              Due today
-            </AppText>
-          </View>
-
-          <View style={[styles.metricTile, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-            <View style={[styles.metricIcon, { backgroundColor: colors.primarySubtle }]}>
-              <TrendingUp size={16} color={colors.primary} />
-            </View>
-            <AppText variant="title" tabularNums>
-              {stats.last7DayAdherence}%
-            </AppText>
-            <AppText variant="caption" color={colors.textSecondary}>
-              Last 7 days
-            </AppText>
-          </View>
+          ))}
         </View>
-      </LinearGradient>
+      </View>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
-  gradient: {
+  stack: {
+    gap: Spacing.base,
+  },
+  section: {
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.lg,
-    gap: Spacing.base,
+    gap: Spacing.lg,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: Spacing.md,
   },
-  badge: {
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  heroCopy: {
-    gap: Spacing.xxs,
-  },
-  metricsRow: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  metricTile: {
-    flex: 1,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.base,
+  heroRow: {
     gap: Spacing.xs,
   },
-  metricIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: BorderRadius.full,
+  heroValue: {
+    lineHeight: 32,
+  },
+  metricList: {
+    gap: Spacing.xs,
+  },
+  metricRow: {
+    minHeight: 44,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    gap: Spacing.md,
+  },
+  metricLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    flex: 1,
+  },
+  metricIcon: {
+    width: Spacing.base,
+    alignItems: "center",
+  },
+  metricLabelText: {
+    flex: 1,
+  },
+  metricValue: {
+    minWidth: Spacing.xxl,
+    textAlign: "right",
+  },
+  metricDivider: {
+    height: 1,
+    marginLeft: Spacing.base + Spacing.sm,
   },
 });
 

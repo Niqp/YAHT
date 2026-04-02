@@ -42,6 +42,8 @@ describe("useStats", () => {
       dueToday: 0,
       completedToday: 0,
       todayAdherence: 0,
+      dueLast7Days: 0,
+      completedLast7Days: 0,
       last7DayAdherence: 0,
     });
     expect(result.current.chartData.days).toEqual([]);
@@ -85,6 +87,7 @@ describe("useStats", () => {
     expect(result.current.habits["h1"]).toBeDefined();
     expect(result.current.habitArray).toHaveLength(1);
     expect(result.current.overallStats.activeHabits).toBe(1);
+    expect(result.current.overallStats.completedLast7Days).toBe(1);
     expect(result.current.habitStats.adherenceSinceCreation).toBe(100);
     expect(result.current.chartData.days).toHaveLength(7);
     expect(result.current.chartData.days.at(-1)).toMatchObject({

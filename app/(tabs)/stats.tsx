@@ -2,70 +2,40 @@ import HabitDetailView from "@/components/stats/HabitDetailView";
 import HabitSelector from "@/components/stats/HabitSelector";
 import HabitTypeIndicator from "@/components/stats/HabitTypeIndicator";
 import OverallStats from "@/components/stats/OverallStats";
-import { AppText, PressableCard, ScaleButton } from "@/components/ui";
-import { getElevation } from "@/constants/Elevation";
+import { AppBottomSheet, AppText, PressableCard, ScaleButton } from "@/components/ui";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useStats } from "@/hooks/useStats";
+import type { Habit } from "@/types/habit";
 import { useTheme } from "@/hooks/useTheme";
+import type BottomSheet from "@gorhom/bottom-sheet";
+import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
-import { BarChart2, Check, X } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  type LayoutChangeEvent,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-} from "react-native";
+import { BarChart2, Check } from "lucide-react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 export default function StatsScreen() {
   const { colors } = useTheme();
-  const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
-  const [selectorTop, setSelectorTop] = useState(0);
-  const [selectorHeight, setSelectorHeight] = useState(0);
-  const [showFloatingSelector, setShowFloatingSelector] = useState(false);
+  const [isHabitSheetOpen, setIsHabitSheetOpen] = useState(false);
+  const habitSheetRef = useRef<BottomSheet>(null);
+  const habitSheetSnapPoints = useMemo(() => ["68%"], []);
   const { habitArray, isHydrated, selectedHabit, overallStats, chartData, habitStats, handleSelectHabit } = useStats();
-  const useNativeStickyHeader = Platform.OS !== "android";
-  const stickyHeaderIndices = useMemo(
-    () => (useNativeStickyHeader && selectedHabit ? [1] : []),
-    [selectedHabit, useNativeStickyHeader]
-  );
+
+  useEffect(() => {
+    if (isHabitSheetOpen) {
+      habitSheetRef.current?.snapToIndex(0);
+    } else {
+      habitSheetRef.current?.close();
+    }
+  }, [isHabitSheetOpen]);
 
   const handleOpenHabitSheet = () => {
-    setIsHabitModalOpen(true);
+    setIsHabitSheetOpen(true);
   };
 
-  const handleHabitSheetSelect = (habit: (typeof habitArray)[number]) => {
+  const handleHabitSheetSelect = (habit: Habit) => {
     handleSelectHabit(habit);
-    setIsHabitModalOpen(false);
-  };
-
-  const handleSelectorLayout = (event: LayoutChangeEvent) => {
-    const { y, height } = event.nativeEvent.layout;
-
-    setSelectorTop((current) => (current === y ? current : y));
-    setSelectorHeight((current) => (current === height ? current : height));
-  };
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (useNativeStickyHeader || selectorHeight <= 0) {
-      return;
-    }
-
-    const offsetY = event.nativeEvent.contentOffset.y;
-    const enterThreshold = selectorTop;
-    const exitThreshold = Math.max(selectorTop - 8, 0);
-
-    setShowFloatingSelector((current) => {
-      const nextVisible = current ? offsetY >= exitThreshold : offsetY >= enterThreshold;
-      return current === nextVisible ? current : nextVisible;
-    });
+    setIsHabitSheetOpen(false);
   };
 
   if (!isHydrated) {
@@ -80,14 +50,14 @@ export default function StatsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.emptyContainer}>
-          <View style={[styles.emptyIconContainer, { backgroundColor: colors.primarySubtle }]}>
-            <BarChart2 size={28} color={colors.primary} />
+          <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <BarChart2 size={24} color={colors.icon} strokeWidth={2} />
           </View>
-          <AppText variant="title" style={styles.emptyTitle}>
-            No stats yet
+          <AppText variant="heading" style={styles.emptyTitle}>
+            No habits to analyze
           </AppText>
           <AppText variant="body" color={colors.textSecondary} style={styles.emptyText}>
-            Track a few habits and this dashboard will start showing adherence, streaks and recent momentum.
+            Create a habit to start tracking daily completion, streaks, and consistency over time.
           </AppText>
           <View style={styles.emptyAction}>
             <ScaleButton
@@ -103,139 +73,107 @@ export default function StatsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {!useNativeStickyHeader && showFloatingSelector && selectedHabit ? (
-        <View
-          style={[
-            styles.floatingSelector,
-            { backgroundColor: colors.background, borderBottomColor: colors.border, pointerEvents: "box-none" },
-            getElevation(3, colors.shadow),
-          ]}
-        >
-          <HabitSelector selectedHabit={selectedHabit} onPress={handleOpenHabitSheet} />
-        </View>
-      ) : null}
-
       <ScrollView
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={stickyHeaderIndices}
         contentContainerStyle={styles.content}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
+        stickyHeaderIndices={selectedHabit ? [3] : undefined}
       >
-        <View style={styles.topSection}>
-          <View style={styles.header}>
-            <AppText variant="heading">Stats</AppText>
-            <AppText variant="body" color={colors.textSecondary}>
-              A calmer view of your current pace, recent consistency and habit-by-habit momentum.
-            </AppText>
-          </View>
+        <View style={styles.header}>
+          <AppText variant="heading">Stats</AppText>
+          <AppText variant="body" color={colors.textSecondary}>
+            {`${overallStats.activeHabits} active ${overallStats.activeHabits === 1 ? "habit" : "habits"}`}
+          </AppText>
+        </View>
 
+        <View style={styles.section}>
+          <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
+            Overview
+          </AppText>
           <OverallStats stats={overallStats} />
         </View>
 
         {selectedHabit ? (
-          <View
-            onLayout={handleSelectorLayout}
-            style={[
-              styles.stickySelector,
-              {
-                backgroundColor: colors.background,
-                borderBottomColor: colors.border,
-                pointerEvents: !useNativeStickyHeader && showFloatingSelector ? "none" : "auto",
-              },
-              !useNativeStickyHeader && showFloatingSelector
-                ? [styles.stickySelectorPlaceholder, { height: selectorHeight || undefined }]
-                : null,
-            ]}
-          >
-            <View style={!useNativeStickyHeader && showFloatingSelector ? styles.hiddenSelectorContent : null}>
-              <HabitSelector selectedHabit={selectedHabit} onPress={handleOpenHabitSheet} />
-            </View>
+          <View style={styles.habitIntro}>
+            <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
+              Habit
+            </AppText>
           </View>
         ) : null}
 
-        <View style={styles.detailSection}>
-          {selectedHabit ? (
+        {selectedHabit ? (
+          <View style={[styles.stickySelector, { backgroundColor: colors.background }]}>
+            <HabitSelector selectedHabit={selectedHabit} onPress={handleOpenHabitSheet} />
+          </View>
+        ) : null}
+
+        {selectedHabit ? (
+          <View style={styles.detailSection}>
             <HabitDetailView habit={selectedHabit} chartData={chartData} habitStats={habitStats} />
-          ) : null}
-        </View>
+          </View>
+        ) : null}
       </ScrollView>
 
-      <Modal
-        visible={isHabitModalOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setIsHabitModalOpen(false)}
+      <AppBottomSheet
+        ref={habitSheetRef}
+        snapPoints={habitSheetSnapPoints}
+        onChange={(index) => {
+          if (index === -1) {
+            setIsHabitSheetOpen(false);
+          }
+        }}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
-          <View style={[styles.modalShell, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <View style={styles.modalHeaderCopy}>
-                <AppText variant="title">Choose a habit</AppText>
-                <AppText variant="body" color={colors.textSecondary}>
-                  The stats below will update immediately.
-                </AppText>
-              </View>
-
-              <Pressable
-                onPress={() => setIsHabitModalOpen(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Close habit picker"
-                style={({ pressed }) => [
-                  styles.closeButton,
-                  { backgroundColor: colors.surface },
-                  pressed ? styles.closeButtonPressed : null,
-                ]}
-              >
-                <X size={18} color={colors.icon} />
-              </Pressable>
+        <BottomSheetFlatList
+          data={habitArray}
+          keyExtractor={(habit: Habit) => habit.id}
+          contentContainerStyle={styles.sheetListContent}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View style={[styles.sheetHeader, { borderBottomColor: colors.border }]}>
+              <AppText variant="title">Select a habit</AppText>
             </View>
+          }
+          renderItem={({ item: habit }: { item: Habit }) => {
+            const isSelected = selectedHabit?.id === habit.id;
 
-            <FlatList
-              data={habitArray}
-              keyExtractor={(habit) => habit.id}
-              style={styles.modalScroll}
-              contentContainerStyle={styles.modalScrollContent}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item: habit }) => {
-                const isSelected = selectedHabit?.id === habit.id;
-
-                return (
-                  <PressableCard
-                    onPress={() => handleHabitSheetSelect(habit)}
-                    backgroundColor={isSelected ? colors.surface : colors.cardBackground}
-                    bordered
-                    style={isSelected ? [styles.sheetItem, { borderColor: colors.primary }] : styles.sheetItem}
-                    accessibilityLabel={`Select ${habit.title}`}
-                    accessibilityState={{ selected: isSelected }}
-                  >
-                    <View style={styles.sheetItemRow}>
-                      <View style={styles.sheetItemLeading}>
-                        <View style={[styles.sheetItemIconContainer, { backgroundColor: colors.primarySubtle }]}>
-                          <AppText style={styles.sheetItemIcon}>{habit.icon}</AppText>
-                        </View>
-
-                        <View style={styles.sheetItemTextBlock}>
-                          <AppText variant="body" numberOfLines={1}>
-                            {habit.title}
-                          </AppText>
-                          <HabitTypeIndicator completionType={habit.completion.type} />
-                        </View>
-                      </View>
-
-                      {isSelected ? (
-                        <View style={[styles.selectedMarker, { backgroundColor: colors.primary }]}>
-                          <Check size={14} color={colors.buttonPrimaryText} />
-                        </View>
-                      ) : null}
+            return (
+              <PressableCard
+                onPress={() => handleHabitSheetSelect(habit)}
+                backgroundColor={isSelected ? colors.surface : colors.cardBackground}
+                bordered
+                style={isSelected ? [styles.sheetItem, { borderColor: colors.primary }] : styles.sheetItem}
+                accessibilityLabel={`Select ${habit.title}`}
+                accessibilityState={{ selected: isSelected }}
+              >
+                <View style={styles.sheetItemRow}>
+                  <View style={styles.sheetItemLeading}>
+                    <View style={[styles.sheetItemIconContainer, { backgroundColor: colors.primarySubtle }]}>
+                      <AppText style={styles.sheetItemIcon}>{habit.icon}</AppText>
                     </View>
-                  </PressableCard>
-                );
-              }}
-            />
-          </View>
-        </View>
-      </Modal>
+
+                    <View style={styles.sheetItemTextBlock}>
+                      <AppText variant="bodyMedium" numberOfLines={1}>
+                        {habit.title}
+                      </AppText>
+                      <HabitTypeIndicator completionType={habit.completion.type} />
+                    </View>
+                  </View>
+
+                  {isSelected ? (
+                    <View
+                      style={[
+                        styles.selectedMarker,
+                        { backgroundColor: colors.primarySubtle, borderColor: colors.primary },
+                      ]}
+                    >
+                      <Check size={14} color={colors.primary} strokeWidth={2} />
+                    </View>
+                  ) : null}
+                </View>
+              </PressableCard>
+            );
+          }}
+        />
+      </AppBottomSheet>
     </View>
   );
 }
@@ -245,96 +183,50 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingTop: Spacing.base,
-    paddingBottom: Spacing.xxxl,
-  },
-  topSection: {
-    paddingHorizontal: Spacing.base,
     gap: Spacing.xl,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xxxl,
   },
   header: {
     gap: Spacing.xs,
   },
-  stickySelector: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-  },
-  stickySelectorPlaceholder: {
-    overflow: "hidden",
-  },
-  hiddenSelectorContent: {
-    opacity: 0,
-  },
-  floatingSelector: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 20,
-
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-  },
-  detailSection: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.base,
-  },
-  modalOverlay: {
-    flex: 1,
-  },
-  modalShell: {
-    flex: 1,
-    marginTop: Spacing.xl,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    overflow: "hidden",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.base,
-    borderBottomWidth: 1,
-  },
-  modalHeaderCopy: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  closeButton: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  closeButtonPressed: {
-    opacity: 0.78,
-  },
-  modalScroll: {
-    flex: 1,
-  },
-  modalScrollContent: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.base,
-    paddingBottom: Spacing.xxxl,
+  section: {
     gap: Spacing.base,
   },
+  habitIntro: {
+    gap: Spacing.sm,
+  },
+  sectionLabel: {
+    paddingHorizontal: Spacing.xs,
+  },
+  stickySelector: {
+    paddingBottom: Spacing.sm,
+  },
+  detailSection: {
+    gap: Spacing.base,
+  },
+  sheetHeader: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    marginBottom: Spacing.base,
+  },
+  sheetListContent: {
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.xxxl,
+    gap: Spacing.sm,
+  },
   sheetItem: {
-    minHeight: 76,
+    minHeight: 60,
   },
   sheetItemRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     gap: Spacing.md,
   },
   sheetItemLeading: {
@@ -344,8 +236,8 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   sheetItemIconContainer: {
-    width: 44,
-    height: 44,
+    width: Spacing.xxl,
+    height: Spacing.xxl,
     borderRadius: BorderRadius.full,
     justifyContent: "center",
     alignItems: "center",
@@ -356,12 +248,13 @@ const styles = StyleSheet.create({
   },
   sheetItemTextBlock: {
     flex: 1,
-    gap: Spacing.xs,
+    gap: Spacing.xxs,
   },
   selectedMarker: {
-    width: 24,
-    height: 24,
+    width: Spacing.lg,
+    height: Spacing.lg,
     borderRadius: BorderRadius.full,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -380,7 +273,8 @@ const styles = StyleSheet.create({
   emptyIconContainer: {
     width: 72,
     height: 72,
-    borderRadius: BorderRadius.full,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },

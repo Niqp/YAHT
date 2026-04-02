@@ -98,6 +98,8 @@ export const calculateOverallStats = (habitsMap: HabitMap): OverallStats => {
     dueToday,
     completedToday,
     todayAdherence: asPercent(completedToday, dueToday),
+    dueLast7Days: dueInLastSevenDays,
+    completedLast7Days: completedInLastSevenDays,
     last7DayAdherence: asPercent(completedInLastSevenDays, dueInLastSevenDays),
   };
 };

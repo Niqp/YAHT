@@ -9,4 +9,5 @@ export { default as AppBottomSheet } from "./AppBottomSheet";
 export { default as AppSegmentedControl } from "./AppSegmentedControl";
 export { default as Card } from "./Card";
 export { default as PressableCard } from "./PressableCard";
+export { default as ProgressBar } from "./ProgressBar";
 export { default as ScaleButton } from "./ScaleButton";

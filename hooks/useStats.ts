@@ -8,6 +8,8 @@ const EMPTY_OVERALL_STATS: OverallStats = {
   dueToday: 0,
   completedToday: 0,
   todayAdherence: 0,
+  dueLast7Days: 0,
+  completedLast7Days: 0,
   last7DayAdherence: 0,
 };
 

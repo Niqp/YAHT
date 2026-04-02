@@ -18,26 +18,26 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-            <Check size={12} color={colors.buttonPrimaryText} />
+            <Check size={12} color={colors.buttonPrimaryText} strokeWidth={2} />
           </View>
-          <AppText variant="small" color={colors.textSecondary}>
+          <AppText variant="tiny" color={colors.textSecondary}>
             Done
           </AppText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <X size={12} color={colors.textSecondary} />
+            <X size={12} color={colors.textSecondary} strokeWidth={2} />
           </View>
-          <AppText variant="small" color={colors.textSecondary}>
+          <AppText variant="tiny" color={colors.textSecondary}>
             Missed
           </AppText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.input, borderColor: colors.border }]}>
-            <Minus size={12} color={colors.textTertiary} />
+            <Minus size={12} color={colors.textTertiary} strokeWidth={2} />
           </View>
-          <AppText variant="small" color={colors.textSecondary}>
-            Off day
+          <AppText variant="tiny" color={colors.textSecondary}>
+            Not due
           </AppText>
         </View>
       </View>
@@ -67,16 +67,13 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
                 ]}
               >
                 {isCompleted ? (
-                  <Check size={18} color={iconColor} />
+                  <Check size={16} color={iconColor} strokeWidth={2} />
                 ) : isOffDay ? (
-                  <Minus size={18} color={iconColor} />
+                  <Minus size={16} color={iconColor} strokeWidth={2} />
                 ) : (
-                  <X size={18} color={iconColor} />
+                  <X size={16} color={iconColor} strokeWidth={2} />
                 )}
               </View>
-              <AppText variant="tiny" color={colors.textSecondary}>
-                {isCompleted ? "Done" : isOffDay ? "Off" : "Missed"}
-              </AppText>
             </View>
           );
         })}
@@ -87,7 +84,7 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
 
 const styles = StyleSheet.create({
   activityMapSection: {
-    gap: Spacing.base,
+    gap: Spacing.lg,
   },
   legendRow: {
     flexDirection: "row",
@@ -100,9 +97,9 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   legendSwatch: {
-    width: 22,
-    height: 22,
-    borderRadius: BorderRadius.full,
+    width: Spacing.base,
+    height: Spacing.base,
+    borderRadius: BorderRadius.xs,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -110,17 +107,18 @@ const styles = StyleSheet.create({
   simpleHabitChartContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: Spacing.sm,
+    gap: Spacing.xs,
+    paddingTop: Spacing.sm,
   },
   dayColumn: {
     flex: 1,
     alignItems: "center",
-    gap: Spacing.sm,
+    gap: Spacing.base,
   },
   completionIndicator: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
+    width: Spacing.xxl,
+    height: Spacing.xxl,
+    borderRadius: BorderRadius.sm,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
