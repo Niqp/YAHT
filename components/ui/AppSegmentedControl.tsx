@@ -34,23 +34,25 @@ export default function AppSegmentedControl({
 
   if (Platform.OS === "ios") {
     return (
-      <NativeSegmentedControl
-        values={values}
-        selectedIndex={selectedIndex}
-        onChange={(event) => onChange(event.nativeEvent.selectedSegmentIndex)}
-        enabled={!disabled}
-        tintColor={colors.primary}
-        backgroundColor={colors.input}
-        fontStyle={{ color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}
-        activeFontStyle={{ color: colors.text, fontSize: 13, fontWeight: "600" }}
-        sliderStyle={{
-          boxShadow: "0px 0px 0px 0px transparent",
-          elevation: 0,
-          borderWidth: 0,
-          backgroundColor: colors.cardBackground,
-        }}
-        style={style}
-      />
+      <View style={[styles.iosMask, style]}>
+        <NativeSegmentedControl
+          values={values}
+          selectedIndex={selectedIndex}
+          onChange={(event) => onChange(event.nativeEvent.selectedSegmentIndex)}
+          enabled={!disabled}
+          tintColor={colors.primary}
+          backgroundColor={colors.input}
+          fontStyle={{ color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}
+          activeFontStyle={{ color: colors.text, fontSize: 13, fontWeight: "600" }}
+          sliderStyle={{
+            boxShadow: "0px 0px 0px 0px transparent",
+            elevation: 0,
+            borderWidth: 0,
+            backgroundColor: colors.cardBackground,
+          }}
+          style={styles.iosControl}
+        />
+      </View>
     );
   }
 
@@ -165,6 +167,13 @@ function AndroidSegmentedControl({ values, selectedIndex, onChange, disabled, st
 }
 
 const styles = StyleSheet.create({
+  iosMask: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+  },
+  iosControl: {
+    width: "100%",
+  },
   androidContainer: {
     flexDirection: "row",
     position: "relative",

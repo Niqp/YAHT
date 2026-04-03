@@ -234,6 +234,7 @@ export default function AddEditHabitScreen() {
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
+  const allowProgrammaticRemoveRef = useRef(false);
   const pendingNavigationActionRef = useRef<unknown>(null);
   const isDiscardAlertOpenRef = useRef(false);
   const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
@@ -256,16 +257,18 @@ export default function AddEditHabitScreen() {
     isDiscardAlertOpenRef.current = false;
   }, []);
 
-  const completeExit = useCallback(
+  const exitWithoutPrompt = useCallback(
     (action?: unknown) => {
       setIsDiscardSheetOpen(false);
       clearPendingExit();
 
       if (action) {
+        allowProgrammaticRemoveRef.current = true;
         navigation.dispatch(action as never);
         return;
       }
 
+      allowProgrammaticRemoveRef.current = true;
       navigateBack();
     },
     [clearPendingExit, navigateBack, navigation]
@@ -278,8 +281,8 @@ export default function AddEditHabitScreen() {
 
   const handleDiscardConfirmed = useCallback(() => {
     const pendingAction = pendingNavigationActionRef.current;
-    completeExit(pendingAction ?? undefined);
-  }, [completeExit]);
+    exitWithoutPrompt(pendingAction ?? undefined);
+  }, [exitWithoutPrompt]);
 
   const showDiscardConfirmation = useCallback(() => {
     if (Platform.OS === "ios") {
@@ -319,17 +322,28 @@ export default function AddEditHabitScreen() {
       }
 
       if (!hasUnsavedChanges) {
-        completeExit(action);
+        if (action) {
+          navigation.dispatch(action as never);
+          return;
+        }
+
+        navigateBack();
         return;
       }
 
       pendingNavigationActionRef.current = action ?? null;
       showDiscardConfirmation();
     },
-    [activeSheet, completeExit, hasUnsavedChanges, showDiscardConfirmation]
+    [activeSheet, hasUnsavedChanges, navigateBack, navigation, showDiscardConfirmation]
   );
 
   usePreventRemove(activeSheet !== null || hasUnsavedChanges, ({ data }) => {
+    if (allowProgrammaticRemoveRef.current) {
+      allowProgrammaticRemoveRef.current = false;
+      navigation.dispatch(data.action as never);
+      return;
+    }
+
     attemptClose({ action: data.action });
   });
 
@@ -638,7 +652,8 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      navigateBack();
+      setIsDirty(false);
+      exitWithoutPrompt();
     } finally {
       setIsSubmitting(false);
     }
@@ -660,11 +675,12 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      navigateBack();
+      setIsDirty(false);
+      exitWithoutPrompt();
     } finally {
       setIsSubmitting(false);
     }
-  }, [deleteHabit, habitId, isSubmitting, navigateBack]);
+  }, [deleteHabit, exitWithoutPrompt, habitId, isSubmitting]);
 
   const handleDelete = useCallback(() => {
     if (!isEditMode || !habitId) {

@@ -2,13 +2,14 @@ import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { Alert, Keyboard, Platform } from "react-native";
 
-let preventRemoveEnabled = false;
-let preventRemoveCallback: ((event: { data: { action: unknown } }) => void) | undefined;
+let mockPreventRemoveEnabled = false;
+let mockPreventRemoveCallback: ((event: { data: { action: unknown } }) => void) | undefined;
 
 const mockRouterBack = jest.fn();
 const mockRouterCanGoBack = jest.fn(() => true);
 const mockRouterReplace = jest.fn();
 const mockNavigationDispatch = jest.fn();
+const preventedGoBackAction = { type: "GO_BACK" };
 
 const mockStoreState = {
   _hasHydrated: true,
@@ -24,7 +25,15 @@ jest.mock("expo-router", () => ({
     Screen: () => null,
   },
   router: {
-    back: () => mockRouterBack(),
+    back: () => {
+      mockRouterBack();
+
+      if (mockPreventRemoveEnabled) {
+        mockPreventRemoveCallback?.({
+          data: { action: preventedGoBackAction },
+        });
+      }
+    },
     canGoBack: () => mockRouterCanGoBack(),
     replace: (path: string) => mockRouterReplace(path),
   },
@@ -36,8 +45,8 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@react-navigation/native", () => ({
   usePreventRemove: (enabled: boolean, callback: ((event: { data: { action: unknown } }) => void) | undefined) => {
-    preventRemoveEnabled = enabled;
-    preventRemoveCallback = callback;
+    mockPreventRemoveEnabled = enabled;
+    mockPreventRemoveCallback = callback;
   },
 }));
 
@@ -193,8 +202,8 @@ describe("AddEditHabitScreen exit flow", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    preventRemoveEnabled = false;
-    preventRemoveCallback = undefined;
+    mockPreventRemoveEnabled = false;
+    mockPreventRemoveCallback = undefined;
     mockStoreState.error = null;
     setPlatform("ios");
     alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
@@ -251,12 +260,12 @@ describe("AddEditHabitScreen exit flow", () => {
     render(<AddEditHabitScreen />);
 
     fireEvent.changeText(screen.getByTestId("title-input"), "Read");
-    expect(preventRemoveEnabled).toBe(true);
+    expect(mockPreventRemoveEnabled).toBe(true);
 
     const pendingAction = { type: "GO_BACK" };
 
     act(() => {
-      preventRemoveCallback?.({
+      mockPreventRemoveCallback?.({
         data: { action: pendingAction },
       });
     });
@@ -271,6 +280,22 @@ describe("AddEditHabitScreen exit flow", () => {
     expect(mockNavigationDispatch).toHaveBeenCalledTimes(1);
     expect(mockNavigationDispatch).toHaveBeenCalledWith(pendingAction);
     expect(alertSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("saves and closes without showing the discard alert", async () => {
+    mockStoreState.addHabit.mockResolvedValueOnce(undefined);
+
+    render(<AddEditHabitScreen />);
+
+    fireEvent.changeText(screen.getByTestId("title-input"), "Read");
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Create Habit"));
+    });
+
+    expect(mockStoreState.addHabit).toHaveBeenCalledTimes(1);
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(mockNavigationDispatch).toHaveBeenCalledWith(preventedGoBackAction);
   });
 
   it("keeps using the discard sheet on Android cancel when the form is dirty", () => {
@@ -289,10 +314,10 @@ describe("AddEditHabitScreen exit flow", () => {
 
     fireEvent.press(screen.getByText("Habit type"));
     expect(screen.getByText("Completion Sheet")).toBeOnTheScreen();
-    expect(preventRemoveEnabled).toBe(true);
+    expect(mockPreventRemoveEnabled).toBe(true);
 
     act(() => {
-      preventRemoveCallback?.({
+      mockPreventRemoveCallback?.({
         data: { action: { type: "GO_BACK" } },
       });
     });
