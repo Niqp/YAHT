@@ -12,6 +12,7 @@
     },
     "simulator": {
       "ios": {
+        "bundleIdentifier": "tech.niqp.yaht",
         "simulator": true
       }
     },
