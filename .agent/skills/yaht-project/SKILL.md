@@ -19,20 +19,20 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 
 ## Tech Stack
 
-| Category         | Technology                                                                                                                                   | Notes                                                                                          |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Framework        | Expo 54 (managed + dev-client)                                                                                                               | `expo-router` 6.x for file-based routing                                                       |
-| Language         | TypeScript 5.x                                                                                                                               | Strict mode, `@/*` path alias to project root                                                  |
-| State Management | Zustand 5.x + persist middleware                                                                                                             | MMKV storage via `react-native-mmkv`                                                           |
-| Date Library     | dayjs 1.x                                                                                                                                    | Plugins: `isSameOrAfter`, `isToday`, `duration`                                                |
-| Animations       | react-native-reanimated 3.16                                                                                                                 | + react-native-gesture-handler 2.20                                                            |
-| UI               | lucide-react-native 1.x (icons), @gorhom/bottom-sheet 5.x, expo-linear-gradient, expo-haptics, react-native-emoji-popup                    | Design system components in `components/ui/` and the native emoji picker used by `app/add.tsx` |
-| Charts           | Custom React Native chart components                                                                                                         | Stats views render bespoke chart components from `components/stats/charts/`                    |
-| Notifications    | expo-notifications 0.28.x, react-native-permissions                                                                                          | Timestamp-triggered, Android alarm permissions                                                 |
-| Virtualization   | recyclerlistview 4.x                                                                                                                         | Used in DateSlider                                                                             |
-| Linting          | ESLint 9 flat config + typescript-eslint + eslint-config-prettier                                                                            |                                                                                                |
-| Formatting       | Prettier (`.prettierrc`)                                                                                                                     | Enforces project style — run `npm run format`                                                  |
-| Testing          | Jest (jest-expo preset) + @testing-library/react-native                                                                                      | 11 test suites, ~121 tests                                                                     |
+| Category         | Technology                                                                                                              | Notes                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Framework        | Expo 54 (managed + dev-client)                                                                                          | `expo-router` 6.x for file-based routing                                                       |
+| Language         | TypeScript 5.x                                                                                                          | Strict mode, `@/*` path alias to project root                                                  |
+| State Management | Zustand 5.x + persist middleware                                                                                        | MMKV storage via `react-native-mmkv`                                                           |
+| Date Library     | dayjs 1.x                                                                                                               | Plugins: `isSameOrAfter`, `isToday`, `duration`                                                |
+| Animations       | react-native-reanimated 3.16                                                                                            | + react-native-gesture-handler 2.20                                                            |
+| UI               | lucide-react-native 1.x (icons), @gorhom/bottom-sheet 5.x, expo-linear-gradient, expo-haptics, react-native-emoji-popup | Design system components in `components/ui/` and the native emoji picker used by `app/add.tsx` |
+| Charts           | Custom React Native chart components                                                                                    | Stats views render bespoke chart components from `components/stats/charts/`                    |
+| Notifications    | expo-notifications 0.28.x, react-native-permissions                                                                     | Timestamp-triggered, Android alarm permissions                                                 |
+| Virtualization   | recyclerlistview 4.x                                                                                                    | Used in DateSlider                                                                             |
+| Linting          | ESLint 9 flat config + typescript-eslint + eslint-config-prettier                                                       |                                                                                                |
+| Formatting       | Prettier (`.prettierrc`)                                                                                                | Enforces project style — run `npm run format`                                                  |
+| Testing          | Jest (jest-expo preset) + @testing-library/react-native                                                                 | 11 test suites, ~121 tests                                                                     |
 
 ---
 
@@ -136,6 +136,8 @@ All visual constants live in `constants/`. Import from there — never hardcode 
 | `ScaleButton`         | Animated button with spring press feedback; variants: `primary`, `secondary`, `destructive`.                                |
 | `PressableCard`       | Card-style pressable with platform ripple/opacity feedback and configurable elevation.                                      |
 | `AppBottomSheet`      | `@gorhom/bottom-sheet` wrapper with guideline defaults (radius-xl, overlay backdrop, handle).                               |
+
+**Form picker pattern**: `components/ui/form/WheelPicker.tsx` is the shared numeric wheel wrapper used by duration, reminder, completion-goal, and interval controls. It renders the native `@react-native-picker/picker` wheel on iOS and keeps `@quidone/react-native-wheel-picker` on Android/Web; shared sizing constants live in `components/ui/form/WheelPicker.shared.ts`.
 
 **Haptics utility**: `utils/haptics.ts` — thin wrapper around `expo-haptics` with `complete`, `success`, `warning`, `medium` methods.
 

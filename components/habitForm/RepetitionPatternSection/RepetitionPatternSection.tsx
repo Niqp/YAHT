@@ -9,6 +9,11 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { AppSegmentedControl, AppText } from "@/components/ui";
 import { FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
+import {
+  WHEEL_PICKER_CARD_HEIGHT,
+  WHEEL_PICKER_HEIGHT,
+  WHEEL_PICKER_PANEL_HEIGHT,
+} from "@/components/ui/form/WheelPicker.shared";
 
 interface RepetitionPatternSectionProps {
   repetitionType: RepetitionType;
@@ -266,8 +271,8 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 1,
     borderRadius: BorderRadius.md,
-    minHeight: 288,
-    height: 288,
+    minHeight: WHEEL_PICKER_PANEL_HEIGHT,
+    height: WHEEL_PICKER_PANEL_HEIGHT,
     overflow: "hidden",
   },
   panel: {
@@ -314,11 +319,11 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   picker: {
-    height: 120,
+    height: WHEEL_PICKER_HEIGHT,
     width: "100%",
   },
   pickerSurface: {
-    height: 164,
+    height: WHEEL_PICKER_CARD_HEIGHT,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,

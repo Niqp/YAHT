@@ -73,6 +73,44 @@ const mockStoreState = {
   setSelectedDate: mockSetSelectedDate,
 };
 
+type ReminderNotificationResponseData = {
+  kind: string;
+  habitId: string;
+  habitTitle: string;
+  reminderDate: string;
+  reminderSeriesId: string;
+  scheduledFor: number;
+  attemptNumber: number;
+  maxAttempts: number;
+  repeatIntervalMs?: number;
+};
+
+const createNotificationResponse = (
+  actionIdentifier: string,
+  data: ReminderNotificationResponseData
+): Notifications.NotificationResponse => ({
+  actionIdentifier,
+  notification: {
+    date: data.scheduledFor,
+    request: {
+      identifier: "reminder-series-" + data.habitId + "-" + data.reminderDate + "-090000",
+      content: {
+        title: data.habitTitle,
+        subtitle: null,
+        body: null,
+        data,
+        categoryIdentifier: null,
+        sound: null,
+        launchImageName: null,
+        badge: null,
+        attachments: [],
+        threadIdentifier: null,
+      },
+      trigger: null,
+    },
+  },
+});
+
 jest.mock("expo-router", () => ({
   router: {
     replace: (...args: unknown[]) => mockRouterReplace(...args),
@@ -96,8 +134,12 @@ jest.mock("@/utils/notifications", () => ({
   REMINDER_ACTION_DONE_IDENTIFIER: "habitReminderDone",
   REMINDER_ACTION_SNOOZE_IDENTIFIER: "habitReminderSnooze",
   REMINDER_ACTION_OPEN_IDENTIFIER: "habitReminderOpen",
-  getReminderNotificationSeriesId: jest.fn((habitId: string, reminderDate: string) => `series-${habitId}-${reminderDate}`),
-  getReminderNotificationData: jest.fn((response: Notifications.NotificationResponse) => response.notification.request.content.data),
+  getReminderNotificationSeriesId: jest.fn(
+    (habitId: string, reminderDate: string) => `series-${habitId}-${reminderDate}`
+  ),
+  getReminderNotificationData: jest.fn(
+    (response: Notifications.NotificationResponse) => response.notification.request.content.data
+  ),
   prepareReminderNotifications: jest.fn(() => Promise.resolve(true)),
   schedulePreparedReminderNotification: jest.fn(() => Promise.resolve()),
   clearReminderNotifications: jest.fn(() => Promise.resolve()),
@@ -233,31 +275,25 @@ describe("useReminderManager", () => {
     render(<TestComponent />);
 
     await act(async () => {
-      notificationResponseListener?.({
-        actionIdentifier: REMINDER_ACTION_SNOOZE_IDENTIFIER,
-        notification: {
-          request: {
-            identifier: "reminder-series-h1-2026-03-21-090000",
-            content: {
-              data: {
-                kind: "habitReminder",
-                habitId: "h1",
-                habitTitle: "Stretch",
-                reminderDate: "2026-03-21",
-                reminderSeriesId: getReminderNotificationSeriesId("h1", "2026-03-21"),
-                scheduledFor: dayjs("2026-03-21T09:00:00").valueOf(),
-                attemptNumber: 0,
-                maxAttempts: 4,
-                repeatIntervalMs: 300_000,
-              },
-            },
-          },
-        },
-      } as Notifications.NotificationResponse);
+      notificationResponseListener?.(
+        createNotificationResponse(REMINDER_ACTION_SNOOZE_IDENTIFIER, {
+          kind: "habitReminder",
+          habitId: "h1",
+          habitTitle: "Stretch",
+          reminderDate: "2026-03-21",
+          reminderSeriesId: getReminderNotificationSeriesId("h1", "2026-03-21"),
+          scheduledFor: dayjs("2026-03-21T09:00:00").valueOf(),
+          attemptNumber: 0,
+          maxAttempts: 4,
+          repeatIntervalMs: 300_000,
+        })
+      );
     });
 
     await waitFor(() => {
-      expect(cancelReminderNotificationSeries).toHaveBeenCalledWith(getReminderNotificationSeriesId("h1", "2026-03-21"));
+      expect(cancelReminderNotificationSeries).toHaveBeenCalledWith(
+        getReminderNotificationSeriesId("h1", "2026-03-21")
+      );
     });
 
     expect(mockUpdateHabit).toHaveBeenCalledWith(
@@ -277,26 +313,18 @@ describe("useReminderManager", () => {
     render(<TestComponent />);
 
     await act(async () => {
-      notificationResponseListener?.({
-        actionIdentifier: REMINDER_ACTION_DONE_IDENTIFIER,
-        notification: {
-          request: {
-            identifier: "reminder-series-h1-2026-03-21-090000",
-            content: {
-              data: {
-                kind: "habitReminder",
-                habitId: "h1",
-                habitTitle: "Stretch",
-                reminderDate: "2026-03-21",
-                reminderSeriesId: getReminderNotificationSeriesId("h1", "2026-03-21"),
-                scheduledFor: dayjs("2026-03-21T09:00:00").valueOf(),
-                attemptNumber: 0,
-                maxAttempts: 4,
-              },
-            },
-          },
-        },
-      } as Notifications.NotificationResponse);
+      notificationResponseListener?.(
+        createNotificationResponse(REMINDER_ACTION_DONE_IDENTIFIER, {
+          kind: "habitReminder",
+          habitId: "h1",
+          habitTitle: "Stretch",
+          reminderDate: "2026-03-21",
+          reminderSeriesId: getReminderNotificationSeriesId("h1", "2026-03-21"),
+          scheduledFor: dayjs("2026-03-21T09:00:00").valueOf(),
+          attemptNumber: 0,
+          maxAttempts: 4,
+        })
+      );
     });
 
     await waitFor(() => {
@@ -308,26 +336,18 @@ describe("useReminderManager", () => {
     render(<TestComponent />);
 
     await act(async () => {
-      notificationResponseListener?.({
-        actionIdentifier: REMINDER_ACTION_OPEN_IDENTIFIER,
-        notification: {
-          request: {
-            identifier: "reminder-series-h1-2026-03-21-090000",
-            content: {
-              data: {
-                kind: "habitReminder",
-                habitId: "h1",
-                habitTitle: "Stretch",
-                reminderDate: "2026-03-21",
-                reminderSeriesId: getReminderNotificationSeriesId("h1", "2026-03-21"),
-                scheduledFor: dayjs("2026-03-21T09:00:00").valueOf(),
-                attemptNumber: 0,
-                maxAttempts: 4,
-              },
-            },
-          },
-        },
-      } as Notifications.NotificationResponse);
+      notificationResponseListener?.(
+        createNotificationResponse(REMINDER_ACTION_OPEN_IDENTIFIER, {
+          kind: "habitReminder",
+          habitId: "h1",
+          habitTitle: "Stretch",
+          reminderDate: "2026-03-21",
+          reminderSeriesId: getReminderNotificationSeriesId("h1", "2026-03-21"),
+          scheduledFor: dayjs("2026-03-21T09:00:00").valueOf(),
+          attemptNumber: 0,
+          maxAttempts: 4,
+        })
+      );
     });
 
     await waitFor(() => {
@@ -336,5 +356,3 @@ describe("useReminderManager", () => {
     expect(mockRouterReplace).toHaveBeenCalledWith("/(tabs)/today");
   });
 });
-
-

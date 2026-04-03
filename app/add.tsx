@@ -233,10 +233,14 @@ export default function AddEditHabitScreen() {
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
+  const confirmedExitRef = useRef(false);
+  const pendingNavigationActionRef = useRef<unknown>(null);
+  const isDiscardAlertOpenRef = useRef(false);
   const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
   const settingsSheetRef = useRef<BottomSheet>(null);
 
   const navigation = useNavigation();
+  const hasUnsavedChanges = isDirty;
 
   const navigateBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -247,17 +251,110 @@ export default function AddEditHabitScreen() {
     router.replace(TODAY_ROUTE);
   }, []);
 
+  const clearPendingExit = useCallback(() => {
+    pendingNavigationActionRef.current = null;
+    isDiscardAlertOpenRef.current = false;
+  }, []);
+
+  const completeExit = useCallback(
+    (action?: unknown) => {
+      confirmedExitRef.current = true;
+      setIsDiscardSheetOpen(false);
+      clearPendingExit();
+
+      if (action) {
+        navigation.dispatch(action as never);
+        return;
+      }
+
+      navigateBack();
+    },
+    [clearPendingExit, navigateBack, navigation]
+  );
+
+  const handleKeepEditing = useCallback(() => {
+    setIsDiscardSheetOpen(false);
+    clearPendingExit();
+  }, [clearPendingExit]);
+
+  const handleDiscardConfirmed = useCallback(() => {
+    const pendingAction = pendingNavigationActionRef.current;
+    completeExit(pendingAction ?? undefined);
+  }, [completeExit]);
+
+  const showDiscardConfirmation = useCallback(() => {
+    if (Platform.OS === "ios") {
+      if (isDiscardAlertOpenRef.current) {
+        return;
+      }
+
+      isDiscardAlertOpenRef.current = true;
+
+      Alert.alert(
+        "Discard changes?",
+        isEditMode ? "Your habit edits have not been saved yet." : "Your new habit has not been saved yet.",
+        [
+          {
+            text: "Keep Editing",
+            style: "cancel",
+            onPress: handleKeepEditing,
+          },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: handleDiscardConfirmed,
+          },
+        ]
+      );
+      return;
+    }
+
+    setIsDiscardSheetOpen(true);
+  }, [handleDiscardConfirmed, handleKeepEditing, isEditMode]);
+
+  const attemptClose = useCallback(
+    ({ action, fromNavigationEvent = false }: { action?: unknown; fromNavigationEvent?: boolean } = {}) => {
+      if (confirmedExitRef.current) {
+        confirmedExitRef.current = false;
+        clearPendingExit();
+        return false;
+      }
+
+      if (activeSheet !== null) {
+        setActiveSheet(null);
+        return true;
+      }
+
+      if (!hasUnsavedChanges) {
+        if (!fromNavigationEvent) {
+          completeExit(action);
+          return true;
+        }
+
+        return false;
+      }
+
+      pendingNavigationActionRef.current = action ?? null;
+      showDiscardConfirmation();
+      return true;
+    },
+    [activeSheet, clearPendingExit, completeExit, hasUnsavedChanges, showDiscardConfirmation]
+  );
+
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-      // If a bottom sheet is active, prevent back navigation and close the sheet
-      if (activeSheet !== null) {
+      if (
+        attemptClose({
+          action: e.data.action,
+          fromNavigationEvent: true,
+        })
+      ) {
         e.preventDefault();
-        setActiveSheet(null);
       }
     });
 
     return unsubscribe;
-  }, [navigation, activeSheet]);
+  }, [attemptClose, navigation]);
 
   const availableHeight = windowHeight - insets.top - insets.bottom;
   const maxSheetContentSize = Math.max(availableHeight - Spacing.xxl, 320);
@@ -348,8 +445,6 @@ export default function AddEditHabitScreen() {
       hideSub.remove();
     };
   }, []);
-
-  const hasUnsavedChanges = isDirty;
 
   const handleTitleChange = useCallback((nextTitle: string) => {
     setTitle(nextTitle);
@@ -483,13 +578,8 @@ export default function AddEditHabitScreen() {
   const reminderHelperText = getReminderHelperText(reminderEnabled);
 
   const handleCancel = useCallback(() => {
-    if (!hasUnsavedChanges) {
-      navigateBack();
-      return;
-    }
-
-    setIsDiscardSheetOpen(true);
-  }, [hasUnsavedChanges, navigateBack]);
+    attemptClose();
+  }, [attemptClose]);
 
   const handleSave = async () => {
     if (isSubmitting) {
@@ -800,13 +890,10 @@ export default function AddEditHabitScreen() {
       ) : null}
 
       <DiscardChangesSheet
-        isOpen={isDiscardSheetOpen}
+        isOpen={Platform.OS !== "ios" && isDiscardSheetOpen}
         isEditMode={isEditMode}
-        onClose={() => setIsDiscardSheetOpen(false)}
-        onDiscard={() => {
-          setIsDiscardSheetOpen(false);
-          navigateBack();
-        }}
+        onClose={handleKeepEditing}
+        onDiscard={handleDiscardConfirmed}
       />
     </View>
   );

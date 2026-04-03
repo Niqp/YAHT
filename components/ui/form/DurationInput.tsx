@@ -7,6 +7,7 @@ import { useTheme } from "@/hooks/useTheme";
 import AppText from "../AppText";
 import PresetPills from "./PresetPills";
 import WheelPicker from "./WheelPicker";
+import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "./WheelPicker.shared";
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
   value: index,
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   displayCard: {
-    height: 164,
+    height: WHEEL_PICKER_CARD_HEIGHT,
     width: "100%",
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.sm,
   },
   picker: {
-    height: 120,
+    height: WHEEL_PICKER_HEIGHT,
     width: "100%",
   },
 });

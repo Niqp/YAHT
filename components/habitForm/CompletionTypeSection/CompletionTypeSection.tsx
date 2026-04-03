@@ -7,6 +7,11 @@ import { DurationInput, FormSection, PresetPills, WheelPicker } from "@/componen
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { CompletionType } from "@/types/habit";
+import {
+  WHEEL_PICKER_CARD_HEIGHT,
+  WHEEL_PICKER_HEIGHT,
+  WHEEL_PICKER_PANEL_HEIGHT,
+} from "@/components/ui/form/WheelPicker.shared";
 
 interface CompletionTypeSectionProps {
   completionType: CompletionType;
@@ -194,8 +199,8 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 1,
     borderRadius: BorderRadius.md,
-    minHeight: 288,
-    height: 288,
+    minHeight: WHEEL_PICKER_PANEL_HEIGHT,
+    height: WHEEL_PICKER_PANEL_HEIGHT,
     overflow: "hidden",
   },
   panel: {
@@ -245,11 +250,11 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   picker: {
-    height: 120,
+    height: WHEEL_PICKER_HEIGHT,
     width: "100%",
   },
   pickerSurface: {
-    height: 164,
+    height: WHEEL_PICKER_CARD_HEIGHT,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.sm,

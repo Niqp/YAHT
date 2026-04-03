@@ -4,6 +4,7 @@ import { AppText } from "@/components/ui";
 import { FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "@/components/ui/form/WheelPicker.shared";
 
 interface ReminderSectionProps {
   enabled: boolean;
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   timeDisplayCard: {
-    height: 164,
+    height: WHEEL_PICKER_CARD_HEIGHT,
     width: "100%",
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.sm,
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
   timeSeparator: {
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 66,
+    paddingTop: WHEEL_PICKER_HEIGHT / 2 + 6,
     paddingHorizontal: Spacing.xs,
   },
   wheelLabel: {
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   picker: {
-    height: 120,
+    height: WHEEL_PICKER_HEIGHT,
     width: "100%",
   },
   intervalSection: {
