@@ -1,6 +1,6 @@
 import React from "react";
 import Constants from "expo-constants";
-import { ChevronRight, Download, Github, Trash2, Upload } from "lucide-react-native";
+import { ChevronRight, Code2, Download, Trash2, Upload } from "lucide-react-native";
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { AppSegmentedControl, AppText } from "@/components/ui";
@@ -153,7 +153,7 @@ export default function SettingsScreen() {
           <StaticRow title="Version" value={`v${APP_VERSION}`} />
           <SectionDivider />
           <ActionRow
-            icon={<Github size={18} color={colors.icon} />}
+            icon={<Code2 size={18} color={colors.icon} />}
             title="Source code"
             description="Open the public GitHub repository."
             onPress={handleOpenRepository}
