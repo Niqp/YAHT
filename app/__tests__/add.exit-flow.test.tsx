@@ -2,19 +2,13 @@ import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { Alert, Keyboard, Platform } from "react-native";
 
-let beforeRemoveListener: ((event: { data: { action?: unknown }; preventDefault: () => void }) => void) | undefined;
+let preventRemoveEnabled = false;
+let preventRemoveCallback: ((event: { data: { action: unknown } }) => void) | undefined;
 
 const mockRouterBack = jest.fn();
 const mockRouterCanGoBack = jest.fn(() => true);
 const mockRouterReplace = jest.fn();
 const mockNavigationDispatch = jest.fn();
-const mockNavigationAddListener = jest.fn((eventName: string, listener: typeof beforeRemoveListener) => {
-  if (eventName === "beforeRemove") {
-    beforeRemoveListener = listener;
-  }
-
-  return jest.fn();
-});
 
 const mockStoreState = {
   _hasHydrated: true,
@@ -36,9 +30,15 @@ jest.mock("expo-router", () => ({
   },
   useLocalSearchParams: () => ({}),
   useNavigation: () => ({
-    addListener: mockNavigationAddListener,
     dispatch: (action: unknown) => mockNavigationDispatch(action),
   }),
+}));
+
+jest.mock("@react-navigation/native", () => ({
+  usePreventRemove: (enabled: boolean, callback: ((event: { data: { action: unknown } }) => void) | undefined) => {
+    preventRemoveEnabled = enabled;
+    preventRemoveCallback = callback;
+  },
 }));
 
 jest.mock("@/store/habitStore", () => {
@@ -193,7 +193,8 @@ describe("AddEditHabitScreen exit flow", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    beforeRemoveListener = undefined;
+    preventRemoveEnabled = false;
+    preventRemoveCallback = undefined;
     mockStoreState.error = null;
     setPlatform("ios");
     alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
@@ -230,39 +231,36 @@ describe("AddEditHabitScreen exit flow", () => {
     );
     expect(screen.queryByText("Discard Changes Sheet")).toBeNull();
 
+    const keepEditingButton = getLatestAlertButtons().find((button) => button.text === "Keep Editing");
+    act(() => {
+      keepEditingButton?.onPress?.();
+    });
+
+    expect(mockRouterBack).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByText("Cancel"));
+
     const discardButton = getLatestAlertButtons().find((button) => button.text === "Discard");
     act(() => {
       discardButton?.onPress?.();
     });
-
     expect(mockRouterBack).toHaveBeenCalledTimes(1);
   });
 
   it("intercepts iOS swipe dismiss, confirms, and resumes the pending navigation action once", () => {
-    let resumedPreventDefault: jest.Mock | undefined;
-    mockNavigationDispatch.mockImplementation((action) => {
-      resumedPreventDefault = jest.fn();
-      beforeRemoveListener?.({
-        data: { action },
-        preventDefault: resumedPreventDefault,
-      });
-    });
-
     render(<AddEditHabitScreen />);
 
     fireEvent.changeText(screen.getByTestId("title-input"), "Read");
+    expect(preventRemoveEnabled).toBe(true);
 
     const pendingAction = { type: "GO_BACK" };
-    const preventDefault = jest.fn();
 
     act(() => {
-      beforeRemoveListener?.({
+      preventRemoveCallback?.({
         data: { action: pendingAction },
-        preventDefault,
       });
     });
 
-    expect(preventDefault).toHaveBeenCalledTimes(1);
     expect(alertSpy).toHaveBeenCalledTimes(1);
 
     const discardButton = getLatestAlertButtons().find((button) => button.text === "Discard");
@@ -272,7 +270,6 @@ describe("AddEditHabitScreen exit flow", () => {
 
     expect(mockNavigationDispatch).toHaveBeenCalledTimes(1);
     expect(mockNavigationDispatch).toHaveBeenCalledWith(pendingAction);
-    expect(resumedPreventDefault).not.toHaveBeenCalled();
     expect(alertSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -292,16 +289,14 @@ describe("AddEditHabitScreen exit flow", () => {
 
     fireEvent.press(screen.getByText("Habit type"));
     expect(screen.getByText("Completion Sheet")).toBeOnTheScreen();
+    expect(preventRemoveEnabled).toBe(true);
 
-    const preventDefault = jest.fn();
     act(() => {
-      beforeRemoveListener?.({
+      preventRemoveCallback?.({
         data: { action: { type: "GO_BACK" } },
-        preventDefault,
       });
     });
 
-    expect(preventDefault).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("Completion Sheet")).toBeNull();
     expect(alertSpy).not.toHaveBeenCalled();
     expect(mockNavigationDispatch).not.toHaveBeenCalled();

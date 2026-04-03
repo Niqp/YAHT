@@ -20,7 +20,7 @@
     "@expo/metro-runtime": "~6.1.2",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@quidone/react-native-wheel-picker": "^1.6.1",
-    "@react-native-picker/picker": "^2.11.4",
+    "@react-native-picker/picker": "^2.11.1",
     "@react-native-segmented-control/segmented-control": "^2.5.7",
     "dayjs": "^1.11.13",
     "expo": "^54.0.33",

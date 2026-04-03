@@ -17,6 +17,7 @@ import { getCurrentDateStamp } from "@/utils/date";
 import { prepareReminderNotifications } from "@/utils/notifications";
 import type BottomSheet from "@gorhom/bottom-sheet";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
+import { usePreventRemove } from "@react-navigation/native";
 import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { CalendarDays, CheckSquare, Bell } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -233,7 +234,6 @@ export default function AddEditHabitScreen() {
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
-  const confirmedExitRef = useRef(false);
   const pendingNavigationActionRef = useRef<unknown>(null);
   const isDiscardAlertOpenRef = useRef(false);
   const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
@@ -258,7 +258,6 @@ export default function AddEditHabitScreen() {
 
   const completeExit = useCallback(
     (action?: unknown) => {
-      confirmedExitRef.current = true;
       setIsDiscardSheetOpen(false);
       clearPendingExit();
 
@@ -313,48 +312,26 @@ export default function AddEditHabitScreen() {
   }, [handleDiscardConfirmed, handleKeepEditing, isEditMode]);
 
   const attemptClose = useCallback(
-    ({ action, fromNavigationEvent = false }: { action?: unknown; fromNavigationEvent?: boolean } = {}) => {
-      if (confirmedExitRef.current) {
-        confirmedExitRef.current = false;
-        clearPendingExit();
-        return false;
-      }
-
+    ({ action }: { action?: unknown } = {}) => {
       if (activeSheet !== null) {
         setActiveSheet(null);
-        return true;
+        return;
       }
 
       if (!hasUnsavedChanges) {
-        if (!fromNavigationEvent) {
-          completeExit(action);
-          return true;
-        }
-
-        return false;
+        completeExit(action);
+        return;
       }
 
       pendingNavigationActionRef.current = action ?? null;
       showDiscardConfirmation();
-      return true;
     },
-    [activeSheet, clearPendingExit, completeExit, hasUnsavedChanges, showDiscardConfirmation]
+    [activeSheet, completeExit, hasUnsavedChanges, showDiscardConfirmation]
   );
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-      if (
-        attemptClose({
-          action: e.data.action,
-          fromNavigationEvent: true,
-        })
-      ) {
-        e.preventDefault();
-      }
-    });
-
-    return unsubscribe;
-  }, [attemptClose, navigation]);
+  usePreventRemove(activeSheet !== null || hasUnsavedChanges, ({ data }) => {
+    attemptClose({ action: data.action });
+  });
 
   const availableHeight = windowHeight - insets.top - insets.bottom;
   const maxSheetContentSize = Math.max(availableHeight - Spacing.xxl, 320);
