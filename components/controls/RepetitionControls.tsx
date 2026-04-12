@@ -88,14 +88,14 @@ export default function RepetitionControls({
           style={[
             styles.button,
             {
-              backgroundColor: value <= min ? colors.buttonDisabled : colors.input,
-              borderColor: value <= min ? colors.buttonDisabled : colors.border,
+              backgroundColor: value <= min ? colors.buttonDisabledBg : colors.inputBg,
+              borderColor: value <= min ? colors.buttonDisabledBg : colors.inputBorder,
             },
           ]}
           onPress={handleDecrement}
           disabled={value <= min}
         >
-          <Minus size={18} color={value <= min ? colors.buttonDisabledText : colors.textSecondary} />
+          <Minus size={18} color={value <= min ? colors.buttonDisabledText : colors.iconSecondary} />
         </TouchableOpacity>
 
         {/* Text input */}
@@ -103,9 +103,9 @@ export default function RepetitionControls({
           style={[
             styles.input,
             {
-              borderColor: colors.border,
-              backgroundColor: colors.input,
-              color: colors.text,
+              borderColor: colors.inputBorder,
+              backgroundColor: colors.inputBg,
+              color: colors.textPrimary,
             },
           ]}
           value={inputValue}
@@ -121,14 +121,14 @@ export default function RepetitionControls({
           style={[
             styles.button,
             {
-              backgroundColor: value >= max ? colors.buttonDisabled : colors.input,
-              borderColor: value >= max ? colors.buttonDisabled : colors.border,
+              backgroundColor: value >= max ? colors.buttonDisabledBg : colors.inputBg,
+              borderColor: value >= max ? colors.buttonDisabledBg : colors.inputBorder,
             },
           ]}
           onPress={handleIncrement}
           disabled={value >= max}
         >
-          <Plus size={18} color={value >= max ? colors.buttonDisabledText : colors.textSecondary} />
+          <Plus size={18} color={value >= max ? colors.buttonDisabledText : colors.iconSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -142,8 +142,8 @@ export default function RepetitionControls({
               style={[
                 styles.presetButton,
                 {
-                  backgroundColor: value === preset ? colors.primary : colors.input,
-                  borderColor: value === preset ? colors.primary : colors.border,
+                  backgroundColor: value === preset ? colors.chipSelectedBg : colors.chipBg,
+                  borderColor: value === preset ? colors.chipSelectedBorder : colors.chipBorder,
                 },
               ]}
               onPress={() => onChange(preset)}
@@ -152,7 +152,7 @@ export default function RepetitionControls({
                 style={[
                   styles.presetButtonText,
                   {
-                    color: value === preset ? colors.buttonPrimaryText : colors.text,
+                    color: value === preset ? colors.chipSelectedText : colors.chipText,
                   },
                 ]}
               >

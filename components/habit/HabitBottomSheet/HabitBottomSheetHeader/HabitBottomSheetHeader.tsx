@@ -17,11 +17,16 @@ export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habi
 
   return (
     <View style={styles.headerContainer}>
-      <View style={[styles.iconContainer, { backgroundColor: colors.primarySubtle, borderWidth: 1, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.iconContainer,
+          { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderSubtle },
+        ]}
+      >
         <Text style={styles.habitIcon}>{habit.icon}</Text>
       </View>
       <View style={styles.habitInfoContainer}>
-        <Text style={[styles.habitTitle, { color: colors.text }]}>{habit.title}</Text>
+        <Text style={[styles.habitTitle, { color: colors.textPrimary }]}>{habit.title}</Text>
         <Text style={[styles.habitSubtitle, { color: colors.textSecondary }]}>
           {habit.completion.type === "simple"
             ? "Goal: complete once"
@@ -30,8 +35,14 @@ export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habi
               : `Goal: ${formattedTimeGoal}`}
         </Text>
       </View>
-      <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border }]} onPress={onClose}>
-        <ChevronUp size={20} color={colors.textSecondary} />
+      <TouchableOpacity
+        style={[
+          styles.closeButton,
+          { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderSubtle },
+        ]}
+        onPress={onClose}
+      >
+        <ChevronUp size={20} color={colors.iconSecondary} />
       </TouchableOpacity>
     </View>
   );

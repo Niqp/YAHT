@@ -182,7 +182,7 @@ export default function IOSTimerPicker({
   return (
     <View style={styles.container}>
       <View style={styles.headingRow}>
-        <Clock size={18} color={colors.primary} />
+        <Clock size={18} color={colors.accent} />
         <Text style={[styles.label, styles.headingLabel, { color: colors.textSecondary }]}>{label}</Text>
       </View>
 
@@ -191,14 +191,14 @@ export default function IOSTimerPicker({
         style={[
           styles.timeDisplay,
           {
-            backgroundColor: colors.input,
-            borderColor: colors.border,
+            backgroundColor: colors.inputBg,
+            borderColor: colors.inputBorder,
           },
         ]}
         onPress={() => setShowPicker(!showPicker)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.timeDisplayText, { color: colors.text }]}>{formatDisplayTime()}</Text>
+        <Text style={[styles.timeDisplayText, { color: colors.textPrimary }]}>{formatDisplayTime()}</Text>
         <Text style={[styles.timeHintText, { color: colors.textSecondary }]}>
           Tap to {showPicker ? "hide" : "show"} time picker
         </Text>
@@ -210,8 +210,8 @@ export default function IOSTimerPicker({
           style={[
             styles.pickerContainer,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
+              backgroundColor: colors.bgInset,
+              borderColor: colors.inputBorder,
             },
             getElevation(1, colors.shadow),
           ]}
@@ -223,7 +223,7 @@ export default function IOSTimerPicker({
 
               <View style={styles.pickerHighlightContainer}>
                 {/* Center highlight */}
-                <View style={[styles.pickerHighlight, { backgroundColor: colors.primarySubtle }]} />
+                <View style={[styles.pickerHighlight, { backgroundColor: colors.accentSoftBg }]} />
 
                 <ScrollView
                   ref={hourScrollRef}
@@ -241,7 +241,7 @@ export default function IOSTimerPicker({
                       style={[styles.pickerItem, { height: ITEM_HEIGHT }]}
                       onPress={() => handleItemPress("hour", index)}
                     >
-                      <Text style={[styles.pickerItemText, { color: colors.text }]}>{hour}</Text>
+                      <Text style={[styles.pickerItemText, { color: colors.textPrimary }]}>{hour}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -249,7 +249,7 @@ export default function IOSTimerPicker({
             </View>
 
             {/* Separator */}
-            <Text style={[styles.pickerSeparator, { color: colors.text }]}>:</Text>
+            <Text style={[styles.pickerSeparator, { color: colors.textPrimary }]}>:</Text>
 
             {/* Minutes */}
             <View style={styles.pickerColumn}>
@@ -257,7 +257,7 @@ export default function IOSTimerPicker({
 
               <View style={styles.pickerHighlightContainer}>
                 {/* Center highlight */}
-                <View style={[styles.pickerHighlight, { backgroundColor: colors.primarySubtle }]} />
+                <View style={[styles.pickerHighlight, { backgroundColor: colors.accentSoftBg }]} />
 
                 <ScrollView
                   ref={minuteScrollRef}
@@ -275,7 +275,7 @@ export default function IOSTimerPicker({
                       style={[styles.pickerItem, { height: ITEM_HEIGHT }]}
                       onPress={() => handleItemPress("minute", index)}
                     >
-                      <Text style={[styles.pickerItemText, { color: colors.text }]}>{minute}</Text>
+                      <Text style={[styles.pickerItemText, { color: colors.textPrimary }]}>{minute}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -285,7 +285,7 @@ export default function IOSTimerPicker({
 
           {/* Done button */}
           <Pressable
-            style={[styles.doneButton, { backgroundColor: colors.buttonPrimary }]}
+            style={[styles.doneButton, { backgroundColor: colors.buttonPrimaryBg }]}
             onPress={() => setShowPicker(false)}
           >
             <Text style={[styles.doneButtonText, { color: colors.buttonPrimaryText }]}>Done</Text>
@@ -308,8 +308,8 @@ export default function IOSTimerPicker({
               style={[
                 styles.presetButton,
                 {
-                  backgroundColor: value === preset.value ? colors.primary : colors.input,
-                  borderColor: value === preset.value ? colors.primary : colors.border,
+                  backgroundColor: value === preset.value ? colors.chipSelectedBg : colors.chipBg,
+                  borderColor: value === preset.value ? colors.chipSelectedBorder : colors.chipBorder,
                 },
               ]}
               onPress={() => onChange(preset.value)}
@@ -318,7 +318,7 @@ export default function IOSTimerPicker({
                 style={[
                   styles.presetButtonText,
                   {
-                    color: value === preset.value ? colors.buttonPrimaryText : colors.text,
+                    color: value === preset.value ? colors.chipSelectedText : colors.chipText,
                   },
                 ]}
               >

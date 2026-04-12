@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.lg,
+    borderWidth: 1,
     gap: Spacing.xxs,
   },
   streakText: {

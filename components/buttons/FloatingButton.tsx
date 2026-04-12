@@ -63,7 +63,7 @@ export function FloatingButton({ navigateToAddHabit }: FloatingButtonProps) {
             ...getElevation(3, colors.shadow),
           }}
         >
-          <Plus size={24} color={colors.textInverse} strokeWidth={2} />
+          <Plus size={24} color={colors.textOnAccent} strokeWidth={2} />
         </LinearGradient>
       </Pressable>
     </Animated.View>

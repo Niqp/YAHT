@@ -9,7 +9,6 @@ import { MoreVertical } from "lucide-react-native";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, useReducedMotion } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { SpringConfig, PressScale } from "@/constants/Animation";
 import { getElevation } from "@/constants/Elevation";
 import styles from "./HabitItem.styles";
@@ -107,7 +106,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     haptic.complete();
   };
 
-  // Card inner content (shared between gradient and flat variants)
+  // Card inner content shared by all completion states.
   const cardInner = (
     <>
       {/* Progress indicator */}
@@ -116,7 +115,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
           styles.progressBar,
           {
             width: progressBarWidth,
-            backgroundColor: isCompleted ? colors.success : colors.primary,
+            backgroundColor: isCompleted ? colors.success : colors.accent,
             opacity: 0.15,
           },
         ]}
@@ -134,13 +133,21 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         accessibilityState={{ checked: isCompleted }}
       >
         {/* Left section - Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: colors.primarySubtle }]}>
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: isCompleted ? colors.successSoftBg : colors.bgInset,
+              borderColor: isCompleted ? colors.successSoftBorder : colors.borderSubtle,
+            },
+          ]}
+        >
           <Text style={styles.iconText}>{habit.icon}</Text>
         </View>
 
         {/* Middle section - Title and Subtitle */}
         <View style={styles.infoContainer}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1} ellipsizeMode="tail">
             {habit.title}
           </Text>
           {habit?.completion?.type !== "simple" && (
@@ -173,7 +180,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         accessibilityLabel="More options"
         accessibilityHint="Opens habit actions menu"
       >
-        <MoreVertical size={20} color={colors.textSecondary} strokeWidth={2} />
+        <MoreVertical size={20} color={colors.iconPrimary} strokeWidth={2} />
       </TouchableOpacity>
     </>
   );
@@ -184,23 +191,21 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         styles.container,
         animatedStyle,
         {
-          borderColor: isCompleted ? colors.success : colors.border,
+          borderColor: isCompleted ? colors.success : colors.borderDefault,
           ...getElevation(1, colors.shadow),
         },
       ]}
     >
-      {isCompleted ? (
-        <View style={[styles.contentWrapper, { backgroundColor: colors.successSubtle }]}>{cardInner}</View>
-      ) : (
-        <LinearGradient
-          colors={[colors.gradientCardStart, colors.gradientCardEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.contentWrapper}
-        >
-          {cardInner}
-        </LinearGradient>
-      )}
+      <View
+        style={[
+          styles.contentWrapper,
+          {
+            backgroundColor: colors.bgSurface,
+          },
+        ]}
+      >
+        {cardInner}
+      </View>
     </Animated.View>
   );
 }

@@ -23,6 +23,9 @@ interface AppSegmentedControlProps {
   style?: StyleProp<ViewStyle>;
 }
 
+const ANDROID_BORDER_WIDTH = 1;
+const ANDROID_INSET = 2;
+
 export default function AppSegmentedControl({
   values,
   selectedIndex,
@@ -40,15 +43,15 @@ export default function AppSegmentedControl({
           selectedIndex={selectedIndex}
           onChange={(event) => onChange(event.nativeEvent.selectedSegmentIndex)}
           enabled={!disabled}
-          tintColor={colors.primary}
-          backgroundColor={colors.input}
+          tintColor={colors.buttonPrimaryBg}
+          backgroundColor={colors.bgInset}
           fontStyle={{ color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}
-          activeFontStyle={{ color: colors.text, fontSize: 13, fontWeight: "600" }}
+          activeFontStyle={{ color: colors.buttonPrimaryText, fontSize: 13, fontWeight: "600" }}
           sliderStyle={{
             boxShadow: "0px 0px 0px 0px transparent",
             elevation: 0,
             borderWidth: 0,
-            backgroundColor: colors.cardBackground,
+            backgroundColor: colors.buttonPrimaryBg,
           }}
           style={styles.iosControl}
         />
@@ -70,17 +73,17 @@ export default function AppSegmentedControl({
 function AndroidSegmentedControl({ values, selectedIndex, onChange, disabled, style }: AppSegmentedControlProps) {
   const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
-  const [containerWidth, setContainerWidth] = useState(0);
+  const [trackWidth, setTrackWidth] = useState(0);
   const thumbOffset = useSharedValue(0);
   const hasMeasuredRef = useRef(false);
 
   const segmentWidth = useMemo(() => {
-    if (containerWidth <= 0 || values.length === 0) {
+    if (trackWidth <= 0 || values.length === 0) {
       return 0;
     }
 
-    return (containerWidth - Spacing.xs) / values.length;
-  }, [containerWidth, values.length]);
+    return trackWidth / values.length;
+  }, [trackWidth, values.length]);
 
   useEffect(() => {
     if (segmentWidth <= 0) {
@@ -101,9 +104,9 @@ function AndroidSegmentedControl({ values, selectedIndex, onChange, disabled, st
     });
   }, [reducedMotion, segmentWidth, selectedIndex, thumbOffset]);
 
-  const handleLayout = (event: LayoutChangeEvent) => {
-    const nextWidth = Math.round(event.nativeEvent.layout.width);
-    setContainerWidth((currentWidth) => (currentWidth === nextWidth ? currentWidth : nextWidth));
+  const handleTrackLayout = (event: LayoutChangeEvent) => {
+    const nextWidth = event.nativeEvent.layout.width;
+    setTrackWidth((currentWidth) => (currentWidth === nextWidth ? currentWidth : nextWidth));
   };
 
   const thumbStyle = useAnimatedStyle(() => ({
@@ -117,51 +120,52 @@ function AndroidSegmentedControl({ values, selectedIndex, onChange, disabled, st
       style={[
         styles.androidContainer,
         {
-          backgroundColor: colors.input,
+          backgroundColor: colors.bgInset,
           borderColor: colors.inputBorder,
           opacity: disabled ? 0.6 : 1,
         },
         style,
       ]}
-      onLayout={handleLayout}
       accessibilityRole="tablist"
     >
-      <Animated.View
-        style={[
-          styles.androidThumb,
-          {
-            pointerEvents: "none",
-            backgroundColor: colors.primary,
-            borderColor: colors.primary,
-          },
-          getElevation(1, colors.shadow),
-          thumbStyle,
-        ]}
-      />
+      <View style={styles.androidTrack} onLayout={handleTrackLayout}>
+        <Animated.View
+          style={[
+            styles.androidThumb,
+            {
+              pointerEvents: "none",
+              backgroundColor: colors.buttonPrimaryBg,
+              borderColor: colors.buttonPrimaryBg,
+            },
+            getElevation(1, colors.shadow),
+            thumbStyle,
+          ]}
+        />
 
-      {values.map((value, index) => {
-        const isSelected = index === selectedIndex;
+        {values.map((value, index) => {
+          const isSelected = index === selectedIndex;
 
-        return (
-          <Pressable
-            key={value}
-            onPress={() => onChange(index)}
-            disabled={disabled}
-            android_ripple={{ color: colors.ripple, borderless: false }}
-            accessibilityRole="button"
-            accessibilityState={{ disabled, selected: isSelected }}
-            style={({ pressed }) => [styles.segmentPressable, pressed ? styles.segmentPressed : null]}
-          >
-            <AppText
-              variant="small"
-              color={isSelected ? colors.textInverse : colors.textSecondary}
-              style={styles.segmentLabel}
+          return (
+            <Pressable
+              key={value}
+              onPress={() => onChange(index)}
+              disabled={disabled}
+              android_ripple={{ color: colors.ripple, borderless: false }}
+              accessibilityRole="button"
+              accessibilityState={{ disabled, selected: isSelected }}
+              style={({ pressed }) => [styles.segmentPressable, pressed ? styles.segmentPressed : null]}
             >
-              {value}
-            </AppText>
-          </Pressable>
-        );
-      })}
+              <AppText
+                variant="small"
+                color={isSelected ? colors.buttonPrimaryText : colors.textSecondary}
+                style={styles.segmentLabel}
+              >
+                {value}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -177,18 +181,24 @@ const styles = StyleSheet.create({
   androidContainer: {
     flexDirection: "row",
     position: "relative",
-    borderWidth: 1,
+    borderWidth: ANDROID_BORDER_WIDTH,
     borderRadius: BorderRadius.md,
-    padding: 2,
+    padding: ANDROID_INSET,
+    overflow: "hidden",
+  },
+  androidTrack: {
+    flex: 1,
+    flexDirection: "row",
+    position: "relative",
     overflow: "hidden",
   },
   androidThumb: {
     position: "absolute",
-    top: 2,
-    bottom: 2,
-    left: 2,
+    top: 0,
+    bottom: 0,
+    left: 0,
     borderRadius: BorderRadius.sm,
-    borderWidth: 1,
+    borderWidth: ANDROID_BORDER_WIDTH,
   },
   segmentPressable: {
     flex: 1,

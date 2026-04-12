@@ -31,7 +31,7 @@ export default function EmojiPickerField({
       contentContainerStyle={[
         styles.modalContent,
         {
-          backgroundColor: colors.cardBackground,
+          backgroundColor: colors.bgSurface,
         },
       ]}
       closeButton={({ close }) => (
@@ -42,8 +42,8 @@ export default function EmojiPickerField({
           style={[
             styles.closeButton,
             {
-              backgroundColor: colors.buttonSecondary,
-              borderColor: colors.inputBorder,
+              backgroundColor: colors.buttonSecondaryBg,
+              borderColor: colors.buttonSecondaryBorder,
             },
           ]}
         >
@@ -61,12 +61,12 @@ export default function EmojiPickerField({
         style={[
           styles.trigger,
           {
-            backgroundColor: colors.cardBackground,
+            backgroundColor: colors.bgInset,
             borderColor: colors.inputBorder,
           },
         ]}
       >
-        <AppText variant="title" style={styles.emojiText} color={value ? colors.text : colors.textTertiary}>
+        <AppText variant="title" style={styles.emojiText} color={value ? colors.textPrimary : colors.textTertiary}>
           {displayValue}
         </AppText>
       </View>

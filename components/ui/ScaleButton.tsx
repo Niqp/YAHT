@@ -5,9 +5,9 @@
  * UI_UX_GUIDELINES.md §5.3 and §9.1.
  *
  * Variants:
- *  - primary: filled with buttonPrimary, optional subtle gradient
- *  - secondary: filled with buttonSecondary, 1px border
- *  - destructive: filled with buttonDestructive
+ *  - primary: filled with buttonPrimaryBg
+ *  - secondary: filled with buttonSecondaryBg, 1px border
+ *  - destructive: filled with buttonDangerBg
  *  - disabled: uses disabled tokens, no shadow, no animation
  */
 import React from "react";
@@ -28,7 +28,7 @@ interface ScaleButtonProps {
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
-  /** Whether to show a subtle gradient on primary buttons. Defaults to true. */
+  /** Whether to show a FAB-style gradient on primary buttons. Defaults to false. */
   gradient?: boolean;
   style?: ViewStyle;
   labelStyle?: TextStyle;
@@ -48,7 +48,7 @@ export default function ScaleButton({
   onPress,
   variant = "primary",
   disabled = false,
-  gradient = true,
+  gradient = false,
   style,
   labelStyle,
   accessibilityLabel,
@@ -74,12 +74,12 @@ export default function ScaleButton({
 
   // Resolve colors based on variant and disabled state
   const resolvedBg = disabled
-    ? colors.buttonDisabled
+    ? colors.buttonDisabledBg
     : variant === "primary"
-      ? colors.buttonPrimary
+      ? colors.buttonPrimaryBg
       : variant === "secondary"
-        ? colors.buttonSecondary
-        : colors.buttonDestructive;
+        ? colors.buttonSecondaryBg
+        : colors.buttonDangerBg;
 
   const resolvedTextColor = disabled
     ? colors.buttonDisabledText
@@ -87,14 +87,14 @@ export default function ScaleButton({
       ? colors.buttonPrimaryText
       : variant === "secondary"
         ? colors.buttonSecondaryText
-        : colors.textInverse;
+        : colors.buttonDangerText;
 
   const showGradient = !disabled && variant === "primary" && gradient;
 
   const containerStyle: ViewStyle = {
     backgroundColor: resolvedBg,
     borderWidth: variant === "secondary" ? 1 : 0,
-    borderColor: variant === "secondary" ? colors.border : "transparent",
+    borderColor: variant === "secondary" ? colors.buttonSecondaryBorder : "transparent",
     borderRadius: BorderRadius.sm,
   };
 

@@ -54,9 +54,9 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
 
   const content = (
     <View style={styles.container}>
-      <View style={[styles.toggleRow, { borderBottomColor: colors.divider }]}>
+      <View style={[styles.toggleRow, { borderBottomColor: colors.borderSubtle }]}>
         <View style={styles.toggleText}>
-          <AppText variant="bodyMedium" color={colors.text}>
+          <AppText variant="bodyMedium" color={colors.textPrimary}>
             Daily Reminder
           </AppText>
           <AppText variant="caption" color={colors.textSecondary}>
@@ -66,8 +66,8 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
         <Switch
           value={enabled}
           onValueChange={setEnabled}
-          trackColor={{ false: colors.inputBorder, true: colors.primary }}
-          thumbColor={colors.cardBackground}
+          trackColor={{ false: colors.toggleOffTrack, true: colors.toggleOnTrack }}
+          thumbColor={enabled ? colors.toggleOnThumb : colors.toggleOffThumb}
         />
       </View>
 
@@ -78,7 +78,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
         <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
           Time of day
         </AppText>
-        <View style={[styles.timeDisplayCard, { backgroundColor: colors.input }]}>
+        <View style={[styles.timeDisplayCard, { backgroundColor: colors.bgInset }]}>
           <View style={styles.wheelsRow}>
             <View style={styles.wheelColumn}>
               <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
@@ -122,9 +122,9 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
           </View>
         </View>
 
-        <View style={[styles.toggleRow, styles.repeatToggleRow, { borderTopColor: colors.divider }]}>
+        <View style={[styles.toggleRow, styles.repeatToggleRow, { borderTopColor: colors.borderSubtle }]}>
           <View style={styles.toggleText}>
-            <AppText variant="bodyMedium" color={colors.text}>
+            <AppText variant="bodyMedium" color={colors.textPrimary}>
               Repeat if ignored
             </AppText>
             <AppText variant="caption" color={colors.textSecondary}>
@@ -134,8 +134,8 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
           <Switch
             value={repeatIfNotCompleted}
             onValueChange={setRepeatIfNotCompleted}
-            trackColor={{ false: colors.inputBorder, true: colors.primary }}
-            thumbColor={colors.cardBackground}
+            trackColor={{ false: colors.toggleOffTrack, true: colors.toggleOnTrack }}
+            thumbColor={repeatIfNotCompleted ? colors.toggleOnThumb : colors.toggleOffThumb}
           />
         </View>
 
@@ -155,7 +155,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
   if (presentation === "sheet") {
     return (
       <View>
-        <AppText variant="title" color={colors.text} style={styles.sheetTitle}>
+        <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
           Reminders
         </AppText>
         <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>

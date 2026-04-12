@@ -1,7 +1,5 @@
 import React from "react";
-import { act, render } from "@testing-library/react-native";
-
-let focusEffectCallback: (() => void) | undefined;
+import { render, screen } from "@testing-library/react-native";
 
 const mockSetSelectedDate = jest.fn();
 
@@ -19,7 +17,12 @@ jest.mock("@/store/habitStore", () => {
   return { useHabitStore };
 });
 
-jest.mock("@/components/dateSlider/DateSlider", () => () => null);
+jest.mock("@/components/dateSlider/DateSlider", () => {
+  const mockReact = jest.requireActual<typeof import("react")>("react");
+  const mockReactNative = jest.requireActual<typeof import("react-native")>("react-native");
+
+  return () => mockReact.createElement(mockReactNative.View, { testID: "date-slider" });
+});
 jest.mock("@/components/HabitList/HabitList", () => () => null);
 jest.mock("@/components/buttons/FloatingButton", () => ({
   FloatingButton: () => null,
@@ -29,17 +32,14 @@ jest.mock("@/components/habit/HabitBottomSheet/HabitBottomSheet", () => () => nu
 jest.mock("@/hooks/useTheme", () => ({
   useTheme: () => ({
     colors: {
-      background: "#000",
-      primary: "#fff",
+      bgApp: "#000",
+      accent: "#fff",
     },
   }),
 }));
 
 jest.mock("expo-router", () => ({
   router: { push: jest.fn() },
-  useFocusEffect: (cb: () => void) => {
-    focusEffectCallback = cb;
-  },
 }));
 
 jest.mock("@/utils/date", () => {
@@ -52,39 +52,17 @@ jest.mock("@/utils/date", () => {
 
 import TodayScreen from "@/app/(tabs)/today";
 
-describe("TodayScreen focus reset behavior", () => {
+describe("TodayScreen date header", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    focusEffectCallback = undefined;
     mockState._hasHydrated = true;
     mockState.selectedDate = "2026-02-20";
   });
 
-  it("resets selected date to today on first focus", () => {
+  it("renders the date slider that owns focus-based date reset", () => {
     render(<TodayScreen />);
 
-    act(() => {
-      focusEffectCallback?.();
-    });
-
-    expect(mockSetSelectedDate).toHaveBeenCalledWith("2026-02-21");
-  });
-
-  it("does not reset again after selectedDate becomes today while still focused", () => {
-    render(<TodayScreen />);
-
-    act(() => {
-      focusEffectCallback?.();
-    });
-
-    expect(mockSetSelectedDate).toHaveBeenCalledTimes(1);
-
-    mockState.selectedDate = "2026-02-21";
-
-    act(() => {
-      focusEffectCallback?.();
-    });
-
-    expect(mockSetSelectedDate).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("date-slider")).toBeTruthy();
+    expect(mockSetSelectedDate).not.toHaveBeenCalled();
   });
 });

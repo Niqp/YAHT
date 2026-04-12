@@ -32,64 +32,82 @@ export default function HabitBottomSheetActions({
   return (
     <View style={styles.container}>
       {habit.completion.type === "repetitions" && (
-        <View style={[styles.repetitionRow, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}>
+        <View
+          style={[
+            styles.repetitionRow,
+            { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderDefault },
+            getElevation(1, colors.shadow),
+          ]}
+        >
           <TouchableOpacity
             style={styles.repButton}
             onPress={handleDecrement}
             disabled={currentValue === 0}
             activeOpacity={0.7}
           >
-            <Minus size={24} color={currentValue === 0 ? colors.textSecondary : colors.primary} />
+            <Minus size={24} color={currentValue === 0 ? colors.iconDisabled : colors.iconAccent} />
           </TouchableOpacity>
-          <Text style={[styles.repText, { color: colors.text }]}>
+          <Text style={[styles.repText, { color: colors.textPrimary }]}>
             {currentValue} / {habit.completion.goal}
           </Text>
-          <TouchableOpacity
-            style={styles.repButton}
-            onPress={handleIncrement}
-            activeOpacity={0.7}
-          >
-            <Plus size={24} color={colors.primary} />
+          <TouchableOpacity style={styles.repButton} onPress={handleIncrement} activeOpacity={0.7}>
+            <Plus size={24} color={colors.iconAccent} />
           </TouchableOpacity>
         </View>
       )}
 
       <View style={styles.actionsContainer}>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
+          style={[
+            styles.actionButton,
+            { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
+            getElevation(1, colors.shadow),
+          ]}
           onPress={handleEdit}
           activeOpacity={0.7}
         >
-          <Edit size={24} color={colors.primary} />
-          <Text style={[styles.actionText, { color: colors.text }]}>Edit</Text>
+          <Edit size={24} color={colors.iconAccent} />
+          <Text style={[styles.actionText, { color: colors.textPrimary }]}>Edit</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
+          style={[
+            styles.actionButton,
+            { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
+            getElevation(1, colors.shadow),
+          ]}
           onPress={handleDelete}
           activeOpacity={0.7}
         >
-          <Trash2 size={24} color={colors.error} />
-          <Text style={[styles.actionText, { color: colors.text }]}>Delete</Text>
+          <Trash2 size={24} color={colors.iconDanger} />
+          <Text style={[styles.actionText, { color: colors.textPrimary }]}>Delete</Text>
         </TouchableOpacity>
 
         {!isCompleted ? (
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
+              getElevation(1, colors.shadow),
+            ]}
             onPress={handleComplete}
             activeOpacity={0.7}
           >
-            <Check size={24} color={colors.success} />
-            <Text style={[styles.actionText, { color: colors.text }]}>Complete</Text>
+            <Check size={24} color={colors.iconSuccess} />
+            <Text style={[styles.actionText, { color: colors.textPrimary }]}>Complete</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.border }, getElevation(1, colors.shadow)]}
+            style={[
+              styles.actionButton,
+              { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
+              getElevation(1, colors.shadow),
+            ]}
             onPress={handleReset}
             activeOpacity={0.7}
           >
-            <RotateCcw size={24} color={colors.textSecondary} />
-            <Text style={[styles.actionText, { color: colors.text }]}>Reset</Text>
+            <RotateCcw size={24} color={colors.iconSecondary} />
+            <Text style={[styles.actionText, { color: colors.textPrimary }]}>Reset</Text>
           </TouchableOpacity>
         )}
       </View>

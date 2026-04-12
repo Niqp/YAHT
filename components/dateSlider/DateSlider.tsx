@@ -14,6 +14,7 @@ import {
 } from "@/utils/date";
 import { useIsFocused } from "@react-navigation/native";
 import type { ConfigType as DayjsConfigType } from "dayjs";
+import { LinearGradient } from "expo-linear-gradient";
 import { ChevronLeft } from "lucide-react-native";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -75,29 +76,29 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
   // Create styles with theme colors
   const containerStyle = [
     styles.dateItem,
-    { backgroundColor: colors.input, borderColor: colors.border },
+    { backgroundColor: colors.bgSurfaceElevated, borderColor: colors.borderDefault },
     isSelected && {
-      backgroundColor: colors.primarySubtle,
-      borderColor: colors.primary,
+      backgroundColor: colors.buttonPrimaryBg,
+      borderColor: colors.buttonPrimaryBg,
     },
     isToday &&
-      !isSelected && {
-        backgroundColor: colors.input,
-        borderColor: colors.accent,
-      },
+    !isSelected && {
+      backgroundColor: colors.accentSoftBg,
+      borderColor: colors.accentSoftBorder,
+    },
   ];
 
   const dayNameStyle = [
     styles.dayName,
     { color: colors.textSecondary },
-    isSelected && { color: colors.primary, fontWeight: "bold" as const },
+    isSelected && { color: colors.buttonPrimaryText, fontWeight: "bold" as const },
     isToday && !isSelected && { color: colors.accent, fontWeight: "bold" as const },
   ];
 
   const dayNumberStyle = [
     styles.dayNumber,
-    { color: colors.text },
-    isSelected && { color: colors.primary, fontWeight: "bold" as const },
+    { color: colors.textPrimary },
+    isSelected && { color: colors.buttonPrimaryText, fontWeight: "bold" as const },
     isToday && !isSelected && { color: colors.accent, fontWeight: "bold" as const },
   ];
 
@@ -371,37 +372,41 @@ export default function DateSlider() {
   }, [todayIndex, today, setSelectedDate]);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.surfaceDark,
-        },
-      ]}
+    <LinearGradient
+      colors={[colors.gradientHeaderStart, colors.gradientHeaderMid, colors.gradientHeaderEnd] as const}
+      locations={[0, 0.55, 1]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
     >
       <View style={styles.headerContainer}>
-        <Text style={[styles.monthText, { color: colors.textOnSurfaceDark }]}>{visibleMonthYear}</Text>
+        <Text style={[styles.monthText, { color: colors.textOnStrong }]}>{visibleMonthYear}</Text>
         <View style={styles.pillRow}>
           {/* Today button — animated expand/collapse */}
-          <Animated.View pointerEvents={showTodayButton ? "auto" : "none"} style={[styles.todayButtonContainer, todayPillStyle]}>
+          <Animated.View
+            pointerEvents={showTodayButton ? "auto" : "none"}
+            style={[styles.todayButtonContainer, todayPillStyle]}
+          >
             <TouchableOpacity
-              style={[styles.todayButton, { backgroundColor: colors.primary }]}
+              style={[styles.todayButton, { backgroundColor: colors.buttonPrimaryBg }]}
               onPress={scrollToToday}
               accessibilityRole="button"
               accessibilityLabel="Go to today"
             >
               <View style={styles.todayButtonIcon}>
-                <ChevronLeft size={14} color={colors.textInverse} />
+                <ChevronLeft size={14} color={colors.buttonPrimaryText} />
               </View>
               <Animated.View style={todayTextStyle}>
-                <Text style={[styles.todayButtonText, { color: colors.textInverse }]}>Today</Text>
+                <Text style={[styles.todayButtonText, { color: colors.buttonPrimaryText }]}>Today</Text>
               </Animated.View>
             </TouchableOpacity>
           </Animated.View>
           {/* Streak pill — always visible */}
-          <View style={[styles.streakPill, { backgroundColor: colors.primarySubtle }]}>
+          <View
+            style={[styles.streakPill, { backgroundColor: colors.accentSoftBg, borderColor: colors.accentSoftBorder }]}
+          >
             <Text style={styles.streakEmoji}>🔥</Text>
-            <Text style={[styles.streakText, { color: colors.text }]}>{streak}</Text>
+            <Text style={[styles.streakText, { color: colors.textPrimary }]}>{streak}</Text>
           </View>
         </View>
       </View>
@@ -433,6 +438,6 @@ export default function DateSlider() {
           />
         ) : null}
       </View>
-    </View>
+    </LinearGradient>
   );
 }

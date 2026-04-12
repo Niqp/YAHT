@@ -20,17 +20,17 @@ export default function RootLayout() {
     () => ({
       headerShown: false,
       headerStyle: {
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.bgSurface,
       },
-      headerTintColor: colors.text,
+      headerTintColor: colors.textPrimary,
       headerTitleStyle: {
-        color: colors.text,
+        color: colors.textPrimary,
       },
       contentStyle: {
-        backgroundColor: colors.background,
+        backgroundColor: colors.bgApp,
       },
     }),
-    [colors.background, colors.cardBackground, colors.text]
+    [colors.bgApp, colors.bgSurface, colors.textPrimary]
   );
 
   const navigationTheme = useMemo<Theme>(() => {
@@ -41,18 +41,26 @@ export default function RootLayout() {
       dark: isDarkMode,
       colors: {
         ...baseTheme.colors,
-        primary: colors.primary,
-        background: colors.background,
-        card: colors.cardBackground,
-        text: colors.text,
-        border: colors.border,
+        primary: colors.accent,
+        background: colors.bgApp,
+        card: colors.bgSurface,
+        text: colors.textPrimary,
+        border: colors.borderDefault,
         notification: colors.accent,
       },
     };
-  }, [colors.accent, colors.background, colors.border, colors.cardBackground, colors.primary, colors.text, isDarkMode]);
+  }, [
+    colors.accent,
+    colors.bgApp,
+    colors.borderDefault,
+    colors.bgSurface,
+    colors.accent,
+    colors.textPrimary,
+    isDarkMode,
+  ]);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bgApp }}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <ThemeProvider value={navigationTheme}>
           <BottomSheetModalProvider>

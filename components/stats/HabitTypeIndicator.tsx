@@ -18,15 +18,15 @@ const HabitTypeIndicator: React.FC<HabitTypeIndicatorProps> = ({ completionType 
 
   switch (completionType) {
     case "simple":
-      icon = <CheckSquare size={16} color={colors.icon} strokeWidth={2} />;
+      icon = <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />;
       label = "Simple";
       break;
     case "repetitions":
-      icon = <RotateCcw size={16} color={colors.icon} strokeWidth={2} />;
+      icon = <RotateCcw size={16} color={colors.iconPrimary} strokeWidth={2} />;
       label = "Count";
       break;
     case "timed":
-      icon = <Clock3 size={16} color={colors.icon} strokeWidth={2} />;
+      icon = <Clock3 size={16} color={colors.iconPrimary} strokeWidth={2} />;
       label = "Timer";
       break;
   }

@@ -1,369 +1,522 @@
 /**
- * YAHT Design System — Color Tokens
+ * YAHT Design System - Color Tokens
  *
- * Full light/dark palette for each color theme (sepia, clear, oled).
- * Rules:
- *  - Never hardcode hex values in components. Always use `colors.<token>` from `useTheme()`.
- *  - No new tokens without updating this file AND the guidelines doc.
- *  - Gradients only on large surfaces (full-width cards, page headers, FAB).
+ * Public color tokens are semantic roles. Components should consume these via
+ * `useTheme().colors` and should not depend on raw palette values or component
+ * one-off aliases.
  */
 
 export type ColorThemeName = "sepia" | "clear" | "oled";
+export type ColorSchemeName = "light" | "dark";
 
-const sepiaLight = {
-  // ── Backgrounds ──────────────────────────────────────────────────────────
-  background: "#FAF7F2",
-  surface: "#F3EDE4",
-  surfaceDark: "#c7a97dff",
-  cardBackground: "#FFFFFF",
-  textOnSurfaceDark: "#FAF7F2",
+export type ColorTheme = {
+  bgApp: string;
+  bgChrome: string;
+  bgSurface: string;
+  bgSurfaceElevated: string;
+  bgInset: string;
 
-  // ── Accent ───────────────────────────────────────────────────────────────
-  primary: "#8B6F47",
-  primaryMuted: "#A8916E",
-  primarySubtle: "#D4C4AA",
-  accent: "#C4813D",
+  textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  textDisabled: string;
+  textOnAccent: string;
+  textOnStrong: string;
 
-  // ── Text ─────────────────────────────────────────────────────────────────
-  text: "#2C2418",
+  borderSubtle: string;
+  borderDefault: string;
+  borderStrong: string;
+  borderFocus: string;
+
+  iconPrimary: string;
+  iconSecondary: string;
+  iconDisabled: string;
+  iconAccent: string;
+  iconSuccess: string;
+  iconDanger: string;
+
+  accent: string;
+  accentMuted: string;
+  accentSoftBg: string;
+  accentSoftBorder: string;
+
+  success: string;
+  successSoftBg: string;
+  successSoftBorder: string;
+
+  danger: string;
+  dangerSoftBg: string;
+  warning: string;
+  warningSoftBg: string;
+
+  inputBg: string;
+  inputBorder: string;
+  inputBorderFocus: string;
+  inputPlaceholder: string;
+  pickerSelectionBg: string;
+
+  buttonPrimaryBg: string;
+  buttonPrimaryText: string;
+  buttonSecondaryBg: string;
+  buttonSecondaryBorder: string;
+  buttonSecondaryText: string;
+  buttonDisabledBg: string;
+  buttonDisabledText: string;
+  buttonDangerBg: string;
+  buttonDangerText: string;
+
+  chipBg: string;
+  chipBorder: string;
+  chipText: string;
+  chipSelectedBg: string;
+  chipSelectedBorder: string;
+  chipSelectedText: string;
+
+  toggleOffTrack: string;
+  toggleOffThumb: string;
+  toggleOnTrack: string;
+  toggleOnThumb: string;
+
+  navBg: string;
+  navBorder: string;
+  navItemIdle: string;
+  navItemActive: string;
+
+  overlay: string;
+  ripple: string;
+  shadow: string;
+
+  gradientHeaderStart: string;
+  gradientHeaderMid: string;
+  gradientHeaderEnd: string;
+  gradientFabStart: string;
+  gradientFabEnd: string;
+};
+
+const sepiaLight: ColorTheme = {
+  bgApp: "#FAF7F2",
+  bgChrome: "#F3EDE4",
+  bgSurface: "#FFFFFF",
+  bgSurfaceElevated: "#FBF6EF",
+  bgInset: "#F5F0E8",
+
+  textPrimary: "#2C2418",
   textSecondary: "#6B5D4F",
   textTertiary: "#9C8E7E",
-  textInverse: "#FAF7F2",
+  textDisabled: "#B3A694",
+  textOnAccent: "#FAF7F2",
+  textOnStrong: "#2C2418",
 
-  // ── Borders & Dividers ───────────────────────────────────────────────────
-  border: "#E2D9CC",
-  divider: "#EDE7DD",
+  borderSubtle: "rgba(44,36,24,0.06)",
+  borderDefault: "rgba(44,36,24,0.10)",
+  borderStrong: "rgba(44,36,24,0.16)",
+  borderFocus: "#8B6F47",
 
-  // ── Icons ─────────────────────────────────────────────────────────────────
-  icon: "#7A6B5A",
-  iconMuted: "#A89C8C",
+  iconPrimary: "#7A6B5A",
+  iconSecondary: "#9C8E7E",
+  iconDisabled: "#B3A694",
+  iconAccent: "#8B6F47",
+  iconSuccess: "#739E73",
+  iconDanger: "#C0523E",
 
-  // ── Inputs ───────────────────────────────────────────────────────────────
-  input: "#F5F0E8",
-  inputBorder: "#D4C4AA",
-  inputFocusBorder: "#8B6F47",
+  accent: "#8B6F47",
+  accentMuted: "#A8916E",
+  accentSoftBg: "rgba(139,111,71,0.16)",
+  accentSoftBorder: "rgba(139,111,71,0.32)",
 
-  // ── Semantic ─────────────────────────────────────────────────────────────
   success: "#739E73",
-  successSubtle: "#EEF4EE",
-  error: "#C0523E",
-  errorSubtle: "#FAE8E4",
+  successSoftBg: "rgba(115,158,115,0.10)",
+  successSoftBorder: "rgba(115,158,115,0.36)",
+
+  danger: "#C0523E",
+  dangerSoftBg: "rgba(192,82,62,0.10)",
   warning: "#C4813D",
-  warningSubtle: "#FFF3E0",
+  warningSoftBg: "rgba(196,129,61,0.10)",
 
-  // ── Interactive ───────────────────────────────────────────────────────────
-  buttonPrimary: "#8B6F47",
+  inputBg: "#F5F0E8",
+  inputBorder: "rgba(44,36,24,0.10)",
+  inputBorderFocus: "#8B6F47",
+  inputPlaceholder: "#9C8E7E",
+  pickerSelectionBg: "rgba(139,111,71,0.16)",
+
+  buttonPrimaryBg: "#8B6F47",
   buttonPrimaryText: "#FAF7F2",
-  buttonSecondary: "#F5F0E8",
-  buttonSecondaryText: "#8B6F47",
-  buttonDisabled: "#D4C4AA",
+  buttonSecondaryBg: "#F5F0E8",
+  buttonSecondaryBorder: "rgba(44,36,24,0.14)",
+  buttonSecondaryText: "#2C2418",
+  buttonDisabledBg: "#E3D8C8",
   buttonDisabledText: "#A8916E",
-  buttonDestructive: "#C0523E",
+  buttonDangerBg: "#C0523E",
+  buttonDangerText: "#FAF7F2",
 
-  // ── Tab Bar ───────────────────────────────────────────────────────────────
-  tabBackground: "#FFFFFF",
-  tabIconDefault: "#B0A494",
-  tabIconSelected: "#8B6F47",
+  chipBg: "#EFE6D8",
+  chipBorder: "rgba(44,36,24,0.14)",
+  chipText: "#6B5D4F",
+  chipSelectedBg: "rgba(139,111,71,0.18)",
+  chipSelectedBorder: "rgba(139,111,71,0.38)",
+  chipSelectedText: "#2C2418",
 
-  // ── Utility ───────────────────────────────────────────────────────────────
-  ripple: "rgba(139,111,71, 0.10)",
-  shadow: "rgba(44,36,24, 0.08)",
-  overlay: "rgba(44,36,24, 0.40)",
+  toggleOffTrack: "#DCCFBE",
+  toggleOffThumb: "#FAF7F2",
+  toggleOnTrack: "#8B6F47",
+  toggleOnThumb: "#FAF7F2",
 
-  // ── Legacy aliases (used by existing components — do not remove until migrated) ──
-  /** @deprecated Use `primary` instead */
-  selectedItem: "#8B6F47",
-  /** @deprecated Use `accent` instead */
-  todayIndicator: "#C4813D",
-  /** @deprecated Use `surface` instead */
-  habitBackground: "#F3EDE4",
-  /** @deprecated Use `successSubtle` instead */
-  habitCompleted: "#EEF4EE",
+  navBg: "#FFFFFF",
+  navBorder: "rgba(44,36,24,0.06)",
+  navItemIdle: "#9C8E7E",
+  navItemActive: "#8B6F47",
 
-  // ── Gradients ─────────────────────────────────────────────────────────────
-  gradientCardStart: "#FFFFFF",
-  gradientCardEnd: "#FAF7F2",
-  gradientHeaderStart: "#FAF7F2",
-  gradientHeaderEnd: "#F3EDE4",
+  overlay: "rgba(44,36,24,0.40)",
+  ripple: "rgba(139,111,71,0.10)",
+  shadow: "rgba(44,36,24,0.08)",
+
+  gradientHeaderStart: "#e0b67cff",
+  gradientHeaderMid: "#f0d8b0ff",
+  gradientHeaderEnd: "#FAF7F2",
   gradientFabStart: "#9A7D55",
   gradientFabEnd: "#8B6F47",
 };
 
-const sepiaDark = {
-  // ── Backgrounds ──────────────────────────────────────────────────────────
-  background: "#0f0d0bff",
-  surface: "#1f1c16ff",
-  surfaceDark: "#2C2620",
-  cardBackground: "#2C2620",
-  textOnSurfaceDark: "#EDE5D8",
+const sepiaDark: ColorTheme = {
+  bgApp: "#130F0A",
+  bgChrome: "#2D2114",
+  bgSurface: "#2A2117",
+  bgSurfaceElevated: "#352819",
+  bgInset: "#423322",
 
-  // ── Accent ───────────────────────────────────────────────────────────────
-  primary: "#C4A882",
-  primaryMuted: "#9C8568",
-  primarySubtle: "#4E4233",
-  accent: "#D4944A",
+  textPrimary: "#F4E8D6",
+  textSecondary: "#D0C0AA",
+  textTertiary: "#A49178",
+  textDisabled: "#77664F",
+  textOnAccent: "#1B130A",
+  textOnStrong: "#F4E8D6",
 
-  // ── Text ─────────────────────────────────────────────────────────────────
-  text: "#EDE5D8",
-  textSecondary: "#BDB3A6",
-  textTertiary: "#8B7D6E",
-  textInverse: "#1A1612",
+  borderSubtle: "rgba(244,232,214,0.10)",
+  borderDefault: "rgba(244,232,214,0.16)",
+  borderStrong: "rgba(244,232,214,0.24)",
+  borderFocus: "#D6B879",
 
-  // ── Borders & Dividers ───────────────────────────────────────────────────
-  border: "#3D3428",
-  divider: "#302A22",
+  iconPrimary: "#D0C0AA",
+  iconSecondary: "#A49178",
+  iconDisabled: "#77664F",
+  iconAccent: "#D6B879",
+  iconSuccess: "#7AAF7E",
+  iconDanger: "#E07060",
 
-  // ── Icons ─────────────────────────────────────────────────────────────────
-  icon: "#A89C8C",
-  iconMuted: "#6B5D4F",
+  accent: "#D6B879",
+  accentMuted: "#B99A62",
+  accentSoftBg: "rgba(214,184,121,0.26)",
+  accentSoftBorder: "rgba(214,184,121,0.54)",
 
-  // ── Inputs ───────────────────────────────────────────────────────────────
-  input: "#3D3428",
-  inputBorder: "#3D3428",
-  inputFocusBorder: "#C4A882",
-
-  // ── Semantic ─────────────────────────────────────────────────────────────
   success: "#7AAF7E",
-  successSubtle: "#1E2B1E",
-  error: "#E07060",
-  errorSubtle: "#2E1C18",
+  successSoftBg: "rgba(122,175,126,0.10)",
+  successSoftBorder: "rgba(122,175,126,0.42)",
+
+  danger: "#E07060",
+  dangerSoftBg: "rgba(224,112,96,0.10)",
   warning: "#D4944A",
-  warningSubtle: "#2E2418",
+  warningSoftBg: "rgba(212,148,74,0.10)",
 
-  // ── Interactive ───────────────────────────────────────────────────────────
-  buttonPrimary: "#C4A882",
-  buttonPrimaryText: "#1A1612",
-  buttonSecondary: "#2C2620",
-  buttonSecondaryText: "#C4A882",
-  buttonDisabled: "#3D3428",
-  buttonDisabledText: "#6B5D4F",
-  buttonDestructive: "#E07060",
+  inputBg: "#423322",
+  inputBorder: "rgba(244,232,214,0.18)",
+  inputBorderFocus: "#D6B879",
+  inputPlaceholder: "#A49178",
+  pickerSelectionBg: "rgba(214,184,121,0.20)",
 
-  // ── Tab Bar ───────────────────────────────────────────────────────────────
-  tabBackground: "#231F1A",
-  tabIconDefault: "#5C5248",
-  tabIconSelected: "#C4A882",
+  buttonPrimaryBg: "#D6B879",
+  buttonPrimaryText: "#1B130A",
+  buttonSecondaryBg: "#352819",
+  buttonSecondaryBorder: "rgba(244,232,214,0.24)",
+  buttonSecondaryText: "#F4E8D6",
+  buttonDisabledBg: "#423322",
+  buttonDisabledText: "#77664F",
+  buttonDangerBg: "#E07060",
+  buttonDangerText: "#1B130A",
 
-  // ── Utility ───────────────────────────────────────────────────────────────
-  ripple: "rgba(196,168,130, 0.12)",
-  shadow: "rgba(0,0,0, 0.30)",
-  overlay: "rgba(0,0,0, 0.60)",
+  chipBg: "#4B3D2C",
+  chipBorder: "rgba(244,232,214,0.22)",
+  chipText: "#D0C0AA",
+  chipSelectedBg: "rgba(214,184,121,0.32)",
+  chipSelectedBorder: "rgba(214,184,121,0.66)",
+  chipSelectedText: "#FFF4DE",
 
-  // ── Legacy aliases (used by existing components — do not remove until migrated) ──
-  /** @deprecated Use `primary` instead */
-  selectedItem: "#C4A882",
-  /** @deprecated Use `accent` instead */
-  todayIndicator: "#D4944A",
-  /** @deprecated Use `surface` instead */
-  habitBackground: "#231F1A",
-  /** @deprecated Use `successSubtle` instead */
-  habitCompleted: "#1E2B1E",
+  toggleOffTrack: "#5A4935",
+  toggleOffThumb: "#D0C0AA",
+  toggleOnTrack: "#D6B879",
+  toggleOnThumb: "#FFF4DE",
 
-  // ── Gradients ─────────────────────────────────────────────────────────────
-  gradientCardStart: "#2C2620",
-  gradientCardEnd: "#231F1A",
-  gradientHeaderStart: "#231F1A",
-  gradientHeaderEnd: "#1A1612",
-  gradientFabStart: "#D4B892",
-  gradientFabEnd: "#C4A882",
+  navBg: "#17120C",
+  navBorder: "rgba(244,232,214,0.10)",
+  navItemIdle: "#A49178",
+  navItemActive: "#D6B879",
+
+  overlay: "rgba(0,0,0,0.68)",
+  ripple: "rgba(214,184,121,0.16)",
+  shadow: "rgba(0,0,0,0.34)",
+
+  gradientHeaderStart: "#2B1F13",
+  gradientHeaderMid: "#261B10",
+  gradientHeaderEnd: "#130F0A",
+  gradientFabStart: "#E5C984",
+  gradientFabEnd: "#D6B879",
 };
 
-const clearLight = {
-  // Backgrounds
-  background: "#F6F8FB",
-  surface: "#EAF0F7",
-  surfaceDark: "#D9E6F6",
-  cardBackground: "#FFFFFF",
-  textOnSurfaceDark: "#18212C",
-  // Accent
-  primary: "#3F74B5",
-  primaryMuted: "#7099CC",
-  primarySubtle: "#B8CDE8",
-  accent: "#5D90D2",
-  // Text
-  text: "#18212C",
+const clearLight: ColorTheme = {
+  bgApp: "#F6F8FB",
+  bgChrome: "#EAF0F7",
+  bgSurface: "#FFFFFF",
+  bgSurfaceElevated: "#F9FBFE",
+  bgInset: "#EFF3F8",
+
+  textPrimary: "#18212C",
   textSecondary: "#4F6278",
   textTertiary: "#76879B",
-  textInverse: "#F6F8FB",
-  // Borders and dividers
-  border: "#D5DFEB",
-  divider: "#E5ECF4",
-  // Icons
-  icon: "#5A6E84",
-  iconMuted: "#98A8BC",
-  // Inputs
-  input: "#EFF3F8",
-  inputBorder: "#C9D5E5",
-  inputFocusBorder: "#3F74B5",
-  // Semantic
-  success: "#6EDC70",
-  successSubtle: "#E5F9EA",
-  error: "#C62828",
-  errorSubtle: "#FFEBEE",
+  textDisabled: "#A6B4C6",
+  textOnAccent: "#FFFFFF",
+  textOnStrong: "#18212C",
+
+  borderSubtle: "rgba(24,33,44,0.06)",
+  borderDefault: "rgba(24,33,44,0.11)",
+  borderStrong: "rgba(24,33,44,0.18)",
+  borderFocus: "#3F74B5",
+
+  iconPrimary: "#5A6E84",
+  iconSecondary: "#76879B",
+  iconDisabled: "#A6B4C6",
+  iconAccent: "#3F74B5",
+  iconSuccess: "#3D9653",
+  iconDanger: "#C62828",
+
+  accent: "#3F74B5",
+  accentMuted: "#7099CC",
+  accentSoftBg: "rgba(63,116,181,0.16)",
+  accentSoftBorder: "rgba(63,116,181,0.32)",
+
+  success: "#3D9653",
+  successSoftBg: "rgba(61,150,83,0.10)",
+  successSoftBorder: "rgba(61,150,83,0.36)",
+
+  danger: "#C62828",
+  dangerSoftBg: "rgba(198,40,40,0.10)",
   warning: "#E65100",
-  warningSubtle: "#FFF3E0",
-  // Interactive
-  buttonPrimary: "#3F74B5",
+  warningSoftBg: "rgba(230,81,0,0.10)",
+
+  inputBg: "#EFF3F8",
+  inputBorder: "rgba(24,33,44,0.12)",
+  inputBorderFocus: "#3F74B5",
+  inputPlaceholder: "#76879B",
+  pickerSelectionBg: "rgba(63,116,181,0.16)",
+
+  buttonPrimaryBg: "#3F74B5",
   buttonPrimaryText: "#FFFFFF",
-  buttonSecondary: "#E6EDF6",
-  buttonSecondaryText: "#3F74B5",
-  buttonDisabled: "#CCD7E4",
+  buttonSecondaryBg: "#E6EDF6",
+  buttonSecondaryBorder: "rgba(24,33,44,0.14)",
+  buttonSecondaryText: "#18212C",
+  buttonDisabledBg: "#CCD7E4",
   buttonDisabledText: "#94A7BD",
-  buttonDestructive: "#C62828",
-  // Tab bar
-  tabBackground: "#FFFFFF",
-  tabIconDefault: "#98A8BC",
-  tabIconSelected: "#3F74B5",
-  // Utility
-  ripple: "rgba(63,116,181, 0.12)",
-  shadow: "rgba(0,0,0, 0.08)",
-  overlay: "rgba(0,0,0, 0.40)",
-  // Legacy aliases
-  /** @deprecated */ selectedItem: "#3F74B5",
-  /** @deprecated */ todayIndicator: "#5D90D2",
-  /** @deprecated */ habitBackground: "#EAF0F7",
-  /** @deprecated */ habitCompleted: "#E5F9EA",
-  // Gradients
-  gradientCardStart: "#FFFFFF",
-  gradientCardEnd: "#F6F8FB",
-  gradientHeaderStart: "#F6F8FB",
-  gradientHeaderEnd: "#EAF0F7",
+  buttonDangerBg: "#C62828",
+  buttonDangerText: "#FFFFFF",
+
+  chipBg: "#E6EDF6",
+  chipBorder: "rgba(24,33,44,0.15)",
+  chipText: "#4F6278",
+  chipSelectedBg: "rgba(63,116,181,0.16)",
+  chipSelectedBorder: "rgba(63,116,181,0.34)",
+  chipSelectedText: "#18212C",
+
+  toggleOffTrack: "#D5DFEB",
+  toggleOffThumb: "#FFFFFF",
+  toggleOnTrack: "#3F74B5",
+  toggleOnThumb: "#FFFFFF",
+
+  navBg: "#FFFFFF",
+  navBorder: "rgba(24,33,44,0.06)",
+  navItemIdle: "#98A8BC",
+  navItemActive: "#3F74B5",
+
+  overlay: "rgba(0,0,0,0.40)",
+  ripple: "rgba(63,116,181,0.12)",
+  shadow: "rgba(0,0,0,0.08)",
+
+  gradientHeaderStart: "#B5CBE4",
+  gradientHeaderMid: "#DDE8F5",
+  gradientHeaderEnd: "#F6F8FB",
   gradientFabStart: "#5A8CCB",
   gradientFabEnd: "#3F74B5",
 };
-const clearDark = {
-  // Backgrounds
-  background: "#0F1620",
-  surface: "#162130",
-  surfaceDark: "#22384F",
-  cardBackground: "#1D2A3A",
-  textOnSurfaceDark: "#E7EEF8",
-  // Accent
-  primary: "#7FB1E8",
-  primaryMuted: "#5F8FC2",
-  primarySubtle: "#2C4661",
-  accent: "#95C2F5",
-  // Text
-  text: "#E7EEF8",
+
+const clearDark: ColorTheme = {
+  bgApp: "#0F1620",
+  bgChrome: "#162130",
+  bgSurface: "#1D2A3A",
+  bgSurfaceElevated: "#26384D",
+  bgInset: "#2D415A",
+
+  textPrimary: "#E7EEF8",
   textSecondary: "#C5CFDF",
   textTertiary: "#9BAAC0",
-  textInverse: "#0F1620",
-  // Borders and dividers
-  border: "#2D415A",
-  divider: "#25374D",
-  // Icons
-  icon: "#B2C0D2",
-  iconMuted: "#6F839B",
-  // Inputs
-  input: "#2D415A",
-  inputBorder: "#2D415A",
-  inputFocusBorder: "#7FB1E8",
-  // Semantic
+  textDisabled: "#6F839B",
+  textOnAccent: "#0F1620",
+  textOnStrong: "#E7EEF8",
+
+  borderSubtle: "rgba(231,238,248,0.08)",
+  borderDefault: "rgba(231,238,248,0.13)",
+  borderStrong: "rgba(231,238,248,0.20)",
+  borderFocus: "#7FB1E8",
+
+  iconPrimary: "#B2C0D2",
+  iconSecondary: "#9BAAC0",
+  iconDisabled: "#6F839B",
+  iconAccent: "#7FB1E8",
+  iconSuccess: "#66BB6A",
+  iconDanger: "#EF5350",
+
+  accent: "#7FB1E8",
+  accentMuted: "#5F8FC2",
+  accentSoftBg: "rgba(127,177,232,0.22)",
+  accentSoftBorder: "rgba(127,177,232,0.42)",
+
   success: "#66BB6A",
-  successSubtle: "#14261A",
-  error: "#EF5350",
-  errorSubtle: "#2B1616",
+  successSoftBg: "rgba(102,187,106,0.10)",
+  successSoftBorder: "rgba(102,187,106,0.46)",
+
+  danger: "#EF5350",
+  dangerSoftBg: "rgba(239,83,80,0.10)",
   warning: "#FFA726",
-  warningSubtle: "#2D2112",
-  // Interactive
-  buttonPrimary: "#7FB1E8",
+  warningSoftBg: "rgba(255,167,38,0.10)",
+
+  inputBg: "#2D415A",
+  inputBorder: "rgba(231,238,248,0.12)",
+  inputBorderFocus: "#7FB1E8",
+  inputPlaceholder: "#9BAAC0",
+  pickerSelectionBg: "rgba(127,177,232,0.18)",
+
+  buttonPrimaryBg: "#7FB1E8",
   buttonPrimaryText: "#0F1620",
-  buttonSecondary: "#1D2A3A",
-  buttonSecondaryText: "#7FB1E8",
-  buttonDisabled: "#2D415A",
+  buttonSecondaryBg: "#1D2A3A",
+  buttonSecondaryBorder: "rgba(231,238,248,0.18)",
+  buttonSecondaryText: "#E7EEF8",
+  buttonDisabledBg: "#2D415A",
   buttonDisabledText: "#6F839B",
-  buttonDestructive: "#EF5350",
-  // Tab bar
-  tabBackground: "#162130",
-  tabIconDefault: "#6F839B",
-  tabIconSelected: "#7FB1E8",
-  // Utility
-  ripple: "rgba(127,177,232, 0.12)",
-  shadow: "rgba(0,0,0, 0.35)",
-  overlay: "rgba(0,0,0, 0.62)",
-  // Legacy aliases
-  /** @deprecated */ selectedItem: "#7FB1E8",
-  /** @deprecated */ todayIndicator: "#95C2F5",
-  /** @deprecated */ habitBackground: "#162130",
-  /** @deprecated */ habitCompleted: "#14261A",
-  // Gradients
-  gradientCardStart: "#1D2A3A",
-  gradientCardEnd: "#162130",
-  gradientHeaderStart: "#162130",
+  buttonDangerBg: "#EF5350",
+  buttonDangerText: "#0F1620",
+
+  chipBg: "#26384D",
+  chipBorder: "rgba(231,238,248,0.18)",
+  chipText: "#C5CFDF",
+  chipSelectedBg: "rgba(127,177,232,0.22)",
+  chipSelectedBorder: "rgba(127,177,232,0.46)",
+  chipSelectedText: "#E7EEF8",
+
+  toggleOffTrack: "#405871",
+  toggleOffThumb: "#C5CFDF",
+  toggleOnTrack: "#7FB1E8",
+  toggleOnThumb: "#E7EEF8",
+
+  navBg: "#162130",
+  navBorder: "rgba(231,238,248,0.08)",
+  navItemIdle: "#6F839B",
+  navItemActive: "#7FB1E8",
+
+  overlay: "rgba(0,0,0,0.62)",
+  ripple: "rgba(127,177,232,0.12)",
+  shadow: "rgba(0,0,0,0.35)",
+
+  gradientHeaderStart: "#1C2B3E",
+  gradientHeaderMid: "#1A293B",
   gradientHeaderEnd: "#0F1620",
   gradientFabStart: "#95C2F5",
   gradientFabEnd: "#7FB1E8",
 };
-// OLED light intentionally shares the same tokens as clear light.
-const oledLight = clearLight;
-const oledDark = {
-  // Backgrounds
-  background: "#000000",
-  surface: "#050B14",
-  surfaceDark: "#142638",
-  cardBackground: "#0B1320",
-  textOnSurfaceDark: "#EDF3FB",
-  // Accent
-  primary: "#7FB1E8",
-  primaryMuted: "#5F8FC2",
-  primarySubtle: "#1D354E",
-  accent: "#95C2F5",
-  // Text
-  text: "#EDF3FB",
+
+const oledLight: ColorTheme = clearLight;
+
+const oledDark: ColorTheme = {
+  bgApp: "#000000",
+  bgChrome: "#050B14",
+  bgSurface: "#0B1320",
+  bgSurfaceElevated: "#142638",
+  bgInset: "#1A2B40",
+
+  textPrimary: "#EDF3FB",
   textSecondary: "#C9D4E3",
   textTertiary: "#9AAEC4",
-  textInverse: "#000000",
-  // Borders and dividers
-  border: "#1A2B40",
-  divider: "#132235",
-  // Icons
-  icon: "#B4C2D5",
-  iconMuted: "#6A7F98",
-  // Inputs
-  input: "#1A2B40",
-  inputBorder: "#1A2B40",
-  inputFocusBorder: "#7FB1E8",
-  // Semantic
+  textDisabled: "#566B84",
+  textOnAccent: "#000000",
+  textOnStrong: "#EDF3FB",
+
+  borderSubtle: "rgba(237,243,251,0.08)",
+  borderDefault: "rgba(237,243,251,0.14)",
+  borderStrong: "rgba(237,243,251,0.22)",
+  borderFocus: "#7FB1E8",
+
+  iconPrimary: "#B4C2D5",
+  iconSecondary: "#9AAEC4",
+  iconDisabled: "#566B84",
+  iconAccent: "#7FB1E8",
+  iconSuccess: "#66BB6A",
+  iconDanger: "#EF5350",
+
+  accent: "#7FB1E8",
+  accentMuted: "#5F8FC2",
+  accentSoftBg: "rgba(127,177,232,0.24)",
+  accentSoftBorder: "rgba(127,177,232,0.50)",
+
   success: "#66BB6A",
-  successSubtle: "#0D1D13",
-  error: "#EF5350",
-  errorSubtle: "#220F0F",
+  successSoftBg: "rgba(102,187,106,0.12)",
+  successSoftBorder: "rgba(102,187,106,0.50)",
+
+  danger: "#EF5350",
+  dangerSoftBg: "rgba(239,83,80,0.12)",
   warning: "#FFA726",
-  warningSubtle: "#241A0E",
-  // Interactive
-  buttonPrimary: "#7FB1E8",
+  warningSoftBg: "rgba(255,167,38,0.12)",
+
+  inputBg: "#1A2B40",
+  inputBorder: "rgba(237,243,251,0.14)",
+  inputBorderFocus: "#7FB1E8",
+  inputPlaceholder: "#9AAEC4",
+  pickerSelectionBg: "rgba(127,177,232,0.20)",
+
+  buttonPrimaryBg: "#7FB1E8",
   buttonPrimaryText: "#000000",
-  buttonSecondary: "#0B1320",
-  buttonSecondaryText: "#7FB1E8",
-  buttonDisabled: "#1A2B40",
+  buttonSecondaryBg: "#0B1320",
+  buttonSecondaryBorder: "rgba(237,243,251,0.22)",
+  buttonSecondaryText: "#EDF3FB",
+  buttonDisabledBg: "#1A2B40",
   buttonDisabledText: "#566B84",
-  buttonDestructive: "#EF5350",
-  // Tab bar
-  tabBackground: "#000000",
-  tabIconDefault: "#4D6078",
-  tabIconSelected: "#7FB1E8",
-  // Utility
-  ripple: "rgba(127,177,232, 0.14)",
-  shadow: "rgba(0,0,0, 0.45)",
-  overlay: "rgba(0,0,0, 0.74)",
-  // Legacy aliases
-  /** @deprecated */ selectedItem: "#7FB1E8",
-  /** @deprecated */ todayIndicator: "#95C2F5",
-  /** @deprecated */ habitBackground: "#050B14",
-  /** @deprecated */ habitCompleted: "#0D1D13",
-  // Gradients
-  gradientCardStart: "#0B1320",
-  gradientCardEnd: "#050B14",
-  gradientHeaderStart: "#050B14",
+  buttonDangerBg: "#EF5350",
+  buttonDangerText: "#000000",
+
+  chipBg: "#142638",
+  chipBorder: "rgba(237,243,251,0.20)",
+  chipText: "#C9D4E3",
+  chipSelectedBg: "rgba(127,177,232,0.24)",
+  chipSelectedBorder: "rgba(127,177,232,0.52)",
+  chipSelectedText: "#EDF3FB",
+
+  toggleOffTrack: "#24374F",
+  toggleOffThumb: "#C9D4E3",
+  toggleOnTrack: "#7FB1E8",
+  toggleOnThumb: "#EDF3FB",
+
+  navBg: "#000000",
+  navBorder: "rgba(237,243,251,0.08)",
+  navItemIdle: "#4D6078",
+  navItemActive: "#7FB1E8",
+
+  overlay: "rgba(0,0,0,0.74)",
+  ripple: "rgba(127,177,232,0.14)",
+  shadow: "rgba(0,0,0,0.45)",
+
+  gradientHeaderStart: "#06101D",
+  gradientHeaderMid: "#050D18",
   gradientHeaderEnd: "#000000",
   gradientFabStart: "#95C2F5",
   gradientFabEnd: "#7FB1E8",
 };
-export const Colors = {
+
+export const Colors: Record<ColorThemeName, Record<ColorSchemeName, ColorTheme>> = {
   sepia: { light: sepiaLight, dark: sepiaDark },
   clear: { light: clearLight, dark: clearDark },
   oled: { light: oledLight, dark: oledDark },
 };
-
-/** Type for accessing color tokens — derived from the sepia light theme shape. */
-export type ColorTheme = typeof sepiaLight;

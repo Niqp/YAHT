@@ -37,7 +37,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
       </View>
 
       {errorMessage ? (
-        <AppText variant="small" color={colors.error} style={styles.feedbackText}>
+        <AppText variant="small" color={colors.danger} style={styles.feedbackText}>
           {errorMessage}
         </AppText>
       ) : (

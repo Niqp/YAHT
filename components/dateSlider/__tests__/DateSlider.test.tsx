@@ -7,7 +7,8 @@ import DateSlider from "@/components/dateSlider/DateSlider";
 const TODAY = "2026-02-21";
 const PREVIOUS_DAY = "2026-02-20";
 const NEXT_DAY = "2026-02-22";
-const PRIMARY_SUBTLE_COLOR = "#e0e7ff";
+const ACCENT_SOFT_BG_COLOR = "#e0e7ff";
+const BUTTON_PRIMARY_BG_COLOR = "#4a67ff";
 
 type MockHabitStoreState = {
   selectedDate: string;
@@ -57,16 +58,21 @@ jest.mock("@/store/habitStore", () => {
 jest.mock("@/hooks/useTheme", () => ({
   useTheme: () => ({
     colors: {
-      input: "#1b1b1b",
-      primary: "#4a67ff",
-      primarySubtle: "#e0e7ff",
+      inputBg: "#1b1b1b",
+      buttonPrimaryBg: BUTTON_PRIMARY_BG_COLOR,
+      buttonPrimaryText: "#ffffff",
+      accentSoftBg: ACCENT_SOFT_BG_COLOR,
+      accentSoftBorder: "#a5b4fc",
       accent: "#ff8a00",
+      borderDefault: "#2b2b2b",
       textSecondary: "#6f6f6f",
-      textInverse: "#ffffff",
-      text: "#0f0f0f",
-      surface: "#101010",
-      surfaceDark: "#101010",
-      textOnSurfaceDark: "#ffffff",
+      textOnStrong: "#ffffff",
+      textPrimary: "#0f0f0f",
+      bgChrome: "#101010",
+      bgSurfaceElevated: "#181818",
+      gradientHeaderStart: "#101010",
+      gradientHeaderMid: "#181818",
+      gradientHeaderEnd: "#050505",
     },
   }),
 }));
@@ -181,14 +187,14 @@ describe("DateSlider", () => {
 
     const setSelectedDateMock = mockStore.getState().setSelectedDate as jest.Mock;
 
-    expect(getBackgroundColor(`date-item-${TODAY}`)).toBe(PRIMARY_SUBTLE_COLOR);
+    expect(getBackgroundColor(`date-item-${TODAY}`)).toBe(BUTTON_PRIMARY_BG_COLOR);
 
     fireEvent.press(screen.getByTestId(`date-item-${PREVIOUS_DAY}`));
 
     expect(setSelectedDateMock).toHaveBeenCalledWith(PREVIOUS_DAY);
     expect(mockStore.getState().selectedDate).toBe(PREVIOUS_DAY);
-    expect(getBackgroundColor(`date-item-${PREVIOUS_DAY}`)).toBe(PRIMARY_SUBTLE_COLOR);
-    expect(getBackgroundColor(`date-item-${TODAY}`)).not.toBe(PRIMARY_SUBTLE_COLOR);
+    expect(getBackgroundColor(`date-item-${PREVIOUS_DAY}`)).toBe(BUTTON_PRIMARY_BG_COLOR);
+    expect(getBackgroundColor(`date-item-${TODAY}`)).toBe(ACCENT_SOFT_BG_COLOR);
   });
 
   it("updates selected date with accessibilityTap activation", () => {

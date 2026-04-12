@@ -63,7 +63,7 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
 
   return (
     <View style={styles.container}>
-      <View style={[styles.displayCard, { backgroundColor: colors.input }]}>
+      <View style={[styles.displayCard, { backgroundColor: colors.bgInset }]}>
         <View style={styles.wheelsRow}>
           <View style={styles.wheelColumn}>
             <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
@@ -82,7 +82,7 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
             />
           </View>
 
-          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+          <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
 
           <View style={styles.wheelColumn}>
             <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>

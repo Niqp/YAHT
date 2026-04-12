@@ -19,7 +19,7 @@ interface PressableCardProps extends PressableProps {
   elevation?: 0 | 1 | 2 | 3;
   /** Whether to show a border. Defaults to false. */
   bordered?: boolean;
-  /** Override background color. Defaults to colors.cardBackground. */
+  /** Override background color. Defaults to colors.bgSurface. */
   backgroundColor?: string;
 }
 
@@ -41,7 +41,7 @@ export default function PressableCard({
 }: PressableCardProps) {
   const { colors } = useTheme();
 
-  const bg = backgroundColor ?? colors.cardBackground;
+  const bg = backgroundColor ?? colors.bgSurface;
 
   return (
     <Pressable
@@ -51,7 +51,7 @@ export default function PressableCard({
         styles.base,
         {
           backgroundColor: bg,
-          borderColor: bordered ? colors.border : "transparent",
+          borderColor: bordered ? colors.borderDefault : "transparent",
           borderWidth: bordered ? 1 : 0,
           ...getElevation(elevation, colors.shadow),
         },

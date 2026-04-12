@@ -25,28 +25,28 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
     {
       label: "Current streak",
       value: habitStats.currentStreak.toString(),
-      icon: <RotateCcw size={16} color={colors.icon} strokeWidth={2} />,
+      icon: <RotateCcw size={16} color={colors.iconPrimary} strokeWidth={2} />,
     },
     {
       label: "Best streak",
       value: habitStats.bestStreak.toString(),
-      icon: <Award size={16} color={colors.icon} strokeWidth={2} />,
+      icon: <Award size={16} color={colors.iconPrimary} strokeWidth={2} />,
     },
     {
       label: "Total completions",
       value: habitStats.totalCompletions.toString(),
-      icon: <CheckSquare size={16} color={colors.icon} strokeWidth={2} />,
+      icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
     },
     completionType === "simple"
       ? {
           label: "Completed due days",
           value: `${habitStats.completedDueDays}/${habitStats.dueDaysSinceCreation}`,
-          icon: <CheckSquare size={16} color={colors.icon} strokeWidth={2} />,
+          icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
         }
       : {
           label: "Goal hit rate",
           value: `${habitStats.goalHitRate}%`,
-          icon: <Target size={16} color={colors.icon} strokeWidth={2} />,
+          icon: <Target size={16} color={colors.iconPrimary} strokeWidth={2} />,
         },
   ];
 
@@ -59,12 +59,12 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
       {
         label: "Total reps",
         value: habitStats.totalRepetitions.toString(),
-        icon: <CheckSquare size={16} color={colors.icon} strokeWidth={2} />,
+        icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
       },
       {
         label: "Best day",
         value: habitStats.bestDayValue.toString(),
-        icon: <TrendingUp size={16} color={colors.icon} strokeWidth={2} />,
+        icon: <TrendingUp size={16} color={colors.iconPrimary} strokeWidth={2} />,
       },
     ];
   }
@@ -75,13 +75,13 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
       {
         label: "Total time",
         value: formatDurationLabel(habitStats.totalTimeSpent),
-        icon: <Clock3 size={16} color={colors.icon} strokeWidth={2} />,
+        icon: <Clock3 size={16} color={colors.iconPrimary} strokeWidth={2} />,
         valueVariant: "bodyMedium",
       },
       {
         label: "Best day",
         value: formatDurationLabel(habitStats.bestDayValue),
-        icon: <TrendingUp size={16} color={colors.icon} strokeWidth={2} />,
+        icon: <TrendingUp size={16} color={colors.iconPrimary} strokeWidth={2} />,
         valueVariant: "bodyMedium",
       },
     ];
@@ -93,7 +93,7 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
         <View style={styles.consistencySection}>
           <View style={styles.headerRow}>
             <AppText variant="title">Consistency</AppText>
-            <AppText variant="title" color={colors.primary} tabularNums>
+            <AppText variant="title" color={colors.accent} tabularNums>
               {habitStats.adherenceSinceCreation}%
             </AppText>
           </View>
@@ -145,7 +145,9 @@ const StatList = ({ stats }: { stats: StatItem[] }) => {
               {stat.value}
             </AppText>
           </View>
-          {index < stats.length - 1 ? <View style={[styles.rowDivider, { backgroundColor: colors.divider }]} /> : null}
+          {index < stats.length - 1 ? (
+            <View style={[styles.rowDivider, { backgroundColor: colors.borderSubtle }]} />
+          ) : null}
         </View>
       ))}
     </View>

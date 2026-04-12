@@ -59,14 +59,14 @@ jest.mock("@/store/habitStore", () => {
 jest.mock("@/hooks/useTheme", () => ({
   useTheme: () => ({
     colors: {
-      background: "#111",
-      cardBackground: "#222",
-      text: "#fff",
+      bgApp: "#111",
+      bgSurface: "#222",
+      textPrimary: "#fff",
       textSecondary: "#ccc",
       textTertiary: "#999",
-      primary: "#6cf",
-      divider: "#333",
-      border: "#444",
+      accent: "#6cf",
+      borderSubtle: "#333",
+      borderDefault: "#444",
       shadow: "#000",
     },
     weekStartDay: 1,

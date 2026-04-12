@@ -85,7 +85,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
       <ScrollView
         key={themeRenderKey}
         showsVerticalScrollIndicator={false}
@@ -127,21 +127,21 @@ export default function SettingsScreen() {
 
         <SettingsSection title="Local data">
           <ActionRow
-            icon={<Download size={18} color={colors.icon} />}
+            icon={<Download size={18} color={colors.iconPrimary} />}
             title="Export data"
             description="Create a JSON backup that you can share or keep."
             onPress={handleExport}
           />
           <SectionDivider />
           <ActionRow
-            icon={<Upload size={18} color={colors.icon} />}
+            icon={<Upload size={18} color={colors.iconPrimary} />}
             title="Import data"
             description="Replace current habits with the contents of a backup file."
             onPress={handleImport}
           />
           <SectionDivider />
           <ActionRow
-            icon={<Trash2 size={18} color={colors.error} />}
+            icon={<Trash2 size={18} color={colors.danger} />}
             title="Reset all data"
             description="Delete habits, timers and saved progress from this device."
             onPress={handleReset}
@@ -153,7 +153,7 @@ export default function SettingsScreen() {
           <StaticRow title="Version" value={`v${APP_VERSION}`} />
           <SectionDivider />
           <ActionRow
-            icon={<Code2 size={18} color={colors.icon} />}
+            icon={<Code2 size={18} color={colors.iconPrimary} />}
             title="Source code"
             description="Open the public GitHub repository."
             onPress={handleOpenRepository}
@@ -167,7 +167,7 @@ export default function SettingsScreen() {
 function SectionDivider() {
   const { colors } = useTheme();
 
-  return <View style={[styles.sectionDivider, { backgroundColor: colors.divider }]} />;
+  return <View style={[styles.sectionDivider, { backgroundColor: colors.borderSubtle }]} />;
 }
 
 interface SettingsSectionProps {
@@ -183,7 +183,7 @@ function SettingsSection({ title, children }: SettingsSectionProps) {
       <AppText variant="label" color={colors.textSecondary} style={styles.sectionTitle}>
         {title}
       </AppText>
-      <View style={[styles.sectionCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+      <View style={[styles.sectionCard, { backgroundColor: colors.bgSurface, borderColor: colors.borderDefault }]}>
         {children}
       </View>
     </View>
@@ -255,7 +255,7 @@ function ActionRow({ icon, title, description, onPress, destructive = false }: A
       <View style={styles.actionIcon}>{icon}</View>
 
       <View style={styles.actionCopy}>
-        <AppText variant="bodyMedium" color={destructive ? colors.error : colors.text}>
+        <AppText variant="bodyMedium" color={destructive ? colors.danger : colors.textPrimary}>
           {title}
         </AppText>
         <AppText variant="caption" color={colors.textSecondary}>
@@ -263,7 +263,7 @@ function ActionRow({ icon, title, description, onPress, destructive = false }: A
         </AppText>
       </View>
 
-      <ChevronRight size={18} color={destructive ? colors.error : colors.textSecondary} />
+      <ChevronRight size={18} color={destructive ? colors.danger : colors.textSecondary} />
     </Pressable>
   );
 }

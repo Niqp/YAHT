@@ -92,10 +92,10 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     repetitionType === RepetitionType.DAILY ? (
       <View style={[styles.panel, styles.centeredPanel]}>
         <View style={styles.infoBlockCentered}>
-          <View style={[styles.placeholderBadge, { backgroundColor: colors.primarySubtle }]}>
-            <CalendarDays size={34} color={colors.primary} />
+          <View style={[styles.placeholderBadge, { backgroundColor: colors.accentSoftBg }]}>
+            <CalendarDays size={34} color={colors.accent} />
           </View>
-          <AppText variant="title" color={colors.text} style={styles.placeholderTitle}>
+          <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
             Due every day
           </AppText>
           <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
@@ -107,12 +107,12 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
       <View style={styles.panel}>
         <View style={styles.scheduleControlBlock}>
           <View style={styles.completionTypeDescription}>
-            <CalendarDays size={24} color={colors.primary} />
+            <CalendarDays size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
               Pick the weekdays when this habit should appear.
             </AppText>
           </View>
-          <View style={[styles.weekdaySurface, { backgroundColor: colors.input }]}>
+          <View style={[styles.weekdaySurface, { backgroundColor: colors.bgInset }]}>
             <View style={styles.weekdayGrid}>
               {weekdayRows.map((row, rowIndex) => (
                 <View key={`weekday-row-${rowIndex}`} style={styles.weekdayRow}>
@@ -129,13 +129,13 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
                         style={({ pressed }) => [
                           styles.weekdayPill,
                           {
-                            backgroundColor: isActive ? colors.primarySubtle : colors.cardBackground,
-                            borderColor: isActive ? colors.primary : colors.inputBorder,
+                            backgroundColor: isActive ? colors.chipSelectedBg : colors.chipBg,
+                            borderColor: isActive ? colors.chipSelectedBorder : colors.chipBorder,
                           },
                           pressed ? styles.weekdayPillPressed : null,
                         ]}
                       >
-                        <AppText variant="bodyMedium" color={isActive ? colors.primary : colors.textSecondary}>
+                        <AppText variant="bodyMedium" color={isActive ? colors.chipSelectedText : colors.chipText}>
                           {option.label}
                         </AppText>
                       </Pressable>
@@ -151,12 +151,12 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
       <View style={styles.panel}>
         <View style={styles.scheduleControlBlock}>
           <View style={styles.completionTypeDescription}>
-            <RotateCcw size={24} color={colors.primary} />
+            <RotateCcw size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
               Make it due every {customDays} {customDays === 1 ? "day" : "days"}.
             </AppText>
           </View>
-          <View style={[styles.pickerSurface, { backgroundColor: colors.input }]}>
+          <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
             <WheelPicker
               data={INTERVAL_OPTIONS}
               value={customDays}
@@ -192,13 +192,13 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
         style={styles.segmentedControl}
       />
 
-      <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>
-        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+      <View style={[styles.optionsWrapper, { borderTopColor: colors.borderSubtle }]}>
+        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.bgInset, borderColor: colors.inputBorder }]}>
           {activePanel}
         </View>
 
         {errorMessage ? (
-          <AppText variant="small" color={colors.error} style={styles.feedbackText}>
+          <AppText variant="small" color={colors.danger} style={styles.feedbackText}>
             {errorMessage}
           </AppText>
         ) : null}
@@ -209,7 +209,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   if (presentation === "sheet") {
     return (
       <View>
-        <AppText variant="title" color={colors.text} style={styles.sheetTitle}>
+        <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
           Repeatability
         </AppText>
         <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>

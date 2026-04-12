@@ -17,7 +17,7 @@ import { useTheme } from "@/hooks/useTheme";
 interface AppTextProps extends TextProps {
   /** Typography scale variant. Defaults to "body". */
   variant?: TypographyVariant;
-  /** Override text color. Defaults to colors.text. */
+  /** Override text color. Defaults to colors.textPrimary. */
   color?: string;
   /**
    * Apply tabular-nums font variant — required for changing numbers
@@ -45,7 +45,7 @@ export default function AppText({
 }: AppTextProps) {
   const { colors } = useTheme();
 
-  const resolvedColor = color ?? colors.text;
+  const resolvedColor = color ?? colors.textPrimary;
 
   const computedStyle: TextStyle = {
     ...Typography[variant],

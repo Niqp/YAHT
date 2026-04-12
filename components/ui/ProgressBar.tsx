@@ -31,12 +31,12 @@ export default function ProgressBar({ value, max = 100, size = "sm", style, trac
         styles.track,
         {
           height: HEIGHT_MAP[size],
-          backgroundColor: trackColor ?? colors.surface,
+          backgroundColor: trackColor ?? colors.bgInset,
         },
         style,
       ]}
     >
-      <View style={[styles.fill, { width: `${progress}%`, backgroundColor: fillColor ?? colors.primary }]} />
+      <View style={[styles.fill, { width: `${progress}%`, backgroundColor: fillColor ?? colors.accent }]} />
     </View>
   );
 }

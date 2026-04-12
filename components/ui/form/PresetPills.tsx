@@ -55,13 +55,13 @@ function PresetPills<T extends string | number>(props: PresetPillsProps<T>) {
             style={({ pressed }) => [
               styles.pill,
               {
-                backgroundColor: isActive ? colors.primarySubtle : colors.cardBackground,
-                borderColor: isActive ? colors.primary : colors.inputBorder,
+                backgroundColor: isActive ? colors.chipSelectedBg : colors.chipBg,
+                borderColor: isActive ? colors.chipSelectedBorder : colors.chipBorder,
               },
               pressed ? styles.pillPressed : null,
             ]}
           >
-            <AppText variant="small" color={isActive ? colors.primary : colors.textSecondary}>
+            <AppText variant="small" color={isActive ? colors.chipSelectedText : colors.chipText}>
               {option.label}
             </AppText>
           </Pressable>

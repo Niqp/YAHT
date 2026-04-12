@@ -42,19 +42,19 @@ const OverallStats: React.FC<OverallStatsProps> = ({ stats }) => {
             key: "activeHabits",
             label: "Active habits",
             value: stats.activeHabits.toString(),
-            icon: <CheckSquare size={16} color={colors.icon} strokeWidth={2} />,
+            icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
           },
           {
             key: "dueToday",
             label: "Due today",
             value: stats.dueToday.toString(),
-            icon: <CalendarDays size={16} color={colors.icon} strokeWidth={2} />,
+            icon: <CalendarDays size={16} color={colors.iconPrimary} strokeWidth={2} />,
           },
           {
             key: "remainingToday",
             label: "Remaining",
             value: remainingToday.toString(),
-            icon: <X size={16} color={colors.icon} strokeWidth={2} />,
+            icon: <X size={16} color={colors.iconPrimary} strokeWidth={2} />,
           },
         ]}
       />
@@ -70,19 +70,19 @@ const OverallStats: React.FC<OverallStatsProps> = ({ stats }) => {
             key: "dueLast7Days",
             label: "Habit checks",
             value: stats.dueLast7Days.toString(),
-            icon: <CalendarDays size={16} color={colors.icon} strokeWidth={2} />,
+            icon: <CalendarDays size={16} color={colors.iconPrimary} strokeWidth={2} />,
           },
           {
             key: "completedLast7Days",
             label: "Completed",
             value: stats.completedLast7Days.toString(),
-            icon: <CheckCheck size={16} color={colors.icon} strokeWidth={2} />,
+            icon: <CheckCheck size={16} color={colors.iconPrimary} strokeWidth={2} />,
           },
           {
             key: "missedLast7Days",
             label: "Missed",
             value: missedLast7Days.toString(),
-            icon: <X size={16} color={colors.icon} strokeWidth={2} />,
+            icon: <X size={16} color={colors.iconPrimary} strokeWidth={2} />,
           },
         ]}
       />
@@ -98,7 +98,7 @@ const OverviewCard = ({ title, accentValue, heroValue, heroLabel, progressValue,
       <View style={styles.section}>
         <View style={styles.headerRow}>
           <AppText variant="title">{title}</AppText>
-          <AppText variant="title" color={colors.primary} tabularNums>
+          <AppText variant="title" color={colors.accent} tabularNums>
             {accentValue}
           </AppText>
         </View>
@@ -129,7 +129,7 @@ const OverviewCard = ({ title, accentValue, heroValue, heroLabel, progressValue,
                 </AppText>
               </View>
               {index < metrics.length - 1 ? (
-                <View style={[styles.metricDivider, { backgroundColor: colors.divider }]} />
+                <View style={[styles.metricDivider, { backgroundColor: colors.borderSubtle }]} />
               ) : null}
             </View>
           ))}

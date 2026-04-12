@@ -12,28 +12,29 @@ interface SimpleHabitChartProps {
 
 const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
   const { colors } = useTheme();
+  const doneColor = colors.accent;
 
   return (
     <View style={styles.activityMapSection}>
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-            <Check size={12} color={colors.buttonPrimaryText} strokeWidth={2} />
+          <View style={[styles.legendSwatch, { backgroundColor: doneColor, borderColor: doneColor }]}>
+            <Check size={12} color={colors.textOnAccent} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
             Done
           </AppText>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <X size={12} color={colors.textSecondary} strokeWidth={2} />
+          <View style={[styles.legendSwatch, { backgroundColor: colors.dangerSoftBg, borderColor: colors.danger }]}>
+            <X size={12} color={colors.danger} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
             Missed
           </AppText>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.input, borderColor: colors.border }]}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.bgInset, borderColor: colors.inputBorder }]}>
             <Minus size={12} color={colors.textTertiary} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
@@ -46,11 +47,7 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
         {days.map((day) => {
           const isCompleted = day.isDue && day.isCompleted;
           const isOffDay = !day.isDue;
-          const iconColor = isCompleted
-            ? colors.buttonPrimaryText
-            : isOffDay
-              ? colors.textTertiary
-              : colors.textSecondary;
+          const iconColor = isCompleted ? colors.textOnAccent : isOffDay ? colors.textTertiary : colors.danger;
 
           return (
             <View key={day.date} style={styles.dayColumn}>
@@ -61,8 +58,8 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
                 style={[
                   styles.completionIndicator,
                   {
-                    backgroundColor: isCompleted ? colors.primary : isOffDay ? colors.input : colors.surface,
-                    borderColor: isCompleted ? colors.primary : colors.border,
+                    backgroundColor: isCompleted ? doneColor : isOffDay ? colors.bgInset : colors.dangerSoftBg,
+                    borderColor: isCompleted ? doneColor : isOffDay ? colors.inputBorder : colors.danger,
                   },
                 ]}
               >

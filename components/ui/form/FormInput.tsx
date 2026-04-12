@@ -37,14 +37,14 @@ export default function FormInput({ label, hideLabel = false, containerStyle, ..
         style={[
           styles.input,
           {
-            backgroundColor: colors.input,
-            borderColor: isFocused ? colors.inputFocusBorder : colors.inputBorder,
-            color: colors.text,
+            backgroundColor: colors.inputBg,
+            borderColor: isFocused ? colors.inputBorderFocus : colors.inputBorder,
+            color: colors.textPrimary,
           },
           containerStyle,
         ]}
-        placeholderTextColor={colors.textTertiary}
-        selectionColor={colors.primary}
+        placeholderTextColor={colors.inputPlaceholder}
+        selectionColor={colors.inputBorderFocus}
       />
     </View>
   );

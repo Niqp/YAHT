@@ -707,7 +707,7 @@ export default function AddEditHabitScreen() {
       style={[
         styles.container,
         {
-          backgroundColor: colors.background,
+          backgroundColor: colors.bgApp,
           paddingTop: insets.top,
           paddingLeft: insets.left,
           paddingRight: insets.right,
@@ -718,12 +718,12 @@ export default function AddEditHabitScreen() {
         options={{
           title: isEditMode ? "Edit Habit" : "New Habit",
           headerStyle: {
-            backgroundColor: colors.background,
+            backgroundColor: colors.bgApp,
           },
           headerTitleStyle: {
-            color: colors.text,
+            color: colors.textPrimary,
           },
-          headerTintColor: colors.text,
+          headerTintColor: colors.textPrimary,
         }}
       />
 
@@ -754,7 +754,7 @@ export default function AddEditHabitScreen() {
               label="Habit type"
               value={completionSummary}
               helperText={completionHelperText}
-              icon={<CheckSquare size={18} color={colors.primary} />}
+              icon={<CheckSquare size={18} color={colors.accent} />}
               onPress={openCompletionSheet}
               errorMessage={completionError}
             />
@@ -763,7 +763,7 @@ export default function AddEditHabitScreen() {
               label="Repeatability"
               value={repetitionSummary}
               helperText={repetitionHelperText}
-              icon={<CalendarDays size={18} color={colors.primary} />}
+              icon={<CalendarDays size={18} color={colors.accent} />}
               onPress={openRepetitionSheet}
               errorMessage={scheduleError}
             />
@@ -772,7 +772,7 @@ export default function AddEditHabitScreen() {
               label="Reminders"
               value={reminderSummary}
               helperText={reminderHelperText}
-              icon={<Bell size={18} color={colors.primary} />}
+              icon={<Bell size={18} color={colors.accent} />}
               onPress={openReminderSheet}
             />
           </View>
@@ -798,8 +798,8 @@ export default function AddEditHabitScreen() {
           style={[
             styles.actionBar,
             {
-              backgroundColor: colors.cardBackground,
-              borderTopColor: colors.divider,
+              backgroundColor: colors.bgSurface,
+              borderTopColor: colors.borderSubtle,
               paddingBottom: insets.bottom + Spacing.base,
             },
             getElevation(2, colors.shadow),

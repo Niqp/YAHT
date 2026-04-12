@@ -56,12 +56,12 @@ export default function TodayScreen() {
   }, []);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
       <DateSlider />
 
       {!showContent ? (
-        <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={[styles.loadingContainer, { backgroundColor: colors.bgApp }]}>
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : (
         <>

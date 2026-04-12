@@ -26,19 +26,19 @@ export default function EmojiPickerField({
       style={[
         styles.input,
         {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.bgInset,
           borderColor: colors.inputBorder,
-          color: colors.text,
+          color: colors.textPrimary,
         },
       ]}
       value={value}
       onChangeText={onChange}
       maxLength={2}
       placeholder={placeholder}
-      placeholderTextColor={colors.textTertiary}
+      placeholderTextColor={colors.inputPlaceholder}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
-      selectionColor={colors.primary}
+      selectionColor={colors.inputBorderFocus}
     />
   );
 }

@@ -1,6 +1,7 @@
-import React, { memo, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { InteractionManager, Platform, StyleSheet, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { BorderRadius } from "@/constants/Spacing";
@@ -24,10 +25,10 @@ function IOSWheelPicker({ data, value, onChange, style, animateMount = true }: W
 
   const itemStyle = useMemo(
     () => ({
-      color: colors.text,
+      color: colors.textPrimary,
       fontSize: 22,
     }),
-    [colors.text]
+    [colors.textPrimary]
   );
 
   const content = (
@@ -38,11 +39,16 @@ function IOSWheelPicker({ data, value, onChange, style, animateMount = true }: W
         onChange(Number.isFinite(resolvedNextValue) ? resolvedNextValue : (resolvedValue ?? value));
       }}
       itemStyle={itemStyle}
-      selectionColor={colors.primary}
+      selectionColor={colors.pickerSelectionBg}
       style={styles.iosPicker}
     >
       {data.map((item) => (
-        <Picker.Item key={`${item.value}-${item.label}`} label={item.label} value={item.value} color={colors.text} />
+        <Picker.Item
+          key={`${item.value}-${item.label}`}
+          label={item.label}
+          value={item.value}
+          color={colors.textPrimary}
+        />
       ))}
     </Picker>
   );
@@ -92,11 +98,21 @@ function AndroidWebWheelPicker({
       setIsReady(true);
     }
   }, [animateMount]);
-  const overlayItemStyle = useMemo(
-    () => ({ backgroundColor: colors.primarySubtle, borderRadius: BorderRadius.md }),
-    [colors.primarySubtle]
+  const renderOverlay = useCallback(
+    ({ itemHeight }: { itemHeight: number }) => (
+      <View pointerEvents="none" style={styles.selectionOverlayContainer}>
+        <LinearGradient
+          colors={["rgba(0,0,0,0)", colors.pickerSelectionBg, colors.pickerSelectionBg, "rgba(0,0,0,0)"] as const}
+          locations={[0, 0.3, 0.7, 1]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={[styles.selectionOverlay, { height: itemHeight }]}
+        />
+      </View>
+    ),
+    [colors.pickerSelectionBg]
   );
-  const itemTextStyle = useMemo(() => ({ color: colors.text, fontSize: 18 }), [colors.text]);
+  const itemTextStyle = useMemo(() => ({ color: colors.textPrimary, fontSize: 18 }), [colors.textPrimary]);
   const commonProps = {
     data,
     value,
@@ -105,7 +121,7 @@ function AndroidWebWheelPicker({
     itemHeight,
     visibleItemCount,
     itemTextStyle,
-    overlayItemStyle,
+    renderOverlay,
     enableScrollByTapOnItem: true,
   } as const;
 
@@ -153,5 +169,13 @@ const styles = StyleSheet.create({
   iosPicker: {
     width: "100%",
     height: "100%",
+  },
+  selectionOverlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+  },
+  selectionOverlay: {
+    width: "100%",
+    borderRadius: BorderRadius.sm,
   },
 });

@@ -110,7 +110,7 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 - `themeStore` persists `mode` (light/dark/system), `colorTheme` (sepia/clear/oled), and `weekStartDay`
 - `useTheme()` hook provides `colors` object, `colorTheme`, `setColorTheme`, and light/dark controls
-- Colors applied via **inline styles**: `{ backgroundColor: colors.background }`
+- Colors applied via **inline styles**: `{ backgroundColor: colors.bgApp }`
 - Three color themes: **Sepia** (warm brown tones), **Clear** (neutral blue-gray), **OLED** (pure black dark mode)
 - System theme changes detected via `AppState` listener in `setupSystemThemeListener()`
 - Web persistence uses `localStorage` fallback (MMKV on native)
@@ -119,13 +119,13 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 
 All visual constants live in `constants/`. Import from there — never hardcode values in components.
 
-| File            | Exports                                      | Usage                                                                                            |
-| --------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `Colors.ts`     | `Colors`, `ColorTheme`, `ColorThemeName`     | 3×2 color palette matrix (sepia/clear/oled × light/dark). Use via `useTheme().colors`.           |
-| `Typography.ts` | `Typography`, `TypographyVariant`            | `StyleSheet` with 9 named text styles.                                                           |
-| `Spacing.ts`    | `Spacing`, `BorderRadius`                    | 4pt grid spacing + border radius tokens.                                                         |
-| `Elevation.ts`  | `getElevation`                               | Platform-aware shadow presets (levels 0–3). Spread returns: `...getElevation(1, colors.shadow)`. |
-| `Animation.ts`  | `SpringConfig`, `TimingConfig`, `PressScale` | Reanimated spring/timing configs for consistent motion.                                          |
+| File            | Exports                                                     | Usage                                                                                            |
+| --------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `Colors.ts`     | `Colors`, `ColorTheme`, `ColorThemeName`, `ColorSchemeName` | 3×2 semantic color-token matrix (sepia/clear/oled × light/dark). Use via `useTheme().colors`.    |
+| `Typography.ts` | `Typography`, `TypographyVariant`                           | `StyleSheet` with 9 named text styles.                                                           |
+| `Spacing.ts`    | `Spacing`, `BorderRadius`                                   | 4pt grid spacing + border radius tokens.                                                         |
+| `Elevation.ts`  | `getElevation`                                              | Platform-aware shadow presets (levels 0–3). Spread returns: `...getElevation(1, colors.shadow)`. |
+| `Animation.ts`  | `SpringConfig`, `TimingConfig`, `PressScale`                | Reanimated spring/timing configs for consistent motion.                                          |
 
 **Design system UI components** live in `components/ui/` and are barrel-exported from `components/ui/index.ts`:
 
@@ -141,7 +141,7 @@ All visual constants live in `constants/`. Import from there — never hardcode 
 
 **Haptics utility**: `utils/haptics.ts` — thin wrapper around `expo-haptics` with `complete`, `success`, `warning`, `medium` methods.
 
-**Colors.ts legacy tokens**: `selectedItem`, `todayIndicator`, `habitBackground`, `habitCompleted` are kept as `@deprecated` aliases for backward compatibility. Migrate usages to the canonical tokens (`primary`, `accent`, `surface`, `successSubtle`) when touching those components.
+**Colors.ts semantic tokens**: public color tokens use elevation, text, border, state, input, picker, button, chip, toggle, nav, overlay, shadow, and limited gradient roles. Header gradients use start/mid/end tokens. Legacy flat/component aliases are not exported; migrate components to the semantic names when touching color consumers.
 
 ### Routing
 

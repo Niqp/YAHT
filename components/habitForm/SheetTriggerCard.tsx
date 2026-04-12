@@ -24,7 +24,7 @@ export default function SheetTriggerCard({
   errorMessage,
 }: SheetTriggerCardProps) {
   const { colors } = useTheme();
-  const statusColor = errorMessage ? colors.error : colors.text;
+  const statusColor = errorMessage ? colors.danger : colors.textPrimary;
   const statusText = errorMessage ?? value;
 
   return (
@@ -35,14 +35,14 @@ export default function SheetTriggerCard({
       style={[
         styles.card,
         {
-          borderColor: errorMessage ? colors.error : colors.border,
-          backgroundColor: colors.cardBackground,
+          borderColor: errorMessage ? colors.danger : colors.borderDefault,
+          backgroundColor: colors.bgSurface,
         },
       ]}
       accessibilityHint={`Open ${label.toLowerCase()} settings`}
     >
       <View style={styles.content}>
-        <View style={[styles.iconWrap, { backgroundColor: colors.surface }]}>{icon}</View>
+        <View style={[styles.iconWrap, { backgroundColor: colors.bgInset }]}>{icon}</View>
 
         <View style={styles.textBlock}>
           <AppText variant="small" color={colors.textSecondary}>
@@ -58,8 +58,8 @@ export default function SheetTriggerCard({
           ) : null}
         </View>
 
-        <View style={[styles.chevronWrap, { borderColor: colors.border }]}>
-          <ChevronRight size={18} color={colors.icon} />
+        <View style={[styles.chevronWrap, { backgroundColor: colors.bgInset, borderColor: colors.borderSubtle }]}>
+          <ChevronRight size={18} color={colors.iconPrimary} />
         </View>
       </View>
     </PressableCard>

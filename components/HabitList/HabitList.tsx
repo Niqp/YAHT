@@ -78,8 +78,13 @@ export default function HabitList({ handleHabitAction }: HabitListProps) {
   if (isEmpty) {
     return (
       <View style={styles.emptyContainer}>
-        <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }]}>
-          <BookOpen size={32} color={colors.iconMuted} strokeWidth={1.5} />
+        <View
+          style={[
+            styles.emptyIconContainer,
+            { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderDefault },
+          ]}
+        >
+          <BookOpen size={32} color={colors.iconDisabled} strokeWidth={1.5} />
         </View>
         <View style={styles.emptyTextBlock}>
           <AppText variant="body" color={colors.textSecondary} style={{ textAlign: "center" }}>

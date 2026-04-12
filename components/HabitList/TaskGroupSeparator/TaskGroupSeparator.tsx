@@ -16,20 +16,20 @@ const TaskGroupSeparator = React.memo(({ title, completed, count }: TaskGroupSep
 
   return (
     <View
-      style={[styles.sectionHeader, { backgroundColor: colors.background }]}
+      style={[styles.sectionHeader, { backgroundColor: colors.bgApp }]}
       accessibilityRole="header"
       accessibilityLabel={`${title}, ${count} habit${count !== 1 ? "s" : ""}`}
     >
       <View
         style={[
           styles.sectionIconContainer,
-          { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+          { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderDefault },
         ]}
       >
         {completed ? (
           <CheckCircle size={16} color={colors.success} strokeWidth={1.5} />
         ) : (
-          <Circle size={16} color={colors.iconMuted} strokeWidth={1.5} />
+          <Circle size={16} color={colors.iconDisabled} strokeWidth={1.5} />
         )}
       </View>
       <AppText variant="label" color={colors.textSecondary}>

@@ -53,14 +53,14 @@ export default function DiscardChangesSheet({ isEditMode, isOpen, onClose, onDis
       backgroundStyle={[
         styles.background,
         {
-          backgroundColor: colors.cardBackground,
+          backgroundColor: colors.bgSurface,
           ...getElevation(2, colors.shadow),
         },
       ]}
-      handleIndicatorStyle={[styles.handle, { backgroundColor: colors.border }]}
+      handleIndicatorStyle={[styles.handle, { backgroundColor: colors.borderDefault }]}
     >
       <BottomSheetView style={styles.container}>
-        <AppText variant="title" style={styles.title} color={colors.text}>
+        <AppText variant="title" style={styles.title} color={colors.textPrimary}>
           Discard changes?
         </AppText>
         <AppText variant="body" style={styles.subtitle} color={colors.textSecondary}>

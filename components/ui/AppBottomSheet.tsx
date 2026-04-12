@@ -5,7 +5,7 @@
  * the guideline defaults from UI_UX_GUIDELINES.md §9.4:
  *  - Top corners: radius-xl (24)
  *  - Handle: 40×4, radius-full, border color
- *  - Background: cardBackground
+ *  - Background: bgSurface
  *  - Backdrop: overlay color
  *  - Max height: 70% of screen
  *  - Elevation: elevation-2
@@ -62,11 +62,11 @@ const AppBottomSheet = forwardRef<BottomSheet, AppBottomSheetProps>(({ children,
       backgroundStyle={[
         styles.background,
         {
-          backgroundColor: colors.cardBackground,
+          backgroundColor: colors.bgSurface,
           ...getElevation(2, colors.shadow),
         },
       ]}
-      handleIndicatorStyle={[styles.handle, { backgroundColor: colors.border }]}
+      handleIndicatorStyle={[styles.handle, { backgroundColor: colors.borderStrong }]}
       {...props}
     >
       {children}

@@ -40,18 +40,20 @@ export default function StatsScreen() {
 
   if (!isHydrated) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.bgApp }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
 
   if (habitArray.length === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
         <View style={styles.emptyContainer}>
-          <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <BarChart2 size={24} color={colors.icon} strokeWidth={2} />
+          <View
+            style={[styles.emptyIconContainer, { backgroundColor: colors.bgInset, borderColor: colors.borderDefault }]}
+          >
+            <BarChart2 size={24} color={colors.iconPrimary} strokeWidth={2} />
           </View>
           <AppText variant="heading" style={styles.emptyTitle}>
             No habits to analyze
@@ -72,7 +74,7 @@ export default function StatsScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
@@ -101,7 +103,7 @@ export default function StatsScreen() {
         ) : null}
 
         {selectedHabit ? (
-          <View style={[styles.stickySelector, { backgroundColor: colors.background }]}>
+          <View style={[styles.stickySelector, { backgroundColor: colors.bgApp }]}>
             <HabitSelector selectedHabit={selectedHabit} onPress={handleOpenHabitSheet} />
           </View>
         ) : null}
@@ -128,7 +130,7 @@ export default function StatsScreen() {
           contentContainerStyle={styles.sheetListContent}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
-            <View style={[styles.sheetHeader, { borderBottomColor: colors.border }]}>
+            <View style={[styles.sheetHeader, { borderBottomColor: colors.borderDefault }]}>
               <AppText variant="title">Select a habit</AppText>
             </View>
           }
@@ -138,15 +140,15 @@ export default function StatsScreen() {
             return (
               <PressableCard
                 onPress={() => handleHabitSheetSelect(habit)}
-                backgroundColor={isSelected ? colors.surface : colors.cardBackground}
+                backgroundColor={isSelected ? colors.accentSoftBg : colors.bgSurface}
                 bordered
-                style={isSelected ? [styles.sheetItem, { borderColor: colors.primary }] : styles.sheetItem}
+                style={isSelected ? [styles.sheetItem, { borderColor: colors.accentSoftBorder }] : styles.sheetItem}
                 accessibilityLabel={`Select ${habit.title}`}
                 accessibilityState={{ selected: isSelected }}
               >
                 <View style={styles.sheetItemRow}>
                   <View style={styles.sheetItemLeading}>
-                    <View style={[styles.sheetItemIconContainer, { backgroundColor: colors.primarySubtle }]}>
+                    <View style={[styles.sheetItemIconContainer, { backgroundColor: colors.bgInset }]}>
                       <AppText style={styles.sheetItemIcon}>{habit.icon}</AppText>
                     </View>
 
@@ -162,10 +164,10 @@ export default function StatsScreen() {
                     <View
                       style={[
                         styles.selectedMarker,
-                        { backgroundColor: colors.primarySubtle, borderColor: colors.primary },
+                        { backgroundColor: colors.accentSoftBg, borderColor: colors.accentSoftBorder },
                       ]}
                     >
-                      <Check size={14} color={colors.primary} strokeWidth={2} />
+                      <Check size={14} color={colors.accent} strokeWidth={2} />
                     </View>
                   ) : null}
                 </View>

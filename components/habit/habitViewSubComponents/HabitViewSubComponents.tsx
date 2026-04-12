@@ -5,14 +5,6 @@ import type { ColorTheme } from "@/constants/Colors";
 import type { Habit } from "@/types/habit";
 import styles from "../HabitItem.styles";
 
-interface ColorsSubset {
-  success: string;
-  accent: string;
-  textSecondary: string;
-  input: string;
-  text: string;
-}
-
 // Simple habit status indicator
 export const HabitStatusIndicator = ({
   isCompleted,
@@ -23,7 +15,7 @@ export const HabitStatusIndicator = ({
   isCompleted: boolean;
   timerActive: boolean;
   completionType: string | undefined;
-  colors: ColorsSubset;
+  colors: ColorTheme;
 }) => (
   <View style={styles.statusContainer}>
     {isCompleted ? (
@@ -32,12 +24,12 @@ export const HabitStatusIndicator = ({
       timerActive ? (
         <PauseCircle size={22} color={colors.accent} strokeWidth={2} />
       ) : (
-        <PlayCircle size={22} color={colors.textSecondary} strokeWidth={2} />
+        <PlayCircle size={22} color={colors.iconSecondary} strokeWidth={2} />
       )
     ) : completionType === "repetitions" ? (
-      <PlusCircle size={22} color={colors.textSecondary} strokeWidth={2} />
+      <PlusCircle size={22} color={colors.iconSecondary} strokeWidth={2} />
     ) : (
-      <Circle size={22} color={colors.textSecondary} strokeWidth={2} />
+      <Circle size={22} color={colors.iconSecondary} strokeWidth={2} />
     )}
   </View>
 );
@@ -54,7 +46,7 @@ export const HabitSubtitle = ({
   isCompleted: boolean;
   timerActive: boolean;
   getSubtitleText: () => string;
-  colors: ColorsSubset;
+  colors: ColorTheme;
 }) => (
   <View style={styles.subtitleContainer}>
     <SubtitleIcon habit={habit} isCompleted={isCompleted} timerActive={timerActive} colors={colors} />
@@ -73,7 +65,7 @@ export const SubtitleIcon = ({
   habit: Habit | null | undefined;
   isCompleted: boolean;
   timerActive: boolean;
-  colors: ColorsSubset;
+  colors: ColorTheme;
 }) => {
   if (!habit) return null;
 
@@ -82,15 +74,15 @@ export const SubtitleIcon = ({
       return isCompleted ? (
         <CheckCircle size={16} color={colors.success} strokeWidth={2} />
       ) : (
-        <Circle size={16} color={colors.textSecondary} strokeWidth={2} />
+        <Circle size={16} color={colors.iconSecondary} strokeWidth={2} />
       );
     case "repetitions":
-      return <RotateCcw size={16} color={isCompleted ? colors.success : colors.textSecondary} strokeWidth={2} />;
+      return <RotateCcw size={16} color={isCompleted ? colors.success : colors.iconSecondary} strokeWidth={2} />;
     case "timed":
       return (
         <Clock
           size={16}
-          color={isCompleted ? colors.success : timerActive ? colors.success : colors.textSecondary}
+          color={isCompleted ? colors.success : timerActive ? colors.success : colors.iconSecondary}
           strokeWidth={2}
         />
       );

@@ -50,8 +50,8 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
     <View style={styles.chartSection}>
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-            <Check size={12} color={colors.buttonPrimaryText} strokeWidth={2} />
+          <View style={[styles.legendSwatch, { backgroundColor: colors.success, borderColor: colors.success }]}>
+            <Check size={12} color={colors.textOnAccent} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
             Goal met
@@ -70,7 +70,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
           </AppText>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendSwatch, { backgroundColor: colors.input, borderColor: colors.border }]}>
+          <View style={[styles.legendSwatch, { backgroundColor: colors.bgInset, borderColor: colors.inputBorder }]}>
             <Minus size={12} color={colors.textTertiary} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
@@ -95,8 +95,8 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
                 style={[
                   styles.barTrack,
                   {
-                    backgroundColor: day.isDue ? colors.surface : colors.input,
-                    borderColor: colors.border,
+                    backgroundColor: colors.bgInset,
+                    borderColor: colors.inputBorder,
                   },
                 ]}
               >
@@ -118,7 +118,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
                       style={[
                         styles.barFill,
                         {
-                          backgroundColor: day.isCompleted ? colors.primary : colors.accent,
+                          backgroundColor: day.isCompleted ? colors.success : colors.accent,
                           height: Math.max(6, barHeight),
                         },
                       ]}

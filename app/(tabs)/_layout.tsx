@@ -50,19 +50,19 @@ export default function TabsLayout() {
         android: {
           elevation: 8,
           borderTopWidth: 1,
-          borderColor: colors.border,
+          borderColor: colors.navBorder,
         },
       }) ?? {},
-    [colors.border, colors.shadow]
+    [colors.navBorder, colors.shadow]
   );
 
   const screenOptions = useMemo<BottomTabNavigationOptions>(
     () => ({
       headerShown: false,
-      tabBarActiveTintColor: colors.primary,
-      tabBarInactiveTintColor: colors.tabIconDefault,
+      tabBarActiveTintColor: colors.navItemActive,
+      tabBarInactiveTintColor: colors.navItemIdle,
       tabBarStyle: {
-        backgroundColor: colors.tabBackground,
+        backgroundColor: colors.navBg,
         ...tabBarShadow,
         minHeight: 60,
       },
@@ -71,7 +71,7 @@ export default function TabsLayout() {
         paddingBottom: Spacing.xs,
       },
     }),
-    [colors.primary, colors.tabBackground, colors.tabIconDefault, tabBarShadow]
+    [colors.navBg, colors.navItemActive, colors.navItemIdle, tabBarShadow]
   );
 
   return (
@@ -86,7 +86,7 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => tab.renderIcon(color, size),
             sceneStyle: {
               ...baseSceneStyle,
-              backgroundColor: tab.name === "today" ? colors.surfaceDark : colors.background,
+              backgroundColor: tab.name === "today" ? colors.gradientHeaderStart : colors.bgApp,
             },
           }}
         />

@@ -9,9 +9,10 @@ const originalPlatform = Platform.OS;
 jest.mock("@/hooks/useTheme", () => ({
   useTheme: () => ({
     colors: {
-      text: "#ffffff",
-      primary: "#55ccff",
-      primarySubtle: "#113344",
+      textPrimary: "#ffffff",
+      accent: "#55ccff",
+      accentSoftBg: "#113344",
+      pickerSelectionBg: "#225577",
     },
   }),
 }));

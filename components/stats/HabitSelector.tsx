@@ -21,7 +21,7 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ selectedHabit, onPress })
   return (
     <PressableCard
       onPress={onPress}
-      backgroundColor={colors.cardBackground}
+      backgroundColor={colors.bgSurface}
       bordered
       style={styles.selectorButton}
       accessibilityLabel={`Choose habit. Currently selected: ${selectedHabit.title}`}
@@ -29,7 +29,7 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ selectedHabit, onPress })
     >
       <View style={styles.selectorRow}>
         <View style={styles.selectedHabitContainer}>
-          <View style={[styles.selectedHabitIconContainer, { backgroundColor: colors.primarySubtle }]}>
+          <View style={[styles.selectedHabitIconContainer, { backgroundColor: colors.accentSoftBg }]}>
             <AppText style={styles.selectedHabitIcon}>{selectedHabit.icon}</AppText>
           </View>
 
@@ -42,7 +42,7 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ selectedHabit, onPress })
         </View>
 
         <View style={styles.chevronContainer}>
-          <ChevronDown size={18} color={colors.icon} strokeWidth={2} />
+          <ChevronDown size={18} color={colors.iconPrimary} strokeWidth={2} />
         </View>
       </View>
     </PressableCard>

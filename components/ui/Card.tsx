@@ -46,14 +46,14 @@ export default function Card({
 }: CardProps) {
   const { colors } = useTheme();
 
-  const backgroundColor = variant === "surface" ? colors.surface : colors.cardBackground;
+  const backgroundColor = variant === "surface" ? colors.bgChrome : colors.bgSurface;
   const resolvedElevation = variant === "surface" ? 0 : elevation;
   const resolvedBordered = variant === "surface" ? true : bordered;
 
   const shellStyle: ViewStyle = {
     backgroundColor,
     borderWidth: resolvedBordered ? 1 : 0,
-    borderColor: resolvedBordered ? colors.border : "transparent",
+    borderColor: resolvedBordered ? colors.borderDefault : "transparent",
     ...getElevation(resolvedElevation, colors.shadow),
   };
 

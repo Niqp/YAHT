@@ -71,10 +71,10 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
     completionType === CompletionType.SIMPLE ? (
       <View style={[styles.panel, styles.centeredPanel]}>
         <View style={styles.infoBlockCentered}>
-          <View style={[styles.placeholderBadge, { backgroundColor: colors.primarySubtle }]}>
-            <CheckSquare size={34} color={colors.primary} />
+          <View style={[styles.placeholderBadge, { backgroundColor: colors.accentSoftBg }]}>
+            <CheckSquare size={34} color={colors.accent} />
           </View>
-          <AppText variant="title" color={colors.text} style={styles.placeholderTitle}>
+          <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
             One tap, done
           </AppText>
           <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
@@ -86,12 +86,12 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
       <View style={styles.panel}>
         <View style={styles.completionTypeContainer}>
           <View style={styles.completionTypeDescription}>
-            <RotateCcw size={24} color={colors.primary} />
+            <RotateCcw size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
               Complete after a certain amount of repetitions.
             </AppText>
           </View>
-          <View style={[styles.pickerSurface, { backgroundColor: colors.input }]}>
+          <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
             <WheelPicker
               data={REPETITION_OPTIONS}
               value={completionGoal}
@@ -111,7 +111,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
       <View style={styles.panel}>
         <View style={styles.completionTypeContainer}>
           <View style={styles.completionTypeDescription}>
-            <Clock size={24} color={colors.primary} />
+            <Clock size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
               Complete after this much time is tracked.
             </AppText>
@@ -135,21 +135,23 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
         style={styles.segmentedControl}
       />
 
-      <View style={[styles.optionsWrapper, { borderTopColor: colors.divider }]}>
-        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+      <View style={[styles.optionsWrapper, { borderTopColor: colors.borderSubtle }]}>
+        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.bgInset, borderColor: colors.inputBorder }]}>
           {activePanel}
         </View>
 
         {errorMessage ? (
-          <AppText variant="small" color={colors.error} style={styles.errorText}>
+          <AppText variant="small" color={colors.danger} style={styles.errorText}>
             {errorMessage}
           </AppText>
         ) : null}
       </View>
 
       {isEditMode ? (
-        <View style={[styles.editNoticeContainer, { backgroundColor: colors.errorSubtle, borderColor: colors.error }]}>
-          <AppText variant="label" color={colors.error} style={styles.editNotice}>
+        <View
+          style={[styles.editNoticeContainer, { backgroundColor: colors.dangerSoftBg, borderColor: colors.danger }]}
+        >
+          <AppText variant="label" color={colors.danger} style={styles.editNotice}>
             Completion type is locked after creation.
           </AppText>
         </View>
@@ -160,7 +162,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   if (presentation === "sheet") {
     return (
       <View>
-        <AppText variant="title" color={colors.text} style={styles.sheetTitle}>
+        <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
           Habit type
         </AppText>
         <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
