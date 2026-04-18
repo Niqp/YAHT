@@ -119,7 +119,7 @@ Habit reminder intent is stored on each `Habit.reminder`; native notification id
 
 ### Android Time Change Bridge
 
-The app consumes the sibling package `@niqp/react-native-android-time-change` from `D:\WebDev\react-native-android-time-change` via a local `file:` dependency. YAHT uses a custom `index.js` entrypoint to preserve Expo Router startup while registering the Android Headless JS task `YAHTTimeChangeTask`. App-owned handling lives in `utils/timeChange.ts` and `hooks/useTimeChangeManager.ts`; the native package only transports normalized `TIME_SET`, `TIMEZONE_CHANGED`, and optional API 37+ `TIMEZONE_OFFSET_CHANGED` events into JS. Keep habit, timer, reminder, and scheduling policy in YAHT code, not in the library.
+The app consumes the sibling package `@niqp/react-native-android-time-change` from `D:\WebDev\react-native-android-time-change` via a local `file:` dependency. YAHT uses a custom `index.js` entrypoint to preserve Expo Router startup while delegating Android Headless JS registration to `utils/registerTimeChangeTask.android.ts`; the default `utils/registerTimeChangeTask.ts` is a non-Android no-op so iOS/web builds do not import the Android native package. App-owned handling lives in `utils/timeChange.ts` and the Android-only `hooks/useTimeChangeManager.android.ts`; the default `hooks/useTimeChangeManager.ts` is a no-op for non-Android platforms. The native package only transports normalized `TIME_SET`, `TIMEZONE_CHANGED`, and optional API 37+ `TIMEZONE_OFFSET_CHANGED` events into JS. Keep habit, timer, reminder, and scheduling policy in YAHT code, not in the library.
 
 ### Theming
 
