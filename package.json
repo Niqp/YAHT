@@ -1,7 +1,7 @@
 {
   "name": "habit-tracker",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -19,6 +19,7 @@
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@gorhom/bottom-sheet": "^5.2.8",
+    "@niqp/react-native-android-time-change": "file:../react-native-android-time-change",
     "@quidone/react-native-wheel-picker": "^1.6.1",
     "@react-native-picker/picker": "^2.11.1",
     "@react-native-segmented-control/segmented-control": "^2.5.7",

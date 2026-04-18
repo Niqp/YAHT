@@ -33,7 +33,7 @@ jest.mock("expo-notifications", () => ({
   __esModule: true,
   AndroidImportance: { MAX: "max", HIGH: "high" },
   AndroidNotificationPriority: { MAX: "max", HIGH: "high" },
-  SchedulableTriggerInputTypes: { DATE: "date" },
+  SchedulableTriggerInputTypes: { DATE: "date", CALENDAR: "calendar" },
   getPermissionsAsync: (...args: unknown[]) => mockGetPermissionsAsync(...args),
   requestPermissionsAsync: (...args: unknown[]) => mockRequestPermissionsAsync(...args),
   setNotificationChannelAsync: (...args: unknown[]) => mockSetNotificationChannelAsync(...args),
@@ -203,10 +203,33 @@ describe("timer notification cancellation", () => {
   });
 
   it("cancels and dismisses all timer notifications", async () => {
+    mockGetAllScheduledNotificationsAsync.mockResolvedValue([
+      { identifier: "timer-timer-1", content: { data: {} } },
+      { identifier: "reminder-series-h1-2026-03-21-123000", content: { data: {} } },
+    ]);
+    mockGetPresentedNotificationsAsync.mockResolvedValue([
+      {
+        request: {
+          identifier: "timer-timer-1",
+          content: { data: {} },
+        },
+      },
+      {
+        request: {
+          identifier: "reminder-series-h1-2026-03-21-123000",
+          content: { data: {} },
+        },
+      },
+    ]);
+
     await cancelAllTimerNotifications();
 
-    expect(mockCancelAllScheduledNotificationsAsync).toHaveBeenCalledTimes(1);
-    expect(mockDismissAllNotificationsAsync).toHaveBeenCalledTimes(1);
+    expect(mockCancelScheduledNotificationAsync).toHaveBeenCalledWith("timer-timer-1");
+    expect(mockCancelScheduledNotificationAsync).not.toHaveBeenCalledWith("reminder-series-h1-2026-03-21-123000");
+    expect(mockDismissNotificationAsync).toHaveBeenCalledWith("timer-timer-1");
+    expect(mockDismissNotificationAsync).not.toHaveBeenCalledWith("reminder-series-h1-2026-03-21-123000");
+    expect(mockCancelAllScheduledNotificationsAsync).not.toHaveBeenCalled();
+    expect(mockDismissAllNotificationsAsync).not.toHaveBeenCalled();
   });
 });
 
@@ -282,6 +305,37 @@ describe("scheduleReminderNotification", () => {
         }),
       })
     );
+  });
+
+  it("uses non-repeating calendar triggers on iOS", async () => {
+    const originalPlatform = Platform.OS;
+    Object.defineProperty(Platform, "OS", { value: "ios" });
+
+    await schedulePreparedReminderNotification({
+      habitId: "h1",
+      habitTitle: "Stretch",
+      timestamp: new Date(2026, 2, 21, 9, 30, 0).getTime(),
+      reminderDate: "2026-03-21",
+      attemptNumber: 0,
+      maxAttempts: 1,
+    });
+
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+          repeats: false,
+          year: 2026,
+          month: 3,
+          day: 21,
+          hour: 9,
+          minute: 30,
+          second: 0,
+        },
+      })
+    );
+
+    Object.defineProperty(Platform, "OS", { value: originalPlatform });
   });
 
   it("returns undefined when reminder exact alarms are unavailable", async () => {

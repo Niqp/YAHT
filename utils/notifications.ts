@@ -8,8 +8,9 @@ const TIMER_CHANNEL_NAME = "Timers";
 const REMINDER_CHANNEL_ID = "reminders";
 const REMINDER_CHANNEL_NAME = "Reminders";
 const REMINDER_NOTIFICATION_CATEGORY_ID = "habitReminderActions";
-const REMINDER_NOTIFICATION_PREFIX = "reminder-";
+export const REMINDER_NOTIFICATION_PREFIX = "reminder-";
 const REMINDER_KIND = "habitReminder";
+const REMINDER_QUEUE_STOP_KIND = "reminderQueueStop";
 
 export const DEFAULT_REMINDER_SNOOZE_MS = 15 * 60 * 1000;
 export const MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE = 3;
@@ -30,6 +31,12 @@ export type ReminderNotificationData = {
   repeatIntervalMs?: number;
 };
 
+export type ReminderQueueStopNotificationData = {
+  kind: typeof REMINDER_QUEUE_STOP_KIND;
+  scheduledFor: number;
+  overflowTimestamp: number;
+};
+
 export type ReminderScheduleParams = {
   habitId: string;
   habitTitle: string;
@@ -42,8 +49,30 @@ export type ReminderScheduleParams = {
 };
 
 const getTimerNotificationId = (timerId: string) => `timer-${timerId}`;
-const getReminderNotificationId = (reminderSeriesId: string, timestamp: number) =>
+export const getReminderNotificationIdentifier = (reminderSeriesId: string, timestamp: number) =>
   `${REMINDER_NOTIFICATION_PREFIX}${reminderSeriesId}-${timestamp}`;
+
+const getReminderTrigger = (timestamp: number, channelId: string): Notifications.NotificationTriggerInput => {
+  if (Platform.OS === "ios") {
+    const triggerDate = new Date(timestamp);
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+      repeats: false,
+      year: triggerDate.getFullYear(),
+      month: triggerDate.getMonth() + 1,
+      day: triggerDate.getDate(),
+      hour: triggerDate.getHours(),
+      minute: triggerDate.getMinutes(),
+      second: triggerDate.getSeconds(),
+    };
+  }
+
+  return {
+    type: Notifications.SchedulableTriggerInputTypes.DATE,
+    date: new Date(timestamp),
+    channelId,
+  };
+};
 
 const ensureNotificationPermission = async (): Promise<boolean> => {
   try {
@@ -192,11 +221,31 @@ export const isReminderNotificationData = (data: unknown): data is ReminderNotif
   );
 };
 
+export const isReminderQueueStopNotificationData = (data: unknown): data is ReminderQueueStopNotificationData => {
+  if (!data || typeof data !== "object") {
+    return false;
+  }
+
+  const candidate = data as Partial<ReminderQueueStopNotificationData>;
+  return (
+    candidate.kind === REMINDER_QUEUE_STOP_KIND &&
+    typeof candidate.scheduledFor === "number" &&
+    typeof candidate.overflowTimestamp === "number"
+  );
+};
+
 export const getReminderNotificationData = (
   response: Pick<Notifications.NotificationResponse, "notification">
 ): ReminderNotificationData | undefined => {
   const data = response.notification.request.content.data;
   return isReminderNotificationData(data) ? data : undefined;
+};
+
+export const getReminderQueueStopNotificationData = (
+  response: Pick<Notifications.NotificationResponse, "notification">
+): ReminderQueueStopNotificationData | undefined => {
+  const data = response.notification.request.content.data;
+  return isReminderQueueStopNotificationData(data) ? data : undefined;
 };
 
 export const clearReminderNotifications = async () => {
@@ -321,10 +370,21 @@ export const cancelTimerNotification = async (timerId: string) => {
 
 export const cancelAllTimerNotifications = async () => {
   try {
-    await Promise.allSettled([
-      Notifications.cancelAllScheduledNotificationsAsync(),
-      Notifications.dismissAllNotificationsAsync(),
-    ]);
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const scheduledTimerIdentifiers = scheduled
+      .filter((notification) => notification.identifier.startsWith("timer-"))
+      .map((notification) => notification.identifier);
+
+    await cancelNotificationIdentifiers(scheduledTimerIdentifiers);
+
+    if (Platform.OS !== "web") {
+      const delivered = await Notifications.getPresentedNotificationsAsync();
+      const deliveredTimerIdentifiers = delivered
+        .filter((notification) => notification.request.identifier.startsWith("timer-"))
+        .map((notification) => notification.request.identifier);
+
+      await dismissNotificationIdentifiers(deliveredTimerIdentifiers);
+    }
   } catch (error) {
     console.error("Error cancelling all timer notifications:", error);
   }
@@ -388,7 +448,7 @@ export const schedulePreparedReminderNotification = async ({
   repeatIntervalMs,
 }: ReminderScheduleParams) => {
   try {
-    const notificationId = getReminderNotificationId(reminderSeriesId, timestamp);
+    const notificationId = getReminderNotificationIdentifier(reminderSeriesId, timestamp);
     const reminderData: ReminderNotificationData = {
       kind: REMINDER_KIND,
       habitId,
@@ -414,14 +474,42 @@ export const schedulePreparedReminderNotification = async ({
     return Notifications.scheduleNotificationAsync({
       identifier: notificationId,
       content,
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: new Date(timestamp),
-        channelId: REMINDER_CHANNEL_ID,
-      },
+      trigger: getReminderTrigger(timestamp, REMINDER_CHANNEL_ID),
     });
   } catch (error) {
     console.error("Error scheduling prepared reminder notification:", error);
+    return undefined;
+  }
+};
+
+export const scheduleReminderQueueStopNotification = async ({
+  timestamp,
+  overflowTimestamp,
+}: {
+  timestamp: number;
+  overflowTimestamp: number;
+}) => {
+  try {
+    const stopData: ReminderQueueStopNotificationData = {
+      kind: REMINDER_QUEUE_STOP_KIND,
+      scheduledFor: timestamp,
+      overflowTimestamp,
+    };
+
+    return Notifications.scheduleNotificationAsync({
+      identifier: "reminder-stop",
+      content: {
+        title: "Open YAHT to continue reminders",
+        body: "Your reminder queue is full. Open YAHT to schedule the next reminders.",
+        sound: "default",
+        color: "#023c69",
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+        data: stopData as unknown as Record<string, unknown>,
+      },
+      trigger: getReminderTrigger(timestamp, REMINDER_CHANNEL_ID),
+    });
+  } catch (error) {
+    console.error("Error scheduling reminder queue stop notification:", error);
     return undefined;
   }
 };

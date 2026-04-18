@@ -19,36 +19,37 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 
 ## Tech Stack
 
-| Category         | Technology                                                                                                              | Notes                                                                                          |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Framework        | Expo 54 (managed + dev-client)                                                                                          | `expo-router` 6.x for file-based routing                                                       |
-| Language         | TypeScript 5.x                                                                                                          | Strict mode, `@/*` path alias to project root                                                  |
-| State Management | Zustand 5.x + persist middleware                                                                                        | MMKV storage via `react-native-mmkv`                                                           |
-| Date Library     | dayjs 1.x                                                                                                               | Plugins: `isSameOrAfter`, `isToday`, `duration`                                                |
-| Animations       | react-native-reanimated 3.16                                                                                            | + react-native-gesture-handler 2.20                                                            |
-| UI               | lucide-react-native 1.x (icons), @gorhom/bottom-sheet 5.x, expo-linear-gradient, expo-haptics, react-native-emoji-popup | Design system components in `components/ui/` and the native emoji picker used by `app/add.tsx` |
-| Charts           | Custom React Native chart components                                                                                    | Stats views render bespoke chart components from `components/stats/charts/`                    |
-| Notifications    | expo-notifications 0.28.x, react-native-permissions                                                                     | Timestamp-triggered, Android alarm permissions                                                 |
-| Virtualization   | recyclerlistview 4.x                                                                                                    | Used in DateSlider                                                                             |
-| Linting          | ESLint 9 flat config + typescript-eslint + eslint-config-prettier                                                       |                                                                                                |
-| Formatting       | Prettier (`.prettierrc`)                                                                                                | Enforces project style — run `npm run format`                                                  |
-| Testing          | Jest (jest-expo preset) + @testing-library/react-native                                                                 | 11 test suites, ~121 tests                                                                     |
+| Category           | Technology                                                                                                              | Notes                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Framework          | Expo 54 (managed + dev-client)                                                                                          | `expo-router` 6.x for file-based routing                                                       |
+| Language           | TypeScript 5.x                                                                                                          | Strict mode, `@/*` path alias to project root                                                  |
+| State Management   | Zustand 5.x + persist middleware                                                                                        | MMKV storage via `react-native-mmkv`                                                           |
+| Date Library       | dayjs 1.x                                                                                                               | Plugins: `isSameOrAfter`, `isToday`, `duration`                                                |
+| Animations         | react-native-reanimated 3.16                                                                                            | + react-native-gesture-handler 2.20                                                            |
+| UI                 | lucide-react-native 1.x (icons), @gorhom/bottom-sheet 5.x, expo-linear-gradient, expo-haptics, react-native-emoji-popup | Design system components in `components/ui/` and the native emoji picker used by `app/add.tsx` |
+| Charts             | Custom React Native chart components                                                                                    | Stats views render bespoke chart components from `components/stats/charts/`                    |
+| Notifications      | expo-notifications 0.32.x, react-native-permissions                                                                     | Derived bounded reminder queue, platform-specific triggers, Android alarm permissions          |
+| Time Change Bridge | `@niqp/react-native-android-time-change`                                                                                | Local sibling RN Android library linked with `file:../react-native-android-time-change`        |
+| Virtualization     | recyclerlistview 4.x                                                                                                    | Used in DateSlider                                                                             |
+| Linting            | ESLint 9 flat config + typescript-eslint + eslint-config-prettier                                                       |                                                                                                |
+| Formatting         | Prettier (`.prettierrc`)                                                                                                | Enforces project style — run `npm run format`                                                  |
+| Testing            | Jest (jest-expo preset) + @testing-library/react-native                                                                 | 11 test suites, ~121 tests                                                                     |
 
 ---
 
 ## Directory Layout
 
-| Directory     | Purpose                                                                                                                                                                                                                      |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/`        | Expo Router pages. Root `_layout.tsx` provides GestureHandler, SafeArea, React Navigation theme, BottomSheet, and TimerManager providers. Tabs: `today`, `stats`, `settings`. `add.tsx` is a modal route for create/edit.    |
-| `components/` | UI components grouped by feature in subfolders. Each component may have a colocated `.styles.ts` file.                                                                                                                       |
-| `store/`      | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`.                                                                                 |
-| `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.                             |
-| `types/`      | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases).                                                                                                                    |
-| `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV adapter for Zustand persist), `notifications.ts`, `fileOperations.ts`, `statsUtils.ts`.                                                                |
-| `constants/`  | Design system tokens: `Colors.ts` (full light/dark palette), `Typography.ts` (9-level type scale), `Spacing.ts` (4pt grid + border radii), `Elevation.ts` (platform shadow presets), `Animation.ts` (spring/timing configs). |
-| `plugins/`    | Expo config plugins (`notifee-mod.js`).                                                                                                                                                                                      |
-| `assets/`     | Images, fonts, splash screen.                                                                                                                                                                                                |
+| Directory     | Purpose                                                                                                                                                                                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/`        | Expo Router pages. Root `_layout.tsx` provides GestureHandler, SafeArea, React Navigation theme, BottomSheet, and TimerManager providers. Tabs: `today`, `stats`, `settings`. `add.tsx` is a modal route for create/edit.                                                 |
+| `components/` | UI components grouped by feature in subfolders. Each component may have a colocated `.styles.ts` file.                                                                                                                                                                    |
+| `store/`      | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`.                                                                                                                              |
+| `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.                                                                          |
+| `types/`      | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases).                                                                                                                                                                 |
+| `utils/`      | Pure utility functions: `date.ts` (dayjs helpers), `storage.ts` (MMKV adapter for Zustand persist), notification scheduler utilities (`notifications.ts`, `reminderQueue.ts`, `reminderScheduler.ts`, `reminderScheduleLedger.ts`), `fileOperations.ts`, `statsUtils.ts`. |
+| `constants/`  | Design system tokens: `Colors.ts` (full light/dark palette), `Typography.ts` (9-level type scale), `Spacing.ts` (4pt grid + border radii), `Elevation.ts` (platform shadow presets), `Animation.ts` (spring/timing configs).                                              |
+| `plugins/`    | Expo config plugins (`notifee-mod.js`).                                                                                                                                                                                                                                   |
+| `assets/`     | Images, fonts, splash screen.                                                                                                                                                                                                                                             |
 
 ---
 
@@ -105,6 +106,20 @@ Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/use
 3. On foreground resume, `reconcileActiveTimers()` recalculates true elapsed time from `lastResumedAt`
 4. Auto-completes habits when `elapsedTime + storedValue >= goal`
 5. `TimerManager` component in root layout mounts the hook
+
+### Reminder Notification System
+
+Habit reminder intent is stored on each `Habit.reminder`; native notification identifiers are not stored on habits. YAHT derives a bounded, non-recurring reminder queue from current habit rules, completion history, and snooze state:
+
+1. `utils/reminderQueue.ts` expands habit reminder rules into concrete occurrence reminders, with one primary reminder and up to three nag reminders per occurrence.
+2. The queue reserves 63 normal notification slots plus one visible “Open YAHT to continue reminders” stop notification when more reminders exist.
+3. `utils/reminderScheduleLedger.ts` stores a plain MMKV-backed operational ledger of scheduled notification IDs and signatures; it is not part of the React-facing habit store.
+4. `utils/reminderScheduler.ts` reconciles desired queue state against Expo scheduled notifications, cancelling changed/stale YAHT reminders and scheduling missing ones.
+5. iOS occurrence reminders use non-repeating calendar triggers; Android uses date/timestamp triggers and relies on `expo-notifications` to re-arm stored notification requests after boot or app update.
+
+### Android Time Change Bridge
+
+The app consumes the sibling package `@niqp/react-native-android-time-change` from `D:\WebDev\react-native-android-time-change` via a local `file:` dependency. YAHT uses a custom `index.js` entrypoint to preserve Expo Router startup while registering the Android Headless JS task `YAHTTimeChangeTask`. App-owned handling lives in `utils/timeChange.ts` and `hooks/useTimeChangeManager.ts`; the native package only transports normalized `TIME_SET`, `TIMEZONE_CHANGED`, and optional API 37+ `TIMEZONE_OFFSET_CHANGED` events into JS. Keep habit, timer, reminder, and scheduling policy in YAHT code, not in the library.
 
 ### Theming
 

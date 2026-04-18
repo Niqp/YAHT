@@ -9,12 +9,14 @@ import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-c
 
 import { useTimerManager } from "@/hooks/timer/useTimerManager";
 import { useReminderManager } from "@/hooks/habit/useReminderManager";
+import { useTimeChangeManager } from "@/hooks/useTimeChangeManager";
 import { useTheme } from "@/hooks/useTheme";
 
 export default function RootLayout() {
   const { colors, isDarkMode } = useTheme();
   useTimerManager();
   useReminderManager();
+  useTimeChangeManager();
 
   const stackScreenOptions = useMemo<NativeStackNavigationOptions>(
     () => ({
