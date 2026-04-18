@@ -115,12 +115,12 @@ const ensureReminderCategory = async () => {
       {
         identifier: REMINDER_ACTION_DONE_IDENTIFIER,
         buttonTitle: "Done",
-        options: { opensAppToForeground: true },
+        options: { opensAppToForeground: false },
       },
       {
         identifier: REMINDER_ACTION_SNOOZE_IDENTIFIER,
         buttonTitle: "Snooze",
-        options: { opensAppToForeground: true },
+        options: { opensAppToForeground: false },
       },
       {
         identifier: REMINDER_ACTION_OPEN_IDENTIFIER,

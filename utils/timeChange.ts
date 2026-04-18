@@ -2,32 +2,10 @@ import type { TimeChangeEvent } from "@niqp/react-native-android-time-change";
 
 import { useHabitStore } from "@/store/habitStore";
 import { getCurrentDateStamp } from "@/utils/date";
+import { waitForHabitStoreHydration } from "@/utils/habitStoreHydration";
 import { reconcileReminderNotifications } from "@/utils/reminderScheduler";
 
 export const TIME_CHANGE_HEADLESS_TASK = "YAHTTimeChangeTask";
-
-const waitForHabitStoreHydration = async (timeoutMs = 2_000): Promise<boolean> => {
-  if (useHabitStore.getState()._hasHydrated) {
-    return true;
-  }
-
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      unsubscribe();
-      resolve(useHabitStore.getState()._hasHydrated);
-    }, timeoutMs);
-
-    const unsubscribe = useHabitStore.subscribe((state) => {
-      if (!state._hasHydrated) {
-        return;
-      }
-
-      clearTimeout(timeout);
-      unsubscribe();
-      resolve(true);
-    });
-  });
-};
 
 export const handleTimeChangeEvent = async (_event: TimeChangeEvent): Promise<void> => {
   try {

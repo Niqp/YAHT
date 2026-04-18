@@ -7,38 +7,25 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "icon": "./assets/images/icon.png",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "tech.niqp.yaht",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "fetch",
-          "processing",
-          "fetch",
-          "processing"
-        ],
+        "UIBackgroundModes": ["fetch", "processing", "remote-notification"],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.niqp.yaht",
-      "permissions": [
-        "android.permission.SCHEDULE_EXACT_ALARM",
-        "android.permission.VIBRATE"
-      ]
+      "permissions": ["android.permission.SCHEDULE_EXACT_ALARM", "android.permission.VIBRATE"]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "build": {
         "babel": {
-          "include": [
-            "@gorhom/bottom-sheet",
-            "react-native-reanimated"
-          ]
+          "include": ["@gorhom/bottom-sheet", "react-native-reanimated"]
         }
       }
     },
@@ -46,7 +33,8 @@
       [
         "expo-notifications",
         {
-          "color": "#023c69"
+          "color": "#023c69",
+          "enableBackgroundRemoteNotifications": true
         }
       ],
       "expo-router",
