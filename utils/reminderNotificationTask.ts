@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { BackgroundNotificationResult } from "expo-notifications/build/BackgroundNotificationTasksModule.types";
+import { mapNotificationResponse } from "expo-notifications/build/utils/mapNotificationResponse";
 import * as TaskManager from "expo-task-manager";
 
 import {
@@ -21,7 +22,12 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
     return BackgroundNotificationResult.Failed;
   }
 
-  if (!isNotificationResponsePayload(data) || !isReminderQuickActionResponse(data)) {
+  if (!isNotificationResponsePayload(data)) {
+    return BackgroundNotificationResult.NoData;
+  }
+
+  const response = mapNotificationResponse(data);
+  if (!isReminderQuickActionResponse(response)) {
     return BackgroundNotificationResult.NoData;
   }
 
@@ -31,7 +37,7 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       return BackgroundNotificationResult.NoData;
     }
 
-    const result = await handleReminderNotificationResponse(data, { allowNavigation: false });
+    const result = await handleReminderNotificationResponse(response, { allowNavigation: false });
     return result.handled ? BackgroundNotificationResult.NewData : BackgroundNotificationResult.NoData;
   } catch (taskError) {
     if (taskError instanceof Error) {

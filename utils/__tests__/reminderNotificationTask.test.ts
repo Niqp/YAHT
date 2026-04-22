@@ -36,7 +36,10 @@ jest.mock("@/utils/reminderNotificationResponse", () => {
   };
 });
 
-const createTaskPayload = (actionIdentifier: string): Notifications.NotificationResponse => ({
+const createTaskPayload = (
+  actionIdentifier: string,
+  contentOverrides: Partial<Notifications.NotificationContent & { dataString: string }> = {}
+): Notifications.NotificationResponse => ({
   actionIdentifier,
   notification: {
     date: 123_000,
@@ -53,6 +56,7 @@ const createTaskPayload = (actionIdentifier: string): Notifications.Notification
         badge: null,
         attachments: [],
         threadIdentifier: null,
+        ...contentOverrides,
       },
       trigger: null,
     },
@@ -88,6 +92,29 @@ describe("reminder notification task", () => {
 
     expect(mockWaitForHabitStoreHydration).toHaveBeenCalledTimes(1);
     expect(mockHandleReminderNotificationResponse).toHaveBeenCalledWith(payload, { allowNavigation: false });
+  });
+
+  it("maps Android headless dataString payloads before handling them", async () => {
+    const taskExecutor = loadTaskExecutor();
+    const payload = createTaskPayload(REMINDER_ACTION_DONE_IDENTIFIER, {
+      data: undefined as unknown as Notifications.NotificationContent["data"],
+      dataString: JSON.stringify({ habitId: "habit-1", reminderDate: "2026-04-22" }),
+    });
+
+    await expect(taskExecutor({ data: payload })).resolves.toBe("NewData");
+
+    expect(mockHandleReminderNotificationResponse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        notification: expect.objectContaining({
+          request: expect.objectContaining({
+            content: expect.objectContaining({
+              data: { habitId: "habit-1", reminderDate: "2026-04-22" },
+            }),
+          }),
+        }),
+      }),
+      { allowNavigation: false }
+    );
   });
 
   it("returns NoData for duplicate actions ignored by the shared handler", async () => {
