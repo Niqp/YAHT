@@ -163,10 +163,14 @@ export const reconcileReminderNotifications = async ({
   reason: _reason = "manual",
   habits = useHabitStore.getState().habits,
   nowMs = Date.now(),
+  timeZone,
+  utcOffsetMinutes,
 }: {
   reason?: ReminderReconcileReason;
   habits?: HabitMap;
   nowMs?: number;
+  timeZone?: string;
+  utcOffsetMinutes?: number;
 } = {}) => {
   try {
     if (Platform.OS === "web") {
@@ -179,7 +183,7 @@ export const reconcileReminderNotifications = async ({
       return;
     }
 
-    const queue = buildReminderQueue({ habits, nowMs });
+    const queue = buildReminderQueue({ habits, nowMs, timeZone, utcOffsetMinutes });
     const desiredEntries: DesiredReminderEntry[] = queue.normalJobs.map((job) => ({
       ...job,
       signature: createReminderSignature(job),

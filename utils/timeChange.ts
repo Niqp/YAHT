@@ -1,4 +1,4 @@
-import type { TimeChangeEvent } from "@niqp/react-native-android-time-change";
+import { getCurrentTimeContext, type TimeChangeEvent } from "@niqp/react-native-android-time-change";
 
 import { useHabitStore } from "@/store/habitStore";
 import { getCurrentDateStamp } from "@/utils/date";
@@ -7,7 +7,28 @@ import { reconcileReminderNotifications } from "@/utils/reminderScheduler";
 
 export const TIME_CHANGE_HEADLESS_TASK = "YAHTTimeChangeTask";
 
-export const handleTimeChangeEvent = async (_event: TimeChangeEvent): Promise<void> => {
+let lastKnownNativeTimeZone: string | undefined;
+
+const getEffectiveTimeZone = async (event: TimeChangeEvent) => {
+  if (event.timeZone) {
+    lastKnownNativeTimeZone = event.timeZone;
+    return event.timeZone;
+  }
+
+  if (lastKnownNativeTimeZone) {
+    return lastKnownNativeTimeZone;
+  }
+
+  try {
+    const currentContext = await getCurrentTimeContext();
+    lastKnownNativeTimeZone = currentContext.timeZone;
+    return currentContext.timeZone;
+  } catch {
+    return undefined;
+  }
+};
+
+export const handleTimeChangeEvent = async (event: TimeChangeEvent): Promise<void> => {
   try {
     const isHydrated = await waitForHabitStoreHydration();
     if (!isHydrated) {
@@ -22,7 +43,12 @@ export const handleTimeChangeEvent = async (_event: TimeChangeEvent): Promise<vo
       setSelectedDate(today);
     }
 
-    await reconcileReminderNotifications({ reason: "time-change" });
+    const timeZone = await getEffectiveTimeZone(event);
+    await reconcileReminderNotifications({
+      reason: "time-change",
+      timeZone,
+      utcOffsetMinutes: event.utcOffsetMinutes,
+    });
   } catch (error) {
     if (error instanceof Error) {
       console.error(`Error handling Android time change event: ${error.message}`, error);

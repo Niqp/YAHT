@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 
 import type { Habit, HabitMap, ReminderConfig } from "@/types/habit";
 import { isHabitDueOnDate } from "@/utils/date";
@@ -7,6 +9,9 @@ import {
   getReminderNotificationSeriesId,
   MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE,
 } from "@/utils/notifications";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const NORMAL_REMINDER_NOTIFICATION_LIMIT = 63;
 export const REMINDER_OVERFLOW_PROBE_LIMIT = NORMAL_REMINDER_NOTIFICATION_LIMIT + 1;
@@ -113,6 +118,22 @@ const compareReminderJobs = (left: ReminderQueueJob, right: ReminderQueueJob) =>
 const getSortedHabits = (habits: HabitMap) =>
   Object.values(habits).sort((left, right) => left.id.localeCompare(right.id));
 
+const getZonedDayjs = (value: number, timeZone?: string, utcOffsetMinutes?: number) => {
+  if (typeof utcOffsetMinutes === "number" && Number.isFinite(utcOffsetMinutes)) {
+    return dayjs.utc(value).utcOffset(utcOffsetMinutes);
+  }
+
+  if (!timeZone) {
+    return dayjs(value);
+  }
+
+  try {
+    return dayjs(value).tz(timeZone);
+  } catch {
+    return dayjs(value);
+  }
+};
+
 const addHabitCandidatesForDate = (
   candidates: ReminderQueueJob[],
   candidateIds: Set<string>,
@@ -202,13 +223,17 @@ const addHabitCandidatesForDate = (
 export const buildReminderQueue = ({
   habits,
   nowMs = Date.now(),
+  timeZone,
+  utcOffsetMinutes,
 }: {
   habits: HabitMap;
   nowMs?: number;
+  timeZone?: string;
+  utcOffsetMinutes?: number;
 }): ReminderQueue => {
   const candidates: ReminderQueueJob[] = [];
   const candidateIds = new Set<string>();
-  const now = dayjs(nowMs);
+  const now = getZonedDayjs(nowMs, timeZone, utcOffsetMinutes);
   const sortedHabits = getSortedHabits(habits);
   let scannedDays = 0;
 

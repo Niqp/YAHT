@@ -75,6 +75,61 @@ describe("buildReminderQueue", () => {
     );
   });
 
+  it("builds reminder timestamps in the provided timezone", () => {
+    const queueOptions = {
+      habits: {
+        h1: makeHabit(),
+      },
+      nowMs: Date.UTC(2026, 3, 23, 22, 30),
+      timeZone: "Europe/London",
+    };
+
+    const queue = buildReminderQueue(queueOptions);
+
+    expect(queue.normalJobs[0]).toEqual(
+      expect.objectContaining({
+        reminderDate: "2026-04-24",
+        timestamp: Date.UTC(2026, 3, 24, 8, 0),
+      })
+    );
+  });
+
+  it("builds reminder timestamps with a native utc offset when provided", () => {
+    const queue = buildReminderQueue({
+      habits: {
+        h1: makeHabit(),
+      },
+      nowMs: Date.UTC(2026, 3, 23, 22, 30),
+      timeZone: "Europe/Paris",
+      utcOffsetMinutes: 120,
+    });
+
+    expect(queue.normalJobs[0]).toEqual(
+      expect.objectContaining({
+        reminderDate: "2026-04-24",
+        timestamp: Date.UTC(2026, 3, 24, 7, 0),
+      })
+    );
+  });
+
+  it("uses the native utc offset ahead of the timezone name", () => {
+    const queue = buildReminderQueue({
+      habits: {
+        h1: makeHabit(),
+      },
+      nowMs: Date.UTC(2026, 3, 23, 22, 30),
+      timeZone: "Europe/Paris",
+      utcOffsetMinutes: 60,
+    });
+
+    expect(queue.normalJobs[0]).toEqual(
+      expect.objectContaining({
+        reminderDate: "2026-04-24",
+        timestamp: Date.UTC(2026, 3, 24, 8, 0),
+      })
+    );
+  });
+
   it("expands weekday reminders only on configured weekdays", () => {
     const queue = buildReminderQueue({
       habits: {
