@@ -9,6 +9,7 @@ import {
   handleReminderNotificationResponse as handleReminderNotificationResponseBase,
 } from "@/utils/reminderNotificationResponse";
 import { reconcileReminderNotifications, type ReminderReconcileReason } from "@/utils/reminderScheduler";
+import { drainIosNativeReminderActions } from "@/utils/iosNativeReminderActions";
 
 export const useReminderManager = () => {
   const appStateRef = useRef(AppState.currentState);
@@ -26,7 +27,11 @@ export const useReminderManager = () => {
   }, []);
 
   const reconcile = useCallback(
-    (reason: ReminderReconcileReason) => enqueueReminderTask(() => reconcileReminderNotifications({ reason })),
+    (reason: ReminderReconcileReason) =>
+      enqueueReminderTask(async () => {
+        await drainIosNativeReminderActions();
+        await reconcileReminderNotifications({ reason });
+      }),
     [enqueueReminderTask]
   );
 
@@ -53,7 +58,10 @@ export const useReminderManager = () => {
       return;
     }
 
-    void enqueueReminderTask(() => reconcileReminderNotifications({ reason: "habit-change", habits }));
+    void enqueueReminderTask(async () => {
+      await drainIosNativeReminderActions();
+      await reconcileReminderNotifications({ reason: "habit-change", habits: useHabitStore.getState().habits });
+    });
   }, [enqueueReminderTask, habits, isHydrated]);
 
   useEffect(() => {

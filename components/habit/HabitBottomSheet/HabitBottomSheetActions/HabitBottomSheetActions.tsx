@@ -1,9 +1,9 @@
 import { useTheme } from "@/hooks/useTheme";
 import { Edit, Trash2, Check, RotateCcw, Plus, Minus } from "lucide-react-native";
-import { View, TouchableOpacity, Text } from "react-native";
+import { View, Pressable } from "react-native";
 import styles from "./HabitBottomSheetActions.styles";
-import { getElevation } from "@/constants/Elevation";
 import type { Habit } from "@/types/habit";
+import { AppText } from "@/components/ui";
 
 interface HabitBottomSheetActionsProps {
   habit: Habit;
@@ -29,87 +29,91 @@ export default function HabitBottomSheetActions({
   handleDecrement,
 }: HabitBottomSheetActionsProps) {
   const { colors } = useTheme();
+  const completeAction = !isCompleted
+    ? {
+        label: "Complete",
+        icon: <Check size={20} color={colors.buttonPrimaryText} />,
+        onPress: handleComplete,
+        style: [
+          styles.actionButton,
+          styles.primaryActionButton,
+          { backgroundColor: colors.buttonPrimaryBg, borderColor: colors.buttonPrimaryBg },
+        ],
+        textColor: colors.buttonPrimaryText,
+      }
+    : {
+        label: "Reset",
+        icon: <RotateCcw size={20} color={colors.iconSecondary} />,
+        onPress: handleReset,
+        style: [
+          styles.actionButton,
+          styles.primaryActionButton,
+          { backgroundColor: colors.buttonSecondaryBg, borderColor: colors.buttonSecondaryBorder },
+        ],
+        textColor: colors.buttonSecondaryText,
+      };
+
   return (
     <View style={styles.container}>
       {habit.completion.type === "repetitions" && (
-        <View
-          style={[
-            styles.repetitionRow,
-            { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderDefault },
-            getElevation(1, colors.shadow),
-          ]}
-        >
-          <TouchableOpacity
-            style={styles.repButton}
+        <View style={[styles.repetitionRow, { backgroundColor: colors.bgInset, borderColor: colors.inputBorder }]}>
+          <Pressable
+            style={[styles.repButton, { backgroundColor: colors.bgSurface, borderColor: colors.borderSubtle }]}
             onPress={handleDecrement}
             disabled={currentValue === 0}
-            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Decrease completion count"
           >
-            <Minus size={24} color={currentValue === 0 ? colors.iconDisabled : colors.iconAccent} />
-          </TouchableOpacity>
-          <Text style={[styles.repText, { color: colors.textPrimary }]}>
+            <Minus size={20} color={currentValue === 0 ? colors.iconDisabled : colors.iconAccent} />
+          </Pressable>
+          <AppText variant="title" color={colors.textPrimary} tabularNums style={styles.repText}>
             {currentValue} / {habit.completion.goal}
-          </Text>
-          <TouchableOpacity style={styles.repButton} onPress={handleIncrement} activeOpacity={0.7}>
-            <Plus size={24} color={colors.iconAccent} />
-          </TouchableOpacity>
+          </AppText>
+          <Pressable
+            style={[styles.repButton, { backgroundColor: colors.bgSurface, borderColor: colors.borderSubtle }]}
+            onPress={handleIncrement}
+            accessibilityRole="button"
+            accessibilityLabel="Increase completion count"
+          >
+            <Plus size={20} color={colors.iconAccent} />
+          </Pressable>
         </View>
       )}
 
       <View style={styles.actionsContainer}>
-        <TouchableOpacity
+        <Pressable style={completeAction.style} onPress={completeAction.onPress} accessibilityRole="button">
+          {completeAction.icon}
+          <AppText variant="bodyMedium" color={completeAction.textColor} style={styles.actionText}>
+            {completeAction.label}
+          </AppText>
+        </Pressable>
+      </View>
+
+      <View style={styles.secondaryActionsContainer}>
+        <Pressable
           style={[
-            styles.actionButton,
-            { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
-            getElevation(1, colors.shadow),
+            styles.secondaryActionButton,
+            { backgroundColor: colors.buttonSecondaryBg, borderColor: colors.buttonSecondaryBorder },
           ]}
           onPress={handleEdit}
-          activeOpacity={0.7}
+          accessibilityRole="button"
         >
-          <Edit size={24} color={colors.iconAccent} />
-          <Text style={[styles.actionText, { color: colors.textPrimary }]}>Edit</Text>
-        </TouchableOpacity>
+          <Edit size={18} color={colors.iconAccent} />
+          <AppText variant="label" color={colors.buttonSecondaryText} style={styles.actionText}>
+            Edit
+          </AppText>
+        </Pressable>
 
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
-            getElevation(1, colors.shadow),
-          ]}
+        <Pressable
+          style={[styles.secondaryActionButton, { backgroundColor: colors.dangerSoftBg, borderColor: colors.danger }]}
           onPress={handleDelete}
-          activeOpacity={0.7}
+          accessibilityRole="button"
         >
-          <Trash2 size={24} color={colors.iconDanger} />
-          <Text style={[styles.actionText, { color: colors.textPrimary }]}>Delete</Text>
-        </TouchableOpacity>
-
-        {!isCompleted ? (
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
-              getElevation(1, colors.shadow),
-            ]}
-            onPress={handleComplete}
-            activeOpacity={0.7}
-          >
-            <Check size={24} color={colors.iconSuccess} />
-            <Text style={[styles.actionText, { color: colors.textPrimary }]}>Complete</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              { backgroundColor: colors.bgSurfaceElevated, borderWidth: 1, borderColor: colors.borderDefault },
-              getElevation(1, colors.shadow),
-            ]}
-            onPress={handleReset}
-            activeOpacity={0.7}
-          >
-            <RotateCcw size={24} color={colors.iconSecondary} />
-            <Text style={[styles.actionText, { color: colors.textPrimary }]}>Reset</Text>
-          </TouchableOpacity>
-        )}
+          <Trash2 size={18} color={colors.iconDanger} />
+          <AppText variant="label" color={colors.danger} style={styles.actionText}>
+            Delete
+          </AppText>
+        </Pressable>
       </View>
     </View>
   );

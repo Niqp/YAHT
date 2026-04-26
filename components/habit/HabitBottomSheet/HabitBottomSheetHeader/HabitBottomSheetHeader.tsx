@@ -1,8 +1,10 @@
 import styles from "./HabitBottomSheetHeader.styles";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Pressable } from "react-native";
 import { useTheme } from "@/hooks/useTheme";
-import { ChevronUp } from "lucide-react-native";
+import { X } from "lucide-react-native";
 import type { Habit } from "@/types/habit";
+import { AppText } from "@/components/ui";
+import HabitTypeIndicator from "@/components/stats/HabitTypeIndicator";
 
 export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habit; onClose: () => void }) {
   const { colors } = useTheme();
@@ -16,34 +18,31 @@ export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habi
   }
 
   return (
-    <View style={styles.headerContainer}>
-      <View
-        style={[
-          styles.iconContainer,
-          { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderSubtle },
-        ]}
-      >
-        <Text style={styles.habitIcon}>{habit.icon}</Text>
+    <View style={[styles.headerContainer, { borderBottomColor: colors.borderSubtle }]}>
+      <View style={[styles.iconContainer, { backgroundColor: colors.bgInset, borderColor: colors.borderSubtle }]}>
+        <AppText style={styles.habitIcon}>{habit.icon}</AppText>
       </View>
       <View style={styles.habitInfoContainer}>
-        <Text style={[styles.habitTitle, { color: colors.textPrimary }]}>{habit.title}</Text>
-        <Text style={[styles.habitSubtitle, { color: colors.textSecondary }]}>
+        <AppText variant="title" color={colors.textPrimary} style={styles.habitTitle} numberOfLines={2}>
+          {habit.title}
+        </AppText>
+        <HabitTypeIndicator completionType={habit.completion.type} />
+        <AppText variant="caption" color={colors.textSecondary} numberOfLines={2}>
           {habit.completion.type === "simple"
             ? "Goal: complete once"
             : habit.completion.type === "repetitions"
               ? `Goal: ${habit.completion.goal || 0} repetitions`
               : `Goal: ${formattedTimeGoal}`}
-        </Text>
+        </AppText>
       </View>
-      <TouchableOpacity
-        style={[
-          styles.closeButton,
-          { backgroundColor: colors.bgInset, borderWidth: 1, borderColor: colors.borderSubtle },
-        ]}
+      <Pressable
+        style={styles.closeButton}
         onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close habit details"
       >
-        <ChevronUp size={20} color={colors.iconSecondary} />
-      </TouchableOpacity>
+        <X size={18} color={colors.iconSecondary} />
+      </Pressable>
     </View>
   );
 }

@@ -1,45 +1,62 @@
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import { BorderRadius, Spacing } from "@/constants/Spacing";
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: Spacing.base,
   },
   repetitionRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 16,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
   },
   repButton: {
     width: 44,
     height: 44,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
   },
   repText: {
-    fontSize: 18,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
+    textAlign: "center",
   },
   actionsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
   },
   actionButton: {
+    flex: 1,
+    minHeight: 52,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    flexBasis: "31%", // Slightly increased from 30% to provide more space
-    padding: 15, // Slightly reduced padding to fit more text
-    borderRadius: 16,
-    marginBottom: 12,
+    paddingHorizontal: Spacing.base,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+  },
+  primaryActionButton: {
+    flex: 1,
+  },
+  secondaryActionsContainer: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  secondaryActionButton: {
+    flex: 1,
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
   },
   actionText: {
-    marginTop: 8,
-    fontSize: 13, // Slightly smaller to fit better
-    fontWeight: "500",
+    marginLeft: Spacing.xs,
     textAlign: "center",
     flexShrink: 1,
   },

@@ -1,31 +1,21 @@
 import { StyleSheet } from "react-native";
+import { Spacing } from "@/constants/Spacing";
 
 export default StyleSheet.create({
   statusSection: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  statusText: {
-    fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
-    marginBottom: 16,
+    paddingBottom: Spacing.base,
+    borderBottomWidth: 1,
+    marginBottom: Spacing.base,
   },
   statsContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 8,
+    justifyContent: "space-between",
   },
   statItem: {
+    flex: 1,
     alignItems: "center",
   },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
   statLabel: {
-    fontSize: 12,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
 });

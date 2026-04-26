@@ -15,9 +15,14 @@ const REMINDER_QUEUE_STOP_KIND = "reminderQueueStop";
 export const DEFAULT_REMINDER_SNOOZE_MS = 15 * 60 * 1000;
 export const MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE = 3;
 
+// Keep these constants in sync with plugins/ios-native-reminder-actions.
+// The iOS native notification delegate reads these payload/action IDs and MMKV keys
+// before React Native is running.
 export const REMINDER_ACTION_DONE_IDENTIFIER = "habitReminderDone";
 export const REMINDER_ACTION_SNOOZE_IDENTIFIER = "habitReminderSnooze";
 export const REMINDER_ACTION_OPEN_IDENTIFIER = "habitReminderOpen";
+export const IOS_NATIVE_REMINDER_ACTION_STORAGE_ID = "ios-native-reminder-actions";
+export const IOS_NATIVE_REMINDER_ACTION_STORAGE_KEY = "ios-native-reminder-actions";
 
 export type ReminderNotificationData = {
   kind: typeof REMINDER_KIND;

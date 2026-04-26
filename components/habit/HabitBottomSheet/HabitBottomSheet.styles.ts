@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
+import { Spacing } from "@/constants/Spacing";
 
 const styles = StyleSheet.create({
   contentContainer: {
-    flex: 1,
-    padding: 20,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
   },
 });
 

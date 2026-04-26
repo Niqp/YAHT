@@ -1,8 +1,9 @@
 import { useTheme } from "@/hooks/useTheme";
 import { useStats } from "@/hooks/useStats";
 import type { Habit } from "@/types/habit";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useEffect } from "react";
+import { AppText } from "@/components/ui";
 import styles from "./HabitBottomSheetStatus.styles";
 
 interface HabitBottomSheetStatusProps {
@@ -26,21 +27,33 @@ const HabitBottomSheetStatus = ({ habit, isCompleted, selectedDate }: HabitBotto
   const { totalCompletions, adherenceSinceCreation, currentStreak } = habitStats;
 
   return (
-    <View style={[styles.statusSection, { backgroundColor: colors.bgInset }]}>
+    <View style={[styles.statusSection, { borderBottomColor: colors.borderSubtle }]}>
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalCompletions}</Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Completed</Text>
+          <AppText variant="title" color={colors.textPrimary} tabularNums>
+            {totalCompletions}
+          </AppText>
+          <AppText variant="small" color={colors.textSecondary} style={styles.statLabel}>
+            Total
+          </AppText>
         </View>
 
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{adherenceSinceCreation}%</Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Adherence</Text>
+          <AppText variant="title" color={colors.textPrimary} tabularNums>
+            {adherenceSinceCreation}%
+          </AppText>
+          <AppText variant="small" color={colors.textSecondary} style={styles.statLabel}>
+            Adherence
+          </AppText>
         </View>
 
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{currentStreak}</Text>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Current Streak</Text>
+          <AppText variant="title" color={colors.textPrimary} tabularNums>
+            {currentStreak}
+          </AppText>
+          <AppText variant="small" color={colors.textSecondary} style={styles.statLabel}>
+            Streak
+          </AppText>
         </View>
       </View>
     </View>

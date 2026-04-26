@@ -6,6 +6,8 @@ import type BottomSheet from "@gorhom/bottom-sheet";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Spacing } from "@/constants/Spacing";
 import styles from "./HabitBottomSheet.styles";
 
 import HabitBottomSheetActions from "./HabitBottomSheetActions/HabitBottomSheetActions";
@@ -19,8 +21,9 @@ interface HabitBottomSheetProps {
 }
 
 export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottomSheetProps) {
+  const insets = useSafeAreaInsets();
   const habitId = habit?.id;
-  const liveHabit = useHabitStore((state) => (habitId ? state.habits[habitId] ?? null : null));
+  const liveHabit = useHabitStore((state) => (habitId ? (state.habits[habitId] ?? null) : null));
   const deleteHabit = useHabitStore((state) => state.deleteHabit);
   const updateCompletion = useHabitStore((state) => state.updateCompletion);
   const selectedDate = useHabitStore((state) => state.selectedDate);
@@ -101,7 +104,7 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
       }}
     >
       {!!liveHabit && (
-        <BottomSheetView style={styles.contentContainer}>
+        <BottomSheetView style={[styles.contentContainer, { paddingBottom: insets.bottom + Spacing.lg }]}>
           <HabitBottomSheetHeader habit={liveHabit} onClose={onClose} />
           <HabitBottomSheetStatus habit={liveHabit} isCompleted={isCompleted} selectedDate={selectedDate} />
           <HabitBottomSheetActions
