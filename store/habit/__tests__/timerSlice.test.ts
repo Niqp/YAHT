@@ -3,6 +3,7 @@ import { createTimerSlice } from "@/store/habit/timerSlice";
 import type { HabitState } from "@/store/habitStore";
 import type { CompletionData } from "@/store/habit/completionSlice";
 import { prepareTimerNotifications, cancelTimerNotification } from "@/utils/notifications";
+import { useThemeStore } from "@/store/themeStore";
 
 jest.mock("@/utils/notifications", () => ({
   prepareTimerNotifications: jest.fn(),
@@ -105,6 +106,7 @@ function createHarness(initialHabits: HabitMap, selectedDate = DATE) {
 describe("createTimerSlice behavior", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useThemeStore.setState({ timedHabitGoalBehavior: "continue" });
   });
 
   it("activates timer and primes timer notifications", () => {
@@ -187,7 +189,7 @@ describe("createTimerSlice behavior", () => {
     expect(harness.updateCompletionMultiple.mock.calls[0][0]).toEqual([{ id: "h1", date: DATE, value: 1_000 }]);
   });
 
-  it("keeps timer active when goal is reached during reconcile", async () => {
+  it("keeps timer active when goal is reached during reconcile while continue beyond goal is enabled", async () => {
     const harness = createHarness({
       h1: makeHabit({
         id: "h1",
@@ -206,6 +208,108 @@ describe("createTimerSlice behavior", () => {
 
     expect(harness.getState().habits.h1.completionHistory[DATE]).toEqual({ isCompleted: true, value: 3_000 });
     expect(harness.getState().activeTimers.h1?.[DATE]).toBeDefined();
+  });
+
+  it("marks active timers complete during foreground ticks without stopping them in continue mode", async () => {
+    const harness = createHarness({
+      h1: makeHabit({
+        id: "h1",
+        completion: { type: CompletionType.TIMED, goal: 2_000 },
+        completionHistory: {
+          [DATE]: { isCompleted: false, value: 1_000 },
+        },
+      }),
+    });
+    harness.setState({
+      activeTimers: {
+        h1: {
+          [DATE]: { id: "timer-1", lastResumedAt: "2026-02-16T09:59:59.000Z" },
+        },
+      },
+    });
+
+    await harness.slice.tickForeground(new Date(DEFAULT_NOW).valueOf());
+
+    expect(harness.updateCompletionMultiple).toHaveBeenCalledWith([{ id: "h1", date: DATE, value: 2_000 }]);
+    expect(harness.getState().activeTimers.h1?.[DATE]).toEqual({
+      id: "timer-1",
+      lastResumedAt: DEFAULT_NOW,
+    });
+  });
+
+  it("clamps and removes active timers during foreground ticks when stop at goal is enabled", async () => {
+    useThemeStore.setState({ timedHabitGoalBehavior: "stop" });
+    const harness = createHarness({
+      h1: makeHabit({
+        id: "h1",
+        completion: { type: CompletionType.TIMED, goal: 2_000 },
+        completionHistory: {
+          [DATE]: { isCompleted: false, value: 1_000 },
+        },
+      }),
+    });
+    harness.setState({
+      activeTimers: {
+        h1: {
+          [DATE]: { id: "timer-1", lastResumedAt: "2026-02-16T09:59:58.000Z" },
+        },
+      },
+    });
+
+    await harness.slice.tickForeground(new Date(DEFAULT_NOW).valueOf());
+
+    expect(harness.updateCompletionMultiple).toHaveBeenCalledWith([{ id: "h1", date: DATE, value: 2_000 }]);
+    expect(cancelTimerNotification).toHaveBeenCalledWith("timer-1");
+    expect(harness.getState().activeTimers.h1).toBeUndefined();
+  });
+
+  it("removes already completed active timers during foreground ticks when stop at goal is enabled", async () => {
+    useThemeStore.setState({ timedHabitGoalBehavior: "stop" });
+    const harness = createHarness({
+      h1: makeHabit({
+        id: "h1",
+        completion: { type: CompletionType.TIMED, goal: 2_000 },
+        completionHistory: {
+          [DATE]: { isCompleted: true, value: 2_500 },
+        },
+      }),
+    });
+    harness.setState({
+      activeTimers: {
+        h1: {
+          [DATE]: { id: "timer-1", lastResumedAt: "2026-02-16T09:59:59.000Z" },
+        },
+      },
+    });
+
+    await harness.slice.tickForeground(new Date(DEFAULT_NOW).valueOf());
+
+    expect(harness.updateCompletionMultiple).toHaveBeenCalledWith([{ id: "h1", date: DATE, value: 2_000 }]);
+    expect(cancelTimerNotification).toHaveBeenCalledWith("timer-1");
+    expect(harness.getState().activeTimers.h1).toBeUndefined();
+  });
+
+  it("clamps and removes active timers during reconcile when stop at goal is enabled", async () => {
+    useThemeStore.setState({ timedHabitGoalBehavior: "stop" });
+    const harness = createHarness({
+      h1: makeHabit({
+        id: "h1",
+        completion: { type: CompletionType.TIMED, goal: 2_000 },
+      }),
+    });
+    harness.setState({
+      activeTimers: {
+        h1: {
+          [DATE]: { id: "timer-1", lastResumedAt: "2026-02-16T09:59:57.000Z" },
+        },
+      },
+    });
+
+    await harness.slice.reconcileActiveTimers(DEFAULT_NOW);
+
+    expect(harness.getState().habits.h1.completionHistory[DATE]).toEqual({ isCompleted: true, value: 2_000 });
+    expect(cancelTimerNotification).toHaveBeenCalledWith("timer-1");
+    expect(harness.getState().activeTimers.h1).toBeUndefined();
   });
 
   it("ticks foreground render signal", () => {

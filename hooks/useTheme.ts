@@ -9,7 +9,16 @@ const isDarkModeActive = (
 ): boolean => mode === "dark" || (mode === "system" && systemColorScheme === "dark");
 
 export const useTheme = () => {
-  const { mode, colorTheme, weekStartDay, setMode, setColorTheme, setWeekStartDay } = useThemeStore();
+  const {
+    mode,
+    colorTheme,
+    weekStartDay,
+    timedHabitGoalBehavior,
+    setMode,
+    setColorTheme,
+    setWeekStartDay,
+    setTimedHabitGoalBehavior,
+  } = useThemeStore();
 
   const systemColorScheme = useColorScheme();
   const isDarkMode = isDarkModeActive(mode, systemColorScheme);
@@ -27,5 +36,7 @@ export const useTheme = () => {
     setColorTheme,
     weekStartDay,
     setWeekStartDay,
+    timedHabitGoalBehavior,
+    setTimedHabitGoalBehavior,
   };
 };

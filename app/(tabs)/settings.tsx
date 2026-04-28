@@ -8,7 +8,7 @@ import type { ColorThemeName } from "@/constants/Colors";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
-import type { ThemeMode, WeekStartDay } from "@/store/themeStore";
+import type { ThemeMode, TimedHabitGoalBehavior, WeekStartDay } from "@/store/themeStore";
 import { exportData, importData } from "@/utils/fileOperations";
 
 const APP_VERSION = Constants.expoConfig?.version ?? "Unknown";
@@ -31,8 +31,24 @@ const WEEK_START_OPTIONS: { label: string; value: WeekStartDay }[] = [
   { label: "Monday", value: 1 },
 ];
 
+const TIMED_GOAL_OPTIONS: { label: string; value: TimedHabitGoalBehavior }[] = [
+  { label: "Allow over goal", value: "continue" },
+  { label: "Stop at goal", value: "stop" },
+];
+
 export default function SettingsScreen() {
-  const { colors, colorTheme, isDarkMode, mode, setColorTheme, setMode, setWeekStartDay, weekStartDay } = useTheme();
+  const {
+    colors,
+    colorTheme,
+    isDarkMode,
+    mode,
+    setColorTheme,
+    setMode,
+    setTimedHabitGoalBehavior,
+    setWeekStartDay,
+    timedHabitGoalBehavior,
+    weekStartDay,
+  } = useTheme();
   const resetStore = useHabitStore((state) => state.resetStore);
   const themeRenderKey = `${colorTheme}-${mode}-${isDarkMode ? "dark" : "light"}`;
 
@@ -95,7 +111,7 @@ export default function SettingsScreen() {
           <View style={styles.headerCopy}>
             <AppText variant="heading">Settings</AppText>
             <AppText variant="body" color={colors.textSecondary}>
-              Theme, calendar behavior and the data stored on this device.
+              Theme, calendar, timers and the data stored on this device.
             </AppText>
           </View>
         </View>
@@ -116,12 +132,19 @@ export default function SettingsScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title="Calendar">
+        <SettingsSection title="Behaviour">
           <SegmentedSettingRow
             title="First day of week"
             values={WEEK_START_OPTIONS.map((option) => option.label)}
             selectedIndex={WEEK_START_OPTIONS.findIndex((option) => option.value === weekStartDay)}
             onChange={(index) => setWeekStartDay(WEEK_START_OPTIONS[index].value)}
+          />
+          <SegmentedSettingRow
+            title="Timed habits"
+            description="What happens after a running timer reaches its goal."
+            values={TIMED_GOAL_OPTIONS.map((option) => option.label)}
+            selectedIndex={TIMED_GOAL_OPTIONS.findIndex((option) => option.value === timedHabitGoalBehavior)}
+            onChange={(index) => setTimedHabitGoalBehavior(TIMED_GOAL_OPTIONS[index].value)}
           />
         </SettingsSection>
 

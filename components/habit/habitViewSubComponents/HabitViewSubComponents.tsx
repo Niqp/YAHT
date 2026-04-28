@@ -18,14 +18,14 @@ export const HabitStatusIndicator = ({
   colors: ColorTheme;
 }) => (
   <View style={styles.statusContainer}>
-    {isCompleted ? (
-      <CheckCircle size={20} color={colors.success} strokeWidth={2} />
-    ) : completionType === "timed" ? (
+    {completionType === "timed" ? (
       timerActive ? (
-        <PauseCircle size={22} color={colors.accent} strokeWidth={2} />
+        <PauseCircle size={22} color={isCompleted ? colors.success : colors.accent} strokeWidth={2} />
       ) : (
-        <PlayCircle size={22} color={colors.iconSecondary} strokeWidth={2} />
+        <PlayCircle size={22} color={isCompleted ? colors.success : colors.iconSecondary} strokeWidth={2} />
       )
+    ) : isCompleted ? (
+      <CheckCircle size={20} color={colors.success} strokeWidth={2} />
     ) : completionType === "repetitions" ? (
       <PlusCircle size={22} color={colors.iconSecondary} strokeWidth={2} />
     ) : (
@@ -82,7 +82,15 @@ export const SubtitleIcon = ({
       return (
         <Clock
           size={16}
-          color={isCompleted ? colors.success : timerActive ? colors.success : colors.iconSecondary}
+          color={
+            timerActive
+              ? isCompleted
+                ? colors.success
+                : colors.accent
+              : isCompleted
+                ? colors.success
+                : colors.iconSecondary
+          }
           strokeWidth={2}
         />
       );

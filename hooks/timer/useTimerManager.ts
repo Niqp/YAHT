@@ -32,7 +32,7 @@ export const useTimerManager = () => {
   }, [reconcileActiveTimers]);
 
   const updateAllActiveTimers = useCallback(() => {
-    tickForeground(Date.now());
+    void tickForeground(Date.now());
   }, [tickForeground]);
 
   const clearTimerNotifications = useCallback(async () => {

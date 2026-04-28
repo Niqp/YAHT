@@ -4,7 +4,7 @@ import { BorderRadius, Spacing } from "@/constants/Spacing";
 const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     borderBottomWidth: 1,
     paddingBottom: Spacing.base,
     marginBottom: Spacing.base,
@@ -31,8 +31,9 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   closeButton: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
+    alignSelf: "flex-start",
     alignItems: "center",
     justifyContent: "center",
   },

@@ -1,7 +1,7 @@
 /**
  * Tests for store/themeStore.ts
  *
- * Covers: mode switching, weekStartDay.
+ * Covers: mode switching, weekStartDay, timedHabitGoalBehavior.
  */
 
 // ── Mock MMKV ─────────────────────────────────────────────────────────────────
@@ -31,6 +31,7 @@ function resetStore() {
     mode: "system",
     colorTheme: "sepia",
     weekStartDay: 1,
+    timedHabitGoalBehavior: "continue",
   });
 }
 
@@ -49,6 +50,10 @@ describe("themeStore", () => {
 
     it("defaults weekStartDay to 1 (Monday)", () => {
       expect(useThemeStore.getState().weekStartDay).toBe(1);
+    });
+
+    it("defaults timed habit goal behavior to continue", () => {
+      expect(useThemeStore.getState().timedHabitGoalBehavior).toBe("continue");
     });
   });
 
@@ -81,6 +86,19 @@ describe("themeStore", () => {
       useThemeStore.getState().setWeekStartDay(0);
       useThemeStore.getState().setWeekStartDay(1);
       expect(useThemeStore.getState().weekStartDay).toBe(1);
+    });
+  });
+
+  describe("setTimedHabitGoalBehavior", () => {
+    it("switches to stop at goal", () => {
+      useThemeStore.getState().setTimedHabitGoalBehavior("stop");
+      expect(useThemeStore.getState().timedHabitGoalBehavior).toBe("stop");
+    });
+
+    it("switches back to continue beyond goal", () => {
+      useThemeStore.getState().setTimedHabitGoalBehavior("stop");
+      useThemeStore.getState().setTimedHabitGoalBehavior("continue");
+      expect(useThemeStore.getState().timedHabitGoalBehavior).toBe("continue");
     });
   });
 });

@@ -30,7 +30,7 @@ export interface HabitState {
   getHabitById: (id: string) => Habit | undefined;
   importHabits: (importedHabits: HabitMap) => Promise<number>;
   resetStore: () => void;
-  tickForeground: (nowMs?: number) => void;
+  tickForeground: (nowMs?: number) => Promise<void>;
   reconcileActiveTimers: (nowIso?: string) => Promise<void>;
   activateTimer: (habitId: string, date: DateStamp) => void;
   removeTimer: (habitId: string, date: DateStamp, nowIso?: string) => Promise<void>;

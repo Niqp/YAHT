@@ -8,7 +8,15 @@ import { haptic } from "@/utils/haptics";
 import { MoreVertical } from "lucide-react-native";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, useReducedMotion } from "react-native-reanimated";
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSpring,
+  useReducedMotion,
+  withTiming,
+} from "react-native-reanimated";
 import { SpringConfig, PressScale } from "@/constants/Animation";
 import { getElevation } from "@/constants/Elevation";
 import styles from "./HabitItem.styles";
@@ -23,7 +31,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
   if (!habitId) return null;
 
   const habit = useHabitStore((state) => state.habits[habitId]);
-  const { colors } = useTheme();
+  const { colors, timedHabitGoalBehavior } = useTheme();
   const selectedDate = useHabitStore((state) => state.selectedDate);
   const updateCompletion = useHabitStore((state) => state.updateCompletion);
   const startTimer = useHabitStore((state) => state.activateTimer);
@@ -40,10 +48,15 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
 
   // Reanimated spring press feedback (replaces old Animated.sequence)
   const scale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(0);
   const reducedMotion = useReducedMotion();
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+  }));
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    opacity: pulseOpacity.value,
   }));
 
   const handlePressIn = () => {
@@ -62,6 +75,24 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
   const isCompleted = completionToday?.isCompleted || false;
   const completionType = habit?.completion?.type;
   const completionGoal = completionType === CompletionType.SIMPLE ? 0 : habit?.completion?.goal || 0;
+  const isTimedHabit = completionType === CompletionType.TIMED;
+  const isActiveTimedHabit = isTimedHabit && isTimerActive;
+  const timerHighlightColor = isCompleted ? colors.success : colors.accent;
+
+  React.useEffect(() => {
+    if (!isActiveTimedHabit) {
+      cancelAnimation(pulseOpacity);
+      pulseOpacity.value = 0;
+      return;
+    }
+
+    if (reducedMotion) {
+      pulseOpacity.value = 0.1;
+      return;
+    }
+
+    pulseOpacity.value = withRepeat(withTiming(0.18, { duration: 900 }), -1, true);
+  }, [isActiveTimedHabit, pulseOpacity, reducedMotion]);
 
   const progress = useHabitProgress({
     habit,
@@ -90,6 +121,10 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         haptic.complete();
       }
     } else if (habit?.completion?.type === "timed") {
+      if (isCompleted && timedHabitGoalBehavior === "stop") {
+        return;
+      }
+
       if (!isTimerActive) {
         startTimer(habit.id, selectedDate);
       } else {
@@ -191,7 +226,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         styles.container,
         animatedStyle,
         {
-          borderColor: isCompleted ? colors.success : colors.borderDefault,
+          borderColor: isActiveTimedHabit ? timerHighlightColor : isCompleted ? colors.success : colors.borderDefault,
           ...getElevation(1, colors.shadow),
         },
       ]}
@@ -205,6 +240,12 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         ]}
       >
         {cardInner}
+        {isActiveTimedHabit ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.timerPulseOverlay, { backgroundColor: timerHighlightColor }, pulseStyle]}
+          />
+        ) : null}
       </View>
     </Animated.View>
   );
