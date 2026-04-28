@@ -7,36 +7,16 @@ import { AppSegmentedControl, AppText } from "@/components/ui";
 import type { ColorThemeName } from "@/constants/Colors";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { useHabitStore } from "@/store/habitStore";
 import type { ThemeMode, TimedHabitGoalBehavior, WeekStartDay } from "@/store/themeStore";
 import { exportData, importData } from "@/utils/fileOperations";
 
-const APP_VERSION = Constants.expoConfig?.version ?? "Unknown";
+const APP_VERSION = Constants.expoConfig?.version;
 const REPOSITORY_URL = "https://github.com/Niqp/YAHT";
 
-const THEME_MODE_OPTIONS: { label: string; value: ThemeMode }[] = [
-  { label: "Light", value: "light" },
-  { label: "Dark", value: "dark" },
-  { label: "System", value: "system" },
-];
-
-const COLOR_THEME_OPTIONS: { label: string; value: ColorThemeName }[] = [
-  { label: "Sepia", value: "sepia" },
-  { label: "Clear", value: "clear" },
-  { label: "OLED", value: "oled" },
-];
-
-const WEEK_START_OPTIONS: { label: string; value: WeekStartDay }[] = [
-  { label: "Sunday", value: 0 },
-  { label: "Monday", value: 1 },
-];
-
-const TIMED_GOAL_OPTIONS: { label: string; value: TimedHabitGoalBehavior }[] = [
-  { label: "Allow over goal", value: "continue" },
-  { label: "Stop at goal", value: "stop" },
-];
-
 export default function SettingsScreen() {
+  const { t } = useTranslation();
   const {
     colors,
     colorTheme,
@@ -51,13 +31,36 @@ export default function SettingsScreen() {
   } = useTheme();
   const resetStore = useHabitStore((state) => state.resetStore);
   const themeRenderKey = `${colorTheme}-${mode}-${isDarkMode ? "dark" : "light"}`;
+  const appVersion = APP_VERSION ?? t("common.unknown");
+
+  const themeModeOptions: { label: string; value: ThemeMode }[] = [
+    { label: t("settings.light"), value: "light" },
+    { label: t("settings.dark"), value: "dark" },
+    { label: t("settings.system"), value: "system" },
+  ];
+
+  const colorThemeOptions: { label: string; value: ColorThemeName }[] = [
+    { label: t("settings.sepia"), value: "sepia" },
+    { label: t("settings.clear"), value: "clear" },
+    { label: t("settings.oled"), value: "oled" },
+  ];
+
+  const weekStartOptions: { label: string; value: WeekStartDay }[] = [
+    { label: t("settings.sunday"), value: 0 },
+    { label: t("settings.monday"), value: 1 },
+  ];
+
+  const timedGoalOptions: { label: string; value: TimedHabitGoalBehavior }[] = [
+    { label: t("settings.allowOverGoal"), value: "continue" },
+    { label: t("settings.stopAtGoal"), value: "stop" },
+  ];
 
   const handleExport = async () => {
     try {
       await exportData();
     } catch (error) {
       console.error("Error exporting data:", error);
-      Alert.alert("Export Failed", "Failed to export data. Please try again.");
+      Alert.alert(t("fileOperations.exportFailedTitle"), t("fileOperations.exportFailedBody"));
     }
   };
 
@@ -74,21 +77,21 @@ export default function SettingsScreen() {
       await Linking.openURL(REPOSITORY_URL);
     } catch (error) {
       console.error("Error opening repository:", error);
-      Alert.alert("Unable to Open Link", "The GitHub repository could not be opened on this device.");
+      Alert.alert(t("settings.unableToOpenLinkTitle"), t("settings.unableToOpenLinkBody"));
     }
   };
 
   const handleReset = () => {
     Alert.alert(
-      "Reset Data",
-      "This will delete all your data. Are you sure?",
+      t("settings.resetDataTitle"),
+      t("settings.resetDataBody"),
       [
         {
-          text: "Cancel",
+          text: t("common.cancel"),
           style: "cancel",
         },
         {
-          text: "Reset",
+          text: t("common.reset"),
           style: "destructive",
           onPress: () => {
             useHabitStore.persist.clearStorage();
@@ -109,76 +112,76 @@ export default function SettingsScreen() {
       >
         <View style={styles.header}>
           <View style={styles.headerCopy}>
-            <AppText variant="heading">Settings</AppText>
+            <AppText variant="heading">{t("settings.title")}</AppText>
             <AppText variant="body" color={colors.textSecondary}>
-              Theme, calendar, timers and the data stored on this device.
+              {t("settings.description")}
             </AppText>
           </View>
         </View>
 
-        <SettingsSection title="Appearance">
+        <SettingsSection title={t("settings.appearance")}>
           <SegmentedSettingRow
-            title="Interface mode"
-            values={THEME_MODE_OPTIONS.map((option) => option.label)}
-            selectedIndex={THEME_MODE_OPTIONS.findIndex((option) => option.value === mode)}
-            onChange={(index) => setMode(THEME_MODE_OPTIONS[index].value)}
+            title={t("settings.interfaceMode")}
+            values={themeModeOptions.map((option) => option.label)}
+            selectedIndex={themeModeOptions.findIndex((option) => option.value === mode)}
+            onChange={(index) => setMode(themeModeOptions[index].value)}
           />
           <SectionDivider />
           <SegmentedSettingRow
-            title="Color palette"
-            values={COLOR_THEME_OPTIONS.map((option) => option.label)}
-            selectedIndex={COLOR_THEME_OPTIONS.findIndex((option) => option.value === colorTheme)}
-            onChange={(index) => setColorTheme(COLOR_THEME_OPTIONS[index].value)}
+            title={t("settings.colorPalette")}
+            values={colorThemeOptions.map((option) => option.label)}
+            selectedIndex={colorThemeOptions.findIndex((option) => option.value === colorTheme)}
+            onChange={(index) => setColorTheme(colorThemeOptions[index].value)}
           />
         </SettingsSection>
 
-        <SettingsSection title="Behaviour">
+        <SettingsSection title={t("settings.behaviour")}>
           <SegmentedSettingRow
-            title="First day of week"
-            values={WEEK_START_OPTIONS.map((option) => option.label)}
-            selectedIndex={WEEK_START_OPTIONS.findIndex((option) => option.value === weekStartDay)}
-            onChange={(index) => setWeekStartDay(WEEK_START_OPTIONS[index].value)}
+            title={t("settings.firstDayOfWeek")}
+            values={weekStartOptions.map((option) => option.label)}
+            selectedIndex={weekStartOptions.findIndex((option) => option.value === weekStartDay)}
+            onChange={(index) => setWeekStartDay(weekStartOptions[index].value)}
           />
           <SegmentedSettingRow
-            title="Timed habits"
-            description="What happens after a running timer reaches its goal."
-            values={TIMED_GOAL_OPTIONS.map((option) => option.label)}
-            selectedIndex={TIMED_GOAL_OPTIONS.findIndex((option) => option.value === timedHabitGoalBehavior)}
-            onChange={(index) => setTimedHabitGoalBehavior(TIMED_GOAL_OPTIONS[index].value)}
+            title={t("settings.timedHabits")}
+            description={t("settings.timedHabitsDescription")}
+            values={timedGoalOptions.map((option) => option.label)}
+            selectedIndex={timedGoalOptions.findIndex((option) => option.value === timedHabitGoalBehavior)}
+            onChange={(index) => setTimedHabitGoalBehavior(timedGoalOptions[index].value)}
           />
         </SettingsSection>
 
-        <SettingsSection title="Local data">
+        <SettingsSection title={t("settings.localData")}>
           <ActionRow
             icon={<Download size={18} color={colors.iconPrimary} />}
-            title="Export data"
-            description="Create a JSON backup that you can share or keep."
+            title={t("settings.exportData")}
+            description={t("settings.exportDataDescription")}
             onPress={handleExport}
           />
           <SectionDivider />
           <ActionRow
             icon={<Upload size={18} color={colors.iconPrimary} />}
-            title="Import data"
-            description="Replace current habits with the contents of a backup file."
+            title={t("settings.importData")}
+            description={t("settings.importDataDescription")}
             onPress={handleImport}
           />
           <SectionDivider />
           <ActionRow
             icon={<Trash2 size={18} color={colors.danger} />}
-            title="Reset all data"
-            description="Delete habits, timers and saved progress from this device."
+            title={t("settings.resetAllData")}
+            description={t("settings.resetAllDataDescription")}
             onPress={handleReset}
             destructive
           />
         </SettingsSection>
 
-        <SettingsSection title="About">
-          <StaticRow title="Version" value={`v${APP_VERSION}`} />
+        <SettingsSection title={t("settings.about")}>
+          <StaticRow title={t("settings.version")} value={`v${appVersion}`} />
           <SectionDivider />
           <ActionRow
             icon={<Code2 size={18} color={colors.iconPrimary} />}
-            title="Source code"
-            description="Open the public GitHub repository."
+            title={t("settings.sourceCode")}
+            description={t("settings.sourceCodeDescription")}
             onPress={handleOpenRepository}
           />
         </SettingsSection>

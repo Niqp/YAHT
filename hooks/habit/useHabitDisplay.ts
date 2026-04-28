@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { formatTime } from "@/utils/date";
+import { useTranslation } from "@/i18n";
 
 import { Habit } from "@/types/habit";
 
@@ -18,6 +19,7 @@ export function useHabitDisplay({
   completionGoal,
   elapsedTime,
 }: HabitDisplayProps) {
+  const { t } = useTranslation();
   // Format the time for display
   const getDisplayTime = useCallback(() => {
     const combinedTime = completionValue + elapsedTime;
@@ -30,7 +32,7 @@ export function useHabitDisplay({
 
     switch (habit.completion.type) {
       case "simple":
-        return isCompleted ? "Completed" : "";
+        return isCompleted ? t("common.completed") : "";
       case "repetitions":
         return `${completionValue} / ${completionGoal}`;
       case "timed":
@@ -38,7 +40,7 @@ export function useHabitDisplay({
       default:
         return "";
     }
-  }, [habit, isCompleted, completionValue, completionGoal, getDisplayTime]);
+  }, [habit, isCompleted, completionValue, completionGoal, getDisplayTime, t]);
 
   return { getSubtitleText };
 }

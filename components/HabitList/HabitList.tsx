@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { SectionList, View } from "react-native";
 import { BookOpen } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { useHabitStore } from "@/store/habitStore";
 import type { Habit } from "@/types/habit";
 import { shouldShowHabitOnDate } from "@/utils/date";
@@ -17,6 +18,7 @@ interface HabitListProps {
 
 export default function HabitList({ handleHabitAction }: HabitListProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const habitsMap = useHabitStore((state) => state.habits);
   const selectedDate = useHabitStore((state) => state.selectedDate);
 
@@ -44,17 +46,17 @@ export default function HabitList({ handleHabitAction }: HabitListProps) {
 
       const sections = [];
       if (incompleteHabits.length > 0) {
-        sections.push({ title: "To Do", data: incompleteHabits, completed: false });
+        sections.push({ title: t("habits.toDo"), data: incompleteHabits, completed: false });
       }
       if (completedHabits.length > 0) {
-        sections.push({ title: "Completed", data: completedHabits, completed: true });
+        sections.push({ title: t("common.completed"), data: completedHabits, completed: true });
       }
       return sections;
     } catch (error) {
       console.error("Error grouping habits:", error);
       return [];
     }
-  }, [filteredHabits, selectedDate]);
+  }, [filteredHabits, selectedDate, t]);
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: { title: string; completed: boolean; data: Habit[] } }) => (
@@ -88,10 +90,10 @@ export default function HabitList({ handleHabitAction }: HabitListProps) {
         </View>
         <View style={styles.emptyTextBlock}>
           <AppText variant="body" color={colors.textSecondary} style={{ textAlign: "center" }}>
-            No habits for this day
+            {t("habits.emptyDay")}
           </AppText>
           <AppText variant="caption" color={colors.textTertiary} style={{ textAlign: "center" }}>
-            Tap the + button to add your first habit
+            {t("habits.emptyHint")}
           </AppText>
         </View>
       </View>

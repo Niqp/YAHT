@@ -6,6 +6,7 @@ import { AppSegmentedControl, AppText } from "@/components/ui";
 import { DurationInput, FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { CompletionType } from "@/types/habit";
 import {
   WHEEL_PICKER_CARD_HEIGHT,
@@ -22,11 +23,6 @@ interface CompletionTypeSectionProps {
   errorMessage?: string | null;
   presentation?: "card" | "sheet";
 }
-
-const REPETITION_OPTIONS = Array.from({ length: 100 }, (_, index) => ({
-  value: index + 1,
-  label: `${index + 1} reps`,
-}));
 
 const REPETITION_PRESETS = [
   { label: "5", value: 5 },
@@ -45,6 +41,15 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   presentation = "card",
 }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const repetitionOptions = useMemo(
+    () =>
+      Array.from({ length: 100 }, (_, index) => ({
+        value: index + 1,
+        label: t("addHabit.units.rep", { count: index + 1 }),
+      })),
+    [t]
+  );
 
   const segmentedIndex = useMemo(
     () => (completionType === CompletionType.SIMPLE ? 0 : completionType === CompletionType.REPETITIONS ? 1 : 2),
@@ -59,10 +64,10 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
             <CheckSquare size={34} color={colors.accent} />
           </View>
           <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
-            One tap, done
+            {t("form.oneTapDone")}
           </AppText>
           <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
-            Mark this habit complete with a single check whenever you are finished.
+            {t("form.oneTapDoneDescription")}
           </AppText>
         </View>
       </View>
@@ -72,12 +77,12 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
           <View style={styles.completionTypeDescription}>
             <RotateCcw size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              Complete after a certain amount of repetitions.
+              {t("form.repetitionGoalDescription")}
             </AppText>
           </View>
           <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
             <WheelPicker
-              data={REPETITION_OPTIONS}
+              data={repetitionOptions}
               value={completionGoal}
               onChange={setCompletionGoal}
               style={styles.picker}
@@ -97,7 +102,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
           <View style={styles.completionTypeDescription}>
             <Clock size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              Complete after this much time is tracked.
+              {t("form.timedGoalDescription")}
             </AppText>
           </View>
           <DurationInput valueMs={completionGoal} onChangeMs={setCompletionGoal} />
@@ -108,7 +113,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   const content = (
     <>
       <AppSegmentedControl
-        values={["Simple", "Repetitions", "Timed"]}
+        values={[t("form.completionSimple"), t("form.completionRepetitions"), t("form.completionTimed")]}
         selectedIndex={segmentedIndex}
         onChange={(index) => {
           if (index === 0) setCompletionType(CompletionType.SIMPLE);
@@ -136,7 +141,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
           style={[styles.editNoticeContainer, { backgroundColor: colors.dangerSoftBg, borderColor: colors.danger }]}
         >
           <AppText variant="label" color={colors.danger} style={styles.editNotice}>
-            Completion type is locked after creation.
+            {t("form.completionLocked")}
           </AppText>
         </View>
       ) : null}
@@ -147,10 +152,10 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
     return (
       <View>
         <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
-          Habit type
+          {t("addHabit.sections.habitType")}
         </AppText>
         <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
-          Decide how this habit should be marked complete.
+          {t("form.completionGoalDescription")}
         </AppText>
         {content}
       </View>
@@ -158,7 +163,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   }
 
   return (
-    <FormSection label="Completion goal" description="Decide how this habit should be marked complete.">
+    <FormSection label={t("form.completionGoal")} description={t("form.completionGoalDescription")}>
       {content}
     </FormSection>
   );

@@ -2,6 +2,7 @@ import { AppText } from "@/components/ui";
 import PressableCard from "@/components/ui/PressableCard";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { ChevronRight } from "lucide-react-native";
 import React, { type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
@@ -24,6 +25,7 @@ export default function SheetTriggerCard({
   errorMessage,
 }: SheetTriggerCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const statusColor = errorMessage ? colors.danger : colors.textPrimary;
   const statusText = errorMessage ?? value;
 
@@ -39,7 +41,7 @@ export default function SheetTriggerCard({
           backgroundColor: colors.bgSurface,
         },
       ]}
-      accessibilityHint={`Open ${label.toLowerCase()} settings`}
+      accessibilityHint={t("addHabit.sections.openPanelHint", { label })}
     >
       <View style={styles.content}>
         <View style={[styles.iconWrap, { backgroundColor: colors.bgInset }]}>{icon}</View>

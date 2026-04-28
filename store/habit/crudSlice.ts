@@ -3,6 +3,7 @@ import type { StateCreator } from "zustand";
 import type { Habit, HabitMap } from "../../types/habit";
 import type { HabitState } from "../habitStore";
 import { getCurrentDateStamp } from "@/utils/date";
+import { translate } from "@/i18n";
 
 export interface CRUDSlice {
   habits: HabitMap;
@@ -37,7 +38,7 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
       });
     } catch (error) {
       console.error("Error adding habit:", error);
-      set({ error: "Failed to add habit" });
+      set({ error: translate("errors.addHabit") });
     }
   },
 
@@ -58,7 +59,7 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
       });
     } catch (error) {
       console.error("Error updating habit:", error);
-      set({ error: "Failed to update habit" });
+      set({ error: translate("errors.updateHabit") });
     }
   },
 
@@ -78,7 +79,7 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
       });
     } catch (error) {
       console.error("Error deleting habit:", error);
-      set({ error: "Failed to delete habit" });
+      set({ error: translate("errors.deleteHabit") });
     }
   },
 

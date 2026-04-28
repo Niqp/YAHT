@@ -8,27 +8,26 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Spacing } from "@/constants/Spacing";
 import { Typography } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 
 const TAB_SCREENS = [
   {
     name: "today",
-    title: "Today",
     renderIcon: (color: string, size: number) => <Home color={color} size={size} />,
   },
   {
     name: "stats",
-    title: "Stats",
     renderIcon: (color: string, size: number) => <BarChart2 color={color} size={size} />,
   },
   {
     name: "settings",
-    title: "Settings",
     renderIcon: (color: string, size: number) => <Settings color={color} size={size} />,
   },
 ] as const;
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   const baseSceneStyle = useMemo(
@@ -82,7 +81,7 @@ export default function TabsLayout() {
           name={tab.name}
           options={{
             headerShown: false,
-            title: tab.title,
+            title: t(`tabs.${tab.name}`),
             tabBarIcon: ({ color, size }) => tab.renderIcon(color, size),
             sceneStyle: {
               ...baseSceneStyle,

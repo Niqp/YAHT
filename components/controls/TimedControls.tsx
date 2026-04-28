@@ -11,6 +11,7 @@ import {
 import { Clock } from "lucide-react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { getElevation } from "@/constants/Elevation";
+import { translate, useTranslation } from "@/i18n";
 
 import styles from "./TimedControls.styles";
 
@@ -35,9 +36,10 @@ export default function IOSTimerPicker({
   onChange,
   min: _min = 60000, // 1 minute minimum (in ms)
   max: _max = 86400000, // 24 hours maximum (in ms)
-  label = "Target time:",
+  label = translate("form.targetTime"),
 }: IOSTimerPickerProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   // Calculate hours, minutes from milliseconds
   const totalSeconds = Math.floor(value / 1000);
@@ -200,7 +202,7 @@ export default function IOSTimerPicker({
       >
         <Text style={[styles.timeDisplayText, { color: colors.textPrimary }]}>{formatDisplayTime()}</Text>
         <Text style={[styles.timeHintText, { color: colors.textSecondary }]}>
-          Tap to {showPicker ? "hide" : "show"} time picker
+          {showPicker ? t("form.tapToHidePicker") : t("form.tapToShowPicker")}
         </Text>
       </TouchableOpacity>
 
@@ -219,7 +221,7 @@ export default function IOSTimerPicker({
           <View style={styles.pickerControls}>
             {/* Hours */}
             <View style={styles.pickerColumn}>
-              <Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>Hours</Text>
+              <Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>{t("form.hour")}</Text>
 
               <View style={styles.pickerHighlightContainer}>
                 {/* Center highlight */}
@@ -253,7 +255,7 @@ export default function IOSTimerPicker({
 
             {/* Minutes */}
             <View style={styles.pickerColumn}>
-              <Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>Minutes</Text>
+              <Text style={[styles.pickerLabel, { color: colors.textSecondary }]}>{t("form.minute")}</Text>
 
               <View style={styles.pickerHighlightContainer}>
                 {/* Center highlight */}
@@ -288,14 +290,14 @@ export default function IOSTimerPicker({
             style={[styles.doneButton, { backgroundColor: colors.buttonPrimaryBg }]}
             onPress={() => setShowPicker(false)}
           >
-            <Text style={[styles.doneButtonText, { color: colors.buttonPrimaryText }]}>Done</Text>
+            <Text style={[styles.doneButtonText, { color: colors.buttonPrimaryText }]}>{t("common.done")}</Text>
           </Pressable>
         </View>
       )}
 
       {/* Time presets for quick selection */}
       <View style={styles.presetsContainer}>
-        <Text style={[styles.presetsLabel, { color: colors.textSecondary }]}>Quick set:</Text>
+        <Text style={[styles.presetsLabel, { color: colors.textSecondary }]}>{t("form.quickSet")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

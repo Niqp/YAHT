@@ -4,6 +4,7 @@ import { EmojiPopup } from "react-native-emoji-popup";
 
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { translate, useTranslation } from "@/i18n";
 
 import AppText from "../AppText";
 
@@ -19,10 +20,11 @@ export default function EmojiPickerField({
   value,
   onChange,
   placeholder = "✨",
-  accessibilityLabel = "Habit emoji",
-  accessibilityHint = "Open the emoji picker to choose an icon for this habit",
+  accessibilityLabel = translate("form.habitEmoji"),
+  accessibilityHint = translate("form.emojiPickerHint"),
 }: EmojiPickerFieldProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const displayValue = value || placeholder;
 
   return (
@@ -37,7 +39,7 @@ export default function EmojiPickerField({
       closeButton={({ close }) => (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close emoji picker"
+          accessibilityLabel={t("form.closeEmojiPicker")}
           onPress={close}
           style={[
             styles.closeButton,
@@ -48,7 +50,7 @@ export default function EmojiPickerField({
           ]}
         >
           <AppText variant="label" color={colors.buttonSecondaryText}>
-            Close
+            {t("form.close")}
           </AppText>
         </Pressable>
       )}

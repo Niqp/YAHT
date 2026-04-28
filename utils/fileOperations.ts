@@ -4,6 +4,7 @@ import * as Sharing from "expo-sharing";
 import { Alert } from "react-native";
 import { useHabitStore } from "../store/habitStore";
 import { getCurrentDateStamp } from "./date";
+import { translate } from "@/i18n";
 
 /**
  * Exports all habit data to a JSON file and offers to share it
@@ -31,20 +32,20 @@ export const exportData = async (): Promise<void> => {
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(backupFile.uri, {
         mimeType: "application/json",
-        dialogTitle: "Export Habits Data",
+        dialogTitle: translate("fileOperations.exportTitle"),
         UTI: "public.json", // For iOS
       });
 
-      Alert.alert("Export Successful", "Your habits data has been exported successfully.");
+      Alert.alert(translate("fileOperations.exportSuccessTitle"), translate("fileOperations.exportSuccessBody"));
     } else {
       Alert.alert(
-        "Sharing not available",
-        `Sharing is not available on this device, but the file was saved to ${backupFile.uri}`
+        translate("fileOperations.sharingUnavailableTitle"),
+        translate("fileOperations.sharingUnavailableSavedBody", { uri: backupFile.uri })
       );
     }
   } catch (error) {
     console.error("Error exporting data:", error);
-    Alert.alert("Export Failed", "Failed to export data. Please try again.");
+    Alert.alert(translate("fileOperations.exportFailedTitle"), translate("fileOperations.exportFailedBody"));
   }
 };
 
@@ -70,24 +71,30 @@ export const importData = async (): Promise<void> => {
 
       // Confirm import with the user
       Alert.alert(
-        "Import Data",
-        `Found ${Object.keys(importedHabits).length} habits in the file. This will replace your current data. Continue?`,
+        translate("fileOperations.importConfirmTitle"),
+        translate("fileOperations.importFoundBody", { count: Object.keys(importedHabits).length }),
         [
           {
-            text: "Cancel",
+            text: translate("common.cancel"),
             style: "cancel",
           },
           {
-            text: "Import",
+            text: translate("fileOperations.importAction"),
             onPress: async () => {
               try {
                 const importedCount = await importHabits(importedHabits);
-                Alert.alert("Import Complete", `Successfully imported ${importedCount} habits.`);
+                Alert.alert(
+                  translate("fileOperations.importCompleteTitle"),
+                  translate("fileOperations.importCompleteBody", { count: importedCount })
+                );
               } catch (error) {
                 if (error instanceof Error) {
                   console.error("Error importing habits:", error.message);
                 }
-                Alert.alert("Import Failed", "Failed to import data. Please try again.");
+                Alert.alert(
+                  translate("fileOperations.importFailedTitle"),
+                  translate("fileOperations.importFailedBody")
+                );
               }
             },
           },
@@ -95,10 +102,10 @@ export const importData = async (): Promise<void> => {
       );
     } catch (error) {
       console.error("Error parsing JSON:", error);
-      Alert.alert("Import Failed", "The selected file contains invalid data.");
+      Alert.alert(translate("fileOperations.importFailedTitle"), translate("fileOperations.importInvalidBody"));
     }
   } catch (error) {
     console.error("Error importing data:", error);
-    Alert.alert("Import Failed", "Failed to import data. Please try again.");
+    Alert.alert(translate("fileOperations.importFailedTitle"), translate("fileOperations.importFailedBody"));
   }
 };

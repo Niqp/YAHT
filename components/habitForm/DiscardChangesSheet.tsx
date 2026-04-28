@@ -2,6 +2,7 @@ import { AppText, ScaleButton } from "@/components/ui";
 import { getElevation } from "@/constants/Elevation";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -20,6 +21,7 @@ interface DiscardChangesSheetProps {
 
 export default function DiscardChangesSheet({ isEditMode, isOpen, onClose, onDiscard }: DiscardChangesSheetProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["36%"], []);
 
@@ -61,15 +63,15 @@ export default function DiscardChangesSheet({ isEditMode, isOpen, onClose, onDis
     >
       <BottomSheetView style={styles.container}>
         <AppText variant="title" style={styles.title} color={colors.textPrimary}>
-          Discard changes?
+          {t("addHabit.alerts.unsavedTitle")}
         </AppText>
         <AppText variant="body" style={styles.subtitle} color={colors.textSecondary}>
-          {isEditMode ? "Your habit edits have not been saved yet." : "Your new habit has not been saved yet."}
+          {isEditMode ? t("form.discardEdit") : t("form.discardCreate")}
         </AppText>
 
         <View style={styles.buttonContainer}>
-          <ScaleButton label="Discard" variant="destructive" onPress={onDiscard} style={styles.button} />
-          <ScaleButton label="Keep Editing" variant="secondary" onPress={onClose} style={styles.button} />
+          <ScaleButton label={t("form.discard")} variant="destructive" onPress={onDiscard} style={styles.button} />
+          <ScaleButton label={t("form.keepEditing")} variant="secondary" onPress={onClose} style={styles.button} />
         </View>
       </BottomSheetView>
     </BottomSheetModal>

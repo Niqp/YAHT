@@ -4,6 +4,7 @@ import { View, Pressable } from "react-native";
 import styles from "./HabitBottomSheetActions.styles";
 import type { Habit } from "@/types/habit";
 import { AppText } from "@/components/ui";
+import { useTranslation } from "@/i18n";
 
 interface HabitBottomSheetActionsProps {
   habit: Habit;
@@ -29,9 +30,10 @@ export default function HabitBottomSheetActions({
   handleDecrement,
 }: HabitBottomSheetActionsProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const completeAction = !isCompleted
     ? {
-        label: "Complete",
+        label: t("common.complete"),
         icon: <Check size={20} color={colors.buttonPrimaryText} />,
         onPress: handleComplete,
         style: [
@@ -42,7 +44,7 @@ export default function HabitBottomSheetActions({
         textColor: colors.buttonPrimaryText,
       }
     : {
-        label: "Reset",
+        label: t("common.reset"),
         icon: <RotateCcw size={20} color={colors.iconSecondary} />,
         onPress: handleReset,
         style: [
@@ -62,7 +64,7 @@ export default function HabitBottomSheetActions({
             onPress={handleDecrement}
             disabled={currentValue === 0}
             accessibilityRole="button"
-            accessibilityLabel="Decrease completion count"
+            accessibilityLabel={t("habits.details.decreaseCount")}
           >
             <Minus size={20} color={currentValue === 0 ? colors.iconDisabled : colors.iconAccent} />
           </Pressable>
@@ -73,7 +75,7 @@ export default function HabitBottomSheetActions({
             style={[styles.repButton, { backgroundColor: colors.bgSurface, borderColor: colors.borderSubtle }]}
             onPress={handleIncrement}
             accessibilityRole="button"
-            accessibilityLabel="Increase completion count"
+            accessibilityLabel={t("habits.details.increaseCount")}
           >
             <Plus size={20} color={colors.iconAccent} />
           </Pressable>
@@ -100,7 +102,7 @@ export default function HabitBottomSheetActions({
         >
           <Edit size={18} color={colors.iconAccent} />
           <AppText variant="label" color={colors.buttonSecondaryText} style={styles.actionText}>
-            Edit
+            {t("common.edit")}
           </AppText>
         </Pressable>
 
@@ -111,7 +113,7 @@ export default function HabitBottomSheetActions({
         >
           <Trash2 size={18} color={colors.iconDanger} />
           <AppText variant="label" color={colors.danger} style={styles.actionText}>
-            Delete
+            {t("common.delete")}
           </AppText>
         </Pressable>
       </View>

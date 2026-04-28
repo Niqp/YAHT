@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { useEffect } from "react";
 import { AppText } from "@/components/ui";
 import styles from "./HabitBottomSheetStatus.styles";
+import { useTranslation } from "@/i18n";
 
 interface HabitBottomSheetStatusProps {
   habit: Habit;
@@ -18,6 +19,7 @@ const HabitBottomSheetStatus = ({
   selectedDate: _selectedDate,
 }: HabitBottomSheetStatusProps) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { habitStats, handleSelectHabit } = useStats();
 
   useEffect(() => {
@@ -38,7 +40,7 @@ const HabitBottomSheetStatus = ({
             {totalCompletions}
           </AppText>
           <AppText variant="small" color={colors.textSecondary} style={styles.statLabel}>
-            Total
+            {t("habits.details.total")}
           </AppText>
         </View>
 
@@ -47,7 +49,7 @@ const HabitBottomSheetStatus = ({
             {adherenceSinceCreation}%
           </AppText>
           <AppText variant="small" color={colors.textSecondary} style={styles.statLabel}>
-            Adherence
+            {t("habits.details.adherence")}
           </AppText>
         </View>
 
@@ -56,7 +58,7 @@ const HabitBottomSheetStatus = ({
             {currentStreak}
           </AppText>
           <AppText variant="small" color={colors.textSecondary} style={styles.statLabel}>
-            Streak
+            {t("habits.details.streak")}
           </AppText>
         </View>
       </View>

@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { HabitMap } from "@/types/habit";
 import type { HabitState } from "../habitStore";
+import { translate } from "@/i18n";
 
 export interface ImportSlice {
   importHabits: (importedHabits: HabitMap) => Promise<number>;
@@ -30,7 +31,7 @@ export const createImportSlice: StateCreator<HabitState, [], [], ImportSlice> = 
       return Object.keys(validHabits).length;
     } catch (error) {
       console.error("Error importing habits:", error);
-      set({ error: "Failed to import habits" });
+      set({ error: translate("errors.importHabits") });
       throw error;
     }
   },

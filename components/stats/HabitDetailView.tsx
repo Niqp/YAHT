@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui";
 import { Spacing } from "@/constants/Spacing";
+import { useTranslation } from "@/i18n";
 import type { Habit, HabitChartData, HabitStats as HabitStatsData } from "@/types/habit";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -15,13 +16,15 @@ interface HabitDetailViewProps {
 }
 
 const HabitDetailView: React.FC<HabitDetailViewProps> = ({ habit, chartData, habitStats }) => {
+  const { t } = useTranslation();
+
   if (!habit) return null;
 
   return (
     <View style={styles.stack}>
       <HabitStats completionType={habit.completion.type} habitStats={habitStats} />
 
-      <Card title="Last 7 scheduled days" contentStyle={styles.performanceContent}>
+      <Card title={t("stats.last7ScheduledDays")} contentStyle={styles.performanceContent}>
         {habit.completion.type === "simple" ? (
           <SimpleHabitChart days={chartData.days} />
         ) : (

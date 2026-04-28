@@ -21,6 +21,7 @@ import { SpringConfig, PressScale } from "@/constants/Animation";
 import { getElevation } from "@/constants/Elevation";
 import styles from "./HabitItem.styles";
 import { HabitStatusIndicator, HabitSubtitle } from "./habitViewSubComponents/HabitViewSubComponents";
+import { useTranslation } from "@/i18n";
 
 interface HabitItemProps {
   habitId: Habit["id"];
@@ -32,6 +33,7 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
 
   const habit = useHabitStore((state) => state.habits[habitId]);
   const { colors, timedHabitGoalBehavior } = useTheme();
+  const { t } = useTranslation();
   const selectedDate = useHabitStore((state) => state.selectedDate);
   const updateCompletion = useHabitStore((state) => state.updateCompletion);
   const startTimer = useHabitStore((state) => state.activateTimer);
@@ -212,8 +214,8 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
         style={styles.moreButton}
         onPress={() => onLongPress(habit)}
         accessibilityRole="button"
-        accessibilityLabel="More options"
-        accessibilityHint="Opens habit actions menu"
+        accessibilityLabel={t("habits.moreOptions")}
+        accessibilityHint={t("habits.moreOptionsHint")}
       >
         <MoreVertical size={20} color={colors.iconPrimary} strokeWidth={2} />
       </TouchableOpacity>

@@ -5,15 +5,13 @@ import duration from "dayjs/plugin/duration";
 
 import { DateStamp, DateTimeStamp } from "@/types/date";
 import type { Habit } from "@/types/habit";
+import type { SupportedLocale } from "@/i18n/locale";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isToday);
 dayjs.extend(duration);
 
-// Cached day names to avoid repeated calculations
-const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WEEK_START_REFERENCE_DATE = "2026-02-15"; // Sunday
 
 export const getCurrentDateDayjs = () => dayjs().startOf("day");
 export const getCurrentDateTimeDayjs = () => dayjs();
@@ -108,13 +106,23 @@ export const formatDate = (date: dayjs.ConfigType): DateStamp => {
 };
 
 export const getMonthName = (date: dayjs.ConfigType): string => {
-  const month = getDayjs(date).month(); // 0-11
-  return MONTH_NAMES[month];
+  return new Intl.DateTimeFormat("en", { month: "short" }).format(toIntlDate(date));
+};
+
+const toIntlDate = (date: dayjs.ConfigType) => getDayjs(date).toDate();
+
+export const getLocalizedMonthYear = (date: dayjs.ConfigType, locale: SupportedLocale): string => {
+  return new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" })
+    .format(toIntlDate(date))
+    .replace(/\sг\.$/, "");
 };
 
 export const getShortDayName = (date: dayjs.ConfigType): string => {
-  const dayIndex = getDayjs(date).day(); // 0-6
-  return DAY_NAMES[dayIndex].substring(0, 3); // First 3 characters
+  return getLocalizedShortDayName(date, "en");
+};
+
+export const getLocalizedShortDayName = (date: dayjs.ConfigType, locale: SupportedLocale): string => {
+  return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(toIntlDate(date)).replace(/\.$/, "");
 };
 
 export const getDay = (date: dayjs.ConfigType): number => {
@@ -141,13 +149,12 @@ export const getOrderedWeekDays = (
   name: string;
 }[] => {
   const weekDaysMap = [
-    { dayIndex: 0, name: "Sunday" },
-    { dayIndex: 1, name: "Monday" },
-    { dayIndex: 2, name: "Tuesday" },
-    { dayIndex: 3, name: "Wednesday" },
-    { dayIndex: 4, name: "Thursday" },
-    { dayIndex: 5, name: "Friday" },
-    { dayIndex: 6, name: "Saturday" },
+    ...Array.from({ length: 7 }, (_, dayIndex) => ({
+      dayIndex,
+      name: new Intl.DateTimeFormat("en", { weekday: "long" }).format(
+        toIntlDate(addDays(WEEK_START_REFERENCE_DATE, dayIndex))
+      ),
+    })),
   ];
 
   const orderedWeekDays = weekDaysMap.slice(startDay).concat(weekDaysMap.slice(0, startDay));

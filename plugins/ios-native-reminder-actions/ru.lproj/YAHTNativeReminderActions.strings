@@ -1,0 +1,5 @@
+"notification_action_done" = "Готово";
+"notification_action_snooze" = "Отложить";
+"notification_action_open" = "Открыть";
+"notification_reminder_title" = "Напоминание";
+"notification_reminder_body" = "Пора выполнить: %@";

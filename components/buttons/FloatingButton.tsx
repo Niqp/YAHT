@@ -7,6 +7,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { SpringConfig, PressScale } from "@/constants/Animation";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { getElevation } from "@/constants/Elevation";
+import { useTranslation } from "@/i18n";
 
 interface FloatingButtonProps {
   navigateToAddHabit: () => void;
@@ -14,6 +15,7 @@ interface FloatingButtonProps {
 
 export function FloatingButton({ navigateToAddHabit }: FloatingButtonProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const scale = useSharedValue(1);
   const reducedMotion = useReducedMotion();
 
@@ -47,8 +49,8 @@ export function FloatingButton({ navigateToAddHabit }: FloatingButtonProps) {
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         accessibilityRole="button"
-        accessibilityLabel="Add a habit"
-        accessibilityHint="Opens the habit creation screen"
+        accessibilityLabel={t("habits.add")}
+        accessibilityHint={t("habits.addHint")}
       >
         <LinearGradient
           colors={[colors.gradientFabStart, colors.gradientFabEnd]}

@@ -8,10 +8,12 @@ import {
   getCurrentDateDayjs,
   getDay,
   getEpochMilliseconds,
-  getMonthName,
-  getShortDayName,
+  getLocalizedMonthYear,
+  getLocalizedShortDayName,
   getYear,
 } from "@/utils/date";
+import { isSupportedLocale } from "@/i18n/locale";
+import { useTranslation } from "@/i18n";
 import { useIsFocused } from "@react-navigation/native";
 import type { ConfigType as DayjsConfigType } from "dayjs";
 import { LinearGradient } from "expo-linear-gradient";
@@ -52,6 +54,7 @@ interface DateItemProps {
   isSelected: boolean;
   isToday: boolean;
   onPress: (date: string) => void;
+  selectDateLabel: string;
 }
 
 const ITEM_WIDTH = 57; // Width of each date item including margins
@@ -64,7 +67,7 @@ const TODAY_PILL_SHOW_DURATION = 260;
 const TODAY_PILL_HIDE_DURATION = 200;
 
 // Memoize the DateItem component to prevent unnecessary re-renders
-const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) => {
+const DateItem = memo(({ item, isSelected, isToday, onPress, selectDateLabel }: DateItemProps) => {
   const { colors } = useTheme();
   const { date, dayName, dayNumber } = item;
 
@@ -82,10 +85,10 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
       borderColor: colors.buttonPrimaryBg,
     },
     isToday &&
-    !isSelected && {
-      backgroundColor: colors.accentSoftBg,
-      borderColor: colors.accentSoftBorder,
-    },
+      !isSelected && {
+        backgroundColor: colors.accentSoftBg,
+        borderColor: colors.accentSoftBorder,
+      },
   ];
 
   const dayNameStyle = [
@@ -108,7 +111,7 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
       onPress={handleActivate}
       onAccessibilityTap={handleActivate}
       accessibilityRole="button"
-      accessibilityLabel={`Select date ${date}`}
+      accessibilityLabel={selectDateLabel}
       testID={`date-item-${date}`}
     >
       <Text style={dayNameStyle}>{dayName}</Text>
@@ -121,8 +124,9 @@ const DateItem = memo(({ item, isSelected, isToday, onPress }: DateItemProps) =>
 DateItem.displayName = "DateItem";
 
 // Generate a range of dates
-const generateDateRange = (startDate: DayjsConfigType, numDays: number): DateInfo[] => {
+const generateDateRange = (startDate: DayjsConfigType, numDays: number, locale: string): DateInfo[] => {
   const result: DateInfo[] = [];
+  const supportedLocale = isSupportedLocale(locale) ? locale : "en";
 
   for (let i = 0; i < numDays; i++) {
     const date = addDays(startDate, i);
@@ -130,9 +134,9 @@ const generateDateRange = (startDate: DayjsConfigType, numDays: number): DateInf
 
     result.push({
       date: formattedDate,
-      dayName: getShortDayName(date),
+      dayName: getLocalizedShortDayName(date, supportedLocale),
       dayNumber: getDay(date),
-      month: getMonthName(date),
+      month: getLocalizedMonthYear(date, supportedLocale),
       year: getYear(date),
       timestamp: getEpochMilliseconds(date),
     });
@@ -143,7 +147,9 @@ const generateDateRange = (startDate: DayjsConfigType, numDays: number): DateInf
 
 export default function DateSlider() {
   const { colors } = useTheme();
+  const { i18n, t } = useTranslation();
   const isFocused = useIsFocused();
+  const locale = isSupportedLocale(i18n.language) ? i18n.language : "en";
   const selectedDate = useHabitStore((state) => state.selectedDate);
   const setSelectedDate = useHabitStore((state) => state.setSelectedDate);
   const { width: viewportWidth } = useWindowDimensions();
@@ -249,15 +255,23 @@ export default function DateSlider() {
   }));
 
   // State to track the visible month and year as user scrolls
-  const [visibleMonthYear, setVisibleMonthYear] = useState("");
+  const [visibleMonthYear, setVisibleMonthYear] = useState(() => getLocalizedMonthYear(getCurrentDateDayjs(), locale));
 
   // Initial date range centered on today
   const [dateRange, setDateRange] = useState<DateInfo[]>(() => {
     const todayDate = getCurrentDateDayjs();
-    const pastDates = generateDateRange(addDays(todayDate, -180), 180);
-    const futureDates = generateDateRange(todayDate, 365);
+    const pastDates = generateDateRange(addDays(todayDate, -180), 180, locale);
+    const futureDates = generateDateRange(todayDate, 365, locale);
     return [...pastDates, ...futureDates];
   });
+
+  useEffect(() => {
+    const todayDate = getCurrentDateDayjs();
+    const pastDates = generateDateRange(addDays(todayDate, -180), 180, locale);
+    const futureDates = generateDateRange(todayDate, 365, locale);
+    setDateRange([...pastDates, ...futureDates]);
+    setVisibleMonthYear(getLocalizedMonthYear(todayDate, locale));
+  }, [locale]);
 
   // Find index of today in the date range
   const todayIndex = useMemo(() => {
@@ -292,9 +306,10 @@ export default function DateSlider() {
         isSelected={item.date === selectedDate}
         isToday={item.date === today}
         onPress={setSelectedDate}
+        selectDateLabel={t("date.selectDate", { date: item.date })}
       />
     ),
-    [selectedDate, today, setSelectedDate]
+    [selectedDate, today, setSelectedDate, t]
   );
 
   // Initialize scroll position to today and set initial visible month
@@ -306,12 +321,6 @@ export default function DateSlider() {
     if (recyclerListRef.current && todayIndex >= 0) {
       initialScrollTimeoutRef.current = setTimeout(() => {
         recyclerListRef.current?.scrollToIndex(todayIndex, true);
-
-        // Set initial visible month/year based on today
-        if (dateRange[todayIndex]) {
-          const { month, year } = dateRange[todayIndex];
-          setVisibleMonthYear(`${month} ${year}`);
-        }
       }, 100);
     }
     return () => {
@@ -341,7 +350,7 @@ export default function DateSlider() {
       // Track visible month/year from first visible item
       if (dateRange[firstVisibleIndex]) {
         const item = dateRange[firstVisibleIndex];
-        const monthYearString = `${item.month} ${item.year}`;
+        const monthYearString = item.month;
 
         // Only update if changed
         setVisibleMonthYear((currentValue) => (currentValue === monthYearString ? currentValue : monthYearString));
@@ -355,12 +364,12 @@ export default function DateSlider() {
         if (lastDate && lastRangeExtensionAtRef.current !== lastDate.date) {
           lastRangeExtensionAtRef.current = lastDate.date;
           const nextDay = addDays(lastDate.date, 1);
-          const newDates = generateDateRange(nextDay, BUFFER_ITEMS * 2);
+          const newDates = generateDateRange(nextDay, BUFFER_ITEMS * 2, locale);
           setDateRange((prevDates) => [...prevDates, ...newDates]);
         }
       }
     },
-    [dateRange, todayIndex, visibleItems]
+    [dateRange, locale, todayIndex, visibleItems]
   );
 
   // Scroll to today when the Today button is pressed
@@ -391,13 +400,13 @@ export default function DateSlider() {
               style={[styles.todayButton, { backgroundColor: colors.buttonPrimaryBg }]}
               onPress={scrollToToday}
               accessibilityRole="button"
-              accessibilityLabel="Go to today"
+              accessibilityLabel={t("date.goToToday")}
             >
               <View style={styles.todayButtonIcon}>
                 <ChevronLeft size={14} color={colors.buttonPrimaryText} />
               </View>
               <Animated.View style={todayTextStyle}>
-                <Text style={[styles.todayButtonText, { color: colors.buttonPrimaryText }]}>Today</Text>
+                <Text style={[styles.todayButtonText, { color: colors.buttonPrimaryText }]}>{t("date.today")}</Text>
               </Animated.View>
             </TouchableOpacity>
           </Animated.View>

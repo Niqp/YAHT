@@ -3,7 +3,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider, type Theme } from "@react-navig
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
+import { AppState } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
 
@@ -11,12 +12,25 @@ import { useTimerManager } from "@/hooks/timer/useTimerManager";
 import { useReminderManager } from "@/hooks/habit/useReminderManager";
 import { useTimeChangeManager } from "@/hooks/useTimeChangeManager";
 import { useTheme } from "@/hooks/useTheme";
+import { initializeI18n, syncI18nToDeviceLocale } from "@/i18n";
+
+initializeI18n();
 
 export default function RootLayout() {
   const { colors, isDarkMode } = useTheme();
   useTimerManager();
   useReminderManager();
   useTimeChangeManager();
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        void syncI18nToDeviceLocale();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   const stackScreenOptions = useMemo<NativeStackNavigationOptions>(
     () => ({

@@ -1,6 +1,7 @@
 import { AppText } from "@/components/ui";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import type { ChartDay, CompletionType } from "@/types/habit";
 import { Check, Minus } from "lucide-react-native";
 import React, { useMemo } from "react";
@@ -40,6 +41,7 @@ const formatValueLabel = (completionType: CompletionType, value: number) => {
 
 const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, completionType }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const scaleMax = useMemo(() => {
     const values = days.filter((day) => day.isDue).flatMap((day) => [day.value, day.goal ?? 0]);
@@ -54,19 +56,19 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
             <Check size={12} color={colors.textOnAccent} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
-            Goal met
+            {t("stats.goalHitRate")}
           </AppText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.accent, borderColor: colors.accent }]} />
           <AppText variant="tiny" color={colors.textSecondary}>
-            Logged
+            {t("common.completed")}
           </AppText>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendGoalMarker, { backgroundColor: colors.textTertiary }]} />
           <AppText variant="tiny" color={colors.textSecondary}>
-            Goal
+            {t("form.completionGoal")}
           </AppText>
         </View>
         <View style={styles.legendItem}>
@@ -74,7 +76,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
             <Minus size={12} color={colors.textTertiary} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
-            Not due
+            {t("stats.off")}
           </AppText>
         </View>
       </View>
@@ -88,7 +90,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
           return (
             <View key={day.date} style={styles.dayColumn}>
               <AppText variant="tiny" color={colors.textSecondary} numberOfLines={1} style={styles.valueLabel}>
-                {day.isDue ? (showValue ? formatValueLabel(completionType, day.value) : "0") : "Off"}
+                {day.isDue ? (showValue ? formatValueLabel(completionType, day.value) : "0") : t("stats.off")}
               </AppText>
 
               <View

@@ -4,6 +4,7 @@ import { AppText } from "@/components/ui";
 import { FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "@/components/ui/form/WheelPicker.shared";
 
 interface ReminderSectionProps {
@@ -51,16 +52,17 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
   presentation = "card",
 }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const content = (
     <View style={styles.container}>
       <View style={[styles.toggleRow, { borderBottomColor: colors.borderSubtle }]}>
         <View style={styles.toggleText}>
           <AppText variant="bodyMedium" color={colors.textPrimary}>
-            Daily Reminder
+            {t("form.dailyReminder")}
           </AppText>
           <AppText variant="caption" color={colors.textSecondary}>
-            Get a notification when you need to complete this habit.
+            {t("form.dailyReminderDescription")}
           </AppText>
         </View>
         <Switch
@@ -76,13 +78,13 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
         pointerEvents={enabled ? "auto" : "none"}
       >
         <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
-          Time of day
+          {t("form.timeOfDay")}
         </AppText>
         <View style={[styles.timeDisplayCard, { backgroundColor: colors.bgInset }]}>
           <View style={styles.wheelsRow}>
             <View style={styles.wheelColumn}>
               <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
-                Hour
+                {t("form.hour")}
               </AppText>
               <WheelPicker
                 data={HOUR_OPTIONS}
@@ -105,7 +107,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
 
             <View style={styles.wheelColumn}>
               <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
-                Minute
+                {t("form.minute")}
               </AppText>
               <WheelPicker
                 data={MINUTE_OPTIONS}
@@ -125,10 +127,10 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
         <View style={[styles.toggleRow, styles.repeatToggleRow, { borderTopColor: colors.borderSubtle }]}>
           <View style={styles.toggleText}>
             <AppText variant="bodyMedium" color={colors.textPrimary}>
-              Repeat if ignored
+              {t("form.repeatIfIgnored")}
             </AppText>
             <AppText variant="caption" color={colors.textSecondary}>
-              Sends follow-up notifications until you complete the habit or the day ends.
+              {t("form.repeatIfIgnoredDescription")}
             </AppText>
           </View>
           <Switch
@@ -144,7 +146,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
           pointerEvents={repeatIfNotCompleted ? "auto" : "none"}
         >
           <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
-            Nagging interval
+            {t("form.naggingInterval")}
           </AppText>
           <PresetPills options={INTERVAL_PRESETS} selectedValue={repeatIntervalMs} onSelect={setRepeatIntervalMs} />
         </View>
@@ -156,10 +158,10 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
     return (
       <View>
         <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
-          Reminders
+          {t("form.reminders")}
         </AppText>
         <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
-          Configure notifications to keep you on track.
+          {t("form.remindersDescription")}
         </AppText>
         {content}
       </View>
@@ -167,7 +169,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
   }
 
   return (
-    <FormSection label="Reminders" description="Configure notifications to keep you on track.">
+    <FormSection label={t("form.reminders")} description={t("form.remindersDescription")}>
       {content}
     </FormSection>
   );

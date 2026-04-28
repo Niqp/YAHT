@@ -2,6 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Circle, CheckCircle } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { AppText } from "@/components/ui";
 import styles from "./TaskGroupSeparator.styles";
 
@@ -13,12 +14,13 @@ interface TaskGroupSeparatorProps {
 
 const TaskGroupSeparator = React.memo(({ title, completed, count }: TaskGroupSeparatorProps) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View
       style={[styles.sectionHeader, { backgroundColor: colors.bgApp }]}
       accessibilityRole="header"
-      accessibilityLabel={`${title}, ${count} habit${count !== 1 ? "s" : ""}`}
+      accessibilityLabel={t("habits.groupAccessibility", { title, count })}
     >
       <View
         style={[

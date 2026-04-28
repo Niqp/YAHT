@@ -4,6 +4,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { RepetitionType } from "@/types/habit";
 import { getOrderedWeekDays } from "@/utils/date";
 import { haptic } from "@/utils/haptics";
+import { useTranslation } from "@/i18n";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppSegmentedControl, AppText } from "@/components/ui";
@@ -27,18 +28,6 @@ interface RepetitionPatternSectionProps {
   presentation?: "card" | "sheet";
 }
 
-const INTERVAL_OPTIONS = Array.from({ length: 365 }, (_, index) => ({
-  value: index + 1,
-  label: `${index + 1} days`,
-}));
-
-const INTERVAL_PRESETS = [
-  { label: "1 day", value: 1 },
-  { label: "2 days", value: 2 },
-  { label: "3 days", value: 3 },
-  { label: "7 days", value: 7 },
-] as const;
-
 const chunkIntoRows = <T,>(items: ReadonlyArray<T>, size: number) => {
   const rows: T[][] = [];
 
@@ -61,6 +50,23 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   presentation = "card",
 }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const intervalOptions = useMemo(
+    () =>
+      Array.from({ length: 365 }, (_, index) => ({
+        value: index + 1,
+        label: t("addHabit.units.day", { count: index + 1 }),
+      })),
+    [t]
+  );
+  const intervalPresets = useMemo(
+    () =>
+      [1, 2, 3, 7].map((value) => ({
+        label: t("addHabit.units.day", { count: value }),
+        value,
+      })),
+    [t]
+  );
 
   const orderedWeekdays = useMemo(() => getOrderedWeekDays(weekStartDay), [weekStartDay]);
   const weekdayOptions = useMemo(
@@ -96,10 +102,10 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
             <CalendarDays size={34} color={colors.accent} />
           </View>
           <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
-            Due every day
+            {t("form.dueEveryDay")}
           </AppText>
           <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
-            Keep this habit on the list each day.
+            {t("form.dailyCaption")}
           </AppText>
         </View>
       </View>
@@ -109,7 +115,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
           <View style={styles.completionTypeDescription}>
             <CalendarDays size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              Pick the weekdays when this habit should appear.
+              {t("form.pickWeekdays")}
             </AppText>
           </View>
           <View style={[styles.weekdaySurface, { backgroundColor: colors.bgInset }]}>
@@ -153,12 +159,12 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
           <View style={styles.completionTypeDescription}>
             <RotateCcw size={24} color={colors.accent} />
             <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              Make it due every {customDays} {customDays === 1 ? "day" : "days"}.
+              {t("form.dueEveryDays", { count: customDays })}
             </AppText>
           </View>
           <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
             <WheelPicker
-              data={INTERVAL_OPTIONS}
+              data={intervalOptions}
               value={customDays}
               onChange={setCustomDays}
               style={styles.picker}
@@ -169,7 +175,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
               animateMount={presentation === "sheet"}
             />
           </View>
-          <PresetPills options={INTERVAL_PRESETS} selectedValue={customDays} onSelect={setCustomDays} />
+          <PresetPills options={intervalPresets} selectedValue={customDays} onSelect={setCustomDays} />
         </View>
       </View>
     );
@@ -177,7 +183,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   const content = (
     <>
       <AppSegmentedControl
-        values={["Daily", "Weekly", "Interval"]}
+        values={[t("form.daily"), t("form.weekly"), t("form.interval")]}
         selectedIndex={segmentedIndex}
         onChange={(index) => {
           let next = RepetitionType.DAILY;
@@ -210,10 +216,10 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     return (
       <View>
         <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
-          Repeatability
+          {t("form.repeatability")}
         </AppText>
         <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
-          Choose how often this habit becomes due.
+          {t("form.scheduleDescription")}
         </AppText>
         {content}
       </View>
@@ -221,7 +227,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   }
 
   return (
-    <FormSection label="Schedule" description="Choose how often this habit becomes due.">
+    <FormSection label={t("form.schedule")} description={t("form.scheduleDescription")}>
       {content}
     </FormSection>
   );

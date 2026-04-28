@@ -7,6 +7,7 @@ import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useStats } from "@/hooks/useStats";
 import type { Habit } from "@/types/habit";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import type BottomSheet from "@gorhom/bottom-sheet";
 import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
@@ -16,6 +17,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 
 export default function StatsScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [isHabitSheetOpen, setIsHabitSheetOpen] = useState(false);
   const habitSheetRef = useRef<BottomSheet>(null);
   const habitSheetSnapPoints = useMemo(() => ["68%"], []);
@@ -56,16 +58,16 @@ export default function StatsScreen() {
             <BarChart2 size={24} color={colors.iconPrimary} strokeWidth={2} />
           </View>
           <AppText variant="heading" style={styles.emptyTitle}>
-            No habits to analyze
+            {t("stats.emptyTitle")}
           </AppText>
           <AppText variant="body" color={colors.textSecondary} style={styles.emptyText}>
-            Create a habit to start tracking daily completion, streaks, and consistency over time.
+            {t("stats.emptyBody")}
           </AppText>
           <View style={styles.emptyAction}>
             <ScaleButton
-              label="Create a habit"
+              label={t("stats.createHabit")}
               onPress={() => router.push("/add")}
-              accessibilityHint="Open the add habit screen"
+              accessibilityHint={t("stats.createHabitHint")}
             />
           </View>
         </View>
@@ -81,15 +83,15 @@ export default function StatsScreen() {
         stickyHeaderIndices={selectedHabit ? [3] : undefined}
       >
         <View style={styles.header}>
-          <AppText variant="heading">Stats</AppText>
+          <AppText variant="heading">{t("stats.screenTitle")}</AppText>
           <AppText variant="body" color={colors.textSecondary}>
-            {`${overallStats.activeHabits} active ${overallStats.activeHabits === 1 ? "habit" : "habits"}`}
+            {t("stats.activeHabits", { count: overallStats.activeHabits })}
           </AppText>
         </View>
 
         <View style={styles.section}>
           <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
-            Overview
+            {t("stats.overview")}
           </AppText>
           <OverallStats stats={overallStats} />
         </View>
@@ -97,7 +99,7 @@ export default function StatsScreen() {
         {selectedHabit ? (
           <View style={styles.habitIntro}>
             <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
-              Habit
+              {t("stats.habit")}
             </AppText>
           </View>
         ) : null}
@@ -131,7 +133,7 @@ export default function StatsScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <View style={[styles.sheetHeader, { borderBottomColor: colors.borderDefault }]}>
-              <AppText variant="title">Select a habit</AppText>
+              <AppText variant="title">{t("stats.selectHabit")}</AppText>
             </View>
           }
           renderItem={({ item: habit }: { item: Habit }) => {
@@ -143,7 +145,7 @@ export default function StatsScreen() {
                 backgroundColor={isSelected ? colors.accentSoftBg : colors.bgSurface}
                 bordered
                 style={isSelected ? [styles.sheetItem, { borderColor: colors.accentSoftBorder }] : styles.sheetItem}
-                accessibilityLabel={`Select ${habit.title}`}
+                accessibilityLabel={t("stats.selectHabitAccessibility", { title: habit.title })}
                 accessibilityState={{ selected: isSelected }}
               >
                 <View style={styles.sheetItemRow}>

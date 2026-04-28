@@ -3,6 +3,7 @@ import { StyleSheet, TextInput } from "react-native";
 
 import { BorderRadius } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { translate } from "@/i18n";
 
 interface EmojiPickerFieldProps {
   value: string;
@@ -16,8 +17,8 @@ export default function EmojiPickerField({
   value,
   onChange,
   placeholder = "✨",
-  accessibilityLabel = "Habit emoji",
-  accessibilityHint = "Enter a one-emoji icon for this habit",
+  accessibilityLabel = translate("form.habitEmoji"),
+  accessibilityHint = translate("form.emojiInputHint"),
 }: EmojiPickerFieldProps) {
   const { colors } = useTheme();
 

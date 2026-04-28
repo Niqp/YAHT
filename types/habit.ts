@@ -90,4 +90,3 @@ export interface ChartDay {
 export interface HabitChartData {
   days: ChartDay[];
 }
-

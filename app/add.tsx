@@ -10,6 +10,7 @@ import { AppBottomSheet, AppText, ScaleButton } from "@/components/ui";
 import { getElevation } from "@/constants/Elevation";
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { useHabitStore } from "@/store/habitStore";
 import { CompletionType, Habit, RepetitionConfig, RepetitionType } from "@/types/habit";
 import { getCurrentDateStamp } from "@/utils/date";
@@ -31,104 +32,118 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { TFunction } from "i18next";
 
 const DEFAULT_ICON = "🌟";
 const DEFAULT_REPETITION_GOAL = 1;
 const DEFAULT_TIMED_GOAL_MS = 1 * 60 * 1000;
-const WEEKDAY_SHORT_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_SHORT_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 type AddSheetKey = "completion" | "repetition" | "reminder";
 const TODAY_ROUTE = "/(tabs)/today";
 
-const formatCountLabel = (count: number, singular: string, plural: string) => {
-  return `${count} ${count === 1 ? singular : plural}`;
-};
-
-const formatDurationLabel = (durationMs: number) => {
+const formatDurationLabel = (durationMs: number, t: TFunction) => {
   const totalMinutes = Math.max(1, Math.round(durationMs / 60000));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
   if (hours > 0 && minutes > 0) {
-    return `${formatCountLabel(hours, "hr", "hrs")} ${formatCountLabel(minutes, "min", "min")}`;
+    return `${t("addHabit.units.hr", { count: hours })} ${t("addHabit.units.min", { count: minutes })}`;
   }
 
   if (hours > 0) {
-    return formatCountLabel(hours, "hr", "hrs");
+    return t("addHabit.units.hr", { count: hours });
   }
 
-  return formatCountLabel(minutes, "min", "min");
+  return t("addHabit.units.min", { count: minutes });
 };
 
-const getCompletionSummary = (completionType: CompletionType, repetitionGoal: number, timedGoalMs: number) => {
+const getCompletionSummary = (
+  completionType: CompletionType,
+  repetitionGoal: number,
+  timedGoalMs: number,
+  t: TFunction
+) => {
   switch (completionType) {
     case CompletionType.REPETITIONS:
-      return formatCountLabel(repetitionGoal, "rep", "reps");
+      return t("addHabit.units.rep", { count: repetitionGoal });
     case CompletionType.TIMED:
-      return formatDurationLabel(timedGoalMs);
+      return formatDurationLabel(timedGoalMs, t);
     case CompletionType.SIMPLE:
     default:
-      return "Simple check-off";
+      return t("addHabit.helpers.simpleCheckOff");
   }
 };
 
-const getCompletionHelperText = (completionType: CompletionType) => {
+const getCompletionHelperText = (completionType: CompletionType, t: TFunction) => {
   switch (completionType) {
     case CompletionType.REPETITIONS:
-      return "Count toward a repetition goal";
+      return t("addHabit.helpers.countGoal");
     case CompletionType.TIMED:
-      return "Track elapsed time to completion";
+      return t("addHabit.helpers.timeGoal");
     case CompletionType.SIMPLE:
     default:
-      return "Single tap completes the habit";
+      return t("addHabit.helpers.simpleGoal");
   }
 };
 
-const getRepetitionSummary = (repetitionType: RepetitionType, selectedDays: number[], customDays: number) => {
+const getRepetitionSummary = (
+  repetitionType: RepetitionType,
+  selectedDays: number[],
+  customDays: number,
+  t: TFunction
+) => {
   switch (repetitionType) {
     case RepetitionType.WEEKDAYS: {
-      const labels = normalizeDays(selectedDays).map((day) => WEEKDAY_SHORT_LABELS[day]);
+      const labels = normalizeDays(selectedDays).map((day) => t(`addHabit.weekdaysShort.${WEEKDAY_SHORT_KEYS[day]}`));
 
       if (labels.length === 0) {
-        return "Pick at least one day";
+        return t("addHabit.helpers.pickDay");
       }
 
       return labels.join(" ");
     }
     case RepetitionType.INTERVAL:
-      return customDays === 1 ? "Every day" : `Every ${customDays} days`;
+      return customDays === 1 ? t("addHabit.helpers.everyDay") : t("addHabit.helpers.everyDays", { count: customDays });
     case RepetitionType.DAILY:
     default:
-      return "Daily";
+      return t("form.daily");
   }
 };
 
-const getRepetitionHelperText = (repetitionType: RepetitionType) => {
+const getRepetitionHelperText = (repetitionType: RepetitionType, t: TFunction) => {
   switch (repetitionType) {
     case RepetitionType.WEEKDAYS:
-      return "Only show the habit on selected weekdays";
+      return t("addHabit.helpers.weekdays");
     case RepetitionType.INTERVAL:
-      return "Space the habit by a repeating interval";
+      return t("addHabit.helpers.interval");
     case RepetitionType.DAILY:
     default:
-      return "Keep it due every day";
+      return t("addHabit.helpers.daily");
   }
 };
 
-const getReminderSummary = (enabled: boolean, hour: number, minute: number, repeat: boolean, intervalMs: number) => {
-  if (!enabled) return "Off";
+const getReminderSummary = (
+  enabled: boolean,
+  hour: number,
+  minute: number,
+  repeat: boolean,
+  intervalMs: number,
+  t: TFunction
+) => {
+  if (!enabled) return t("addHabit.helpers.off");
   const displayHour = hour.toString().padStart(2, "0");
   const displayMin = minute.toString().padStart(2, "0");
   let text = `${displayHour}:${displayMin}`;
   if (repeat) {
-    if (intervalMs === 60 * 60000) text += " (Repeating 1h)";
-    else text += ` (Repeating ${Math.floor(intervalMs / 60000)}m)`;
+    const interval = intervalMs === 60 * 60000 ? "1h" : `${Math.floor(intervalMs / 60000)}m`;
+    text += ` (${t("addHabit.helpers.reminderRepeating", { interval })})`;
   }
   return text;
 };
 
-const getReminderHelperText = (enabled: boolean) => {
-  return enabled ? "Get notified for this habit" : "No notifications";
+const getReminderHelperText = (enabled: boolean, t: TFunction) => {
+  return enabled ? t("addHabit.helpers.getNotified") : t("addHabit.helpers.noNotifications");
 };
 
 const normalizeDays = (days: number[]) => {
@@ -138,7 +153,8 @@ const normalizeDays = (days: number[]) => {
 const buildRepetitionConfig = (
   repetitionType: RepetitionType,
   selectedDays: number[],
-  customDays: number
+  customDays: number,
+  t: TFunction
 ): { repetition: RepetitionConfig | null; errorMessage?: string } => {
   switch (repetitionType) {
     case RepetitionType.WEEKDAYS: {
@@ -147,7 +163,7 @@ const buildRepetitionConfig = (
       if (normalizedDays.length === 0) {
         return {
           repetition: null,
-          errorMessage: "Please select at least one day of the week",
+          errorMessage: t("addHabit.validation.weekDayRequired"),
         };
       }
 
@@ -164,7 +180,7 @@ const buildRepetitionConfig = (
       if (!Number.isFinite(normalizedDays) || normalizedDays < 1) {
         return {
           repetition: null,
-          errorMessage: "Please enter a valid interval (1 day or more)",
+          errorMessage: t("addHabit.validation.intervalRequired"),
         };
       }
 
@@ -197,6 +213,7 @@ const buildCompletionConfig = (completionType: CompletionType, completionGoal: n
 
 export default function AddEditHabitScreen() {
   const { colors, weekStartDay } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
@@ -291,27 +308,23 @@ export default function AddEditHabitScreen() {
 
       isDiscardAlertOpenRef.current = true;
 
-      Alert.alert(
-        "Discard changes?",
-        isEditMode ? "Your habit edits have not been saved yet." : "Your new habit has not been saved yet.",
-        [
-          {
-            text: "Keep Editing",
-            style: "cancel",
-            onPress: handleKeepEditing,
-          },
-          {
-            text: "Discard",
-            style: "destructive",
-            onPress: handleDiscardConfirmed,
-          },
-        ]
-      );
+      Alert.alert(t("addHabit.alerts.unsavedTitle"), isEditMode ? t("form.discardEdit") : t("form.discardCreate"), [
+        {
+          text: t("form.keepEditing"),
+          style: "cancel",
+          onPress: handleKeepEditing,
+        },
+        {
+          text: t("form.discard"),
+          style: "destructive",
+          onPress: handleDiscardConfirmed,
+        },
+      ]);
       return;
     }
 
     setIsDiscardSheetOpen(true);
-  }, [handleDiscardConfirmed, handleKeepEditing, isEditMode]);
+  }, [handleDiscardConfirmed, handleKeepEditing, isEditMode, t]);
 
   const attemptClose = useCallback(
     ({ action }: { action?: unknown } = {}) => {
@@ -382,9 +395,9 @@ export default function AddEditHabitScreen() {
     if (!habit) {
       if (!hasHandledMissingHabitRef.current) {
         hasHandledMissingHabitRef.current = true;
-        Alert.alert("Habit Not Found", "This habit no longer exists.", [
+        Alert.alert(t("addHabit.alerts.habitNotFoundTitle"), t("addHabit.alerts.habitNotFoundBody"), [
           {
-            text: "OK",
+            text: t("common.ok"),
             onPress: navigateBack,
           },
         ]);
@@ -422,7 +435,7 @@ export default function AddEditHabitScreen() {
     setCompletionError(null);
 
     hasInitializedFormRef.current = true;
-  }, [habit, habitId, isHydrated]);
+  }, [habit, habitId, isHydrated, navigateBack, t]);
 
   // Workaround for RN #52596: KeyboardAvoidingView leaves residual bottom padding on Android
   // after keyboard dismissal. Disabling it on hide forces an immediate offset reset to zero.
@@ -554,18 +567,19 @@ export default function AddEditHabitScreen() {
       : completionType === CompletionType.REPETITIONS
         ? repetitionGoal
         : DEFAULT_REPETITION_GOAL;
-  const completionSummary = getCompletionSummary(completionType, repetitionGoal, timedGoalMs);
-  const completionHelperText = getCompletionHelperText(completionType);
-  const repetitionSummary = getRepetitionSummary(repetitionType, selectedDays, customDays);
-  const repetitionHelperText = getRepetitionHelperText(repetitionType);
+  const completionSummary = getCompletionSummary(completionType, repetitionGoal, timedGoalMs, t);
+  const completionHelperText = getCompletionHelperText(completionType, t);
+  const repetitionSummary = getRepetitionSummary(repetitionType, selectedDays, customDays, t);
+  const repetitionHelperText = getRepetitionHelperText(repetitionType, t);
   const reminderSummary = getReminderSummary(
     reminderEnabled,
     reminderHour,
     reminderMinute,
     reminderRepeat,
-    reminderRepeatIntervalMs
+    reminderRepeatIntervalMs,
+    t
   );
-  const reminderHelperText = getReminderHelperText(reminderEnabled);
+  const reminderHelperText = getReminderHelperText(reminderEnabled, t);
 
   const handleCancel = useCallback(() => {
     attemptClose();
@@ -582,7 +596,7 @@ export default function AddEditHabitScreen() {
       const normalizedTitle = title.trim();
 
       if (!normalizedTitle) {
-        setTitleError("Give this habit a short, clear name.");
+        setTitleError(t("addHabit.validation.titleRequired"));
         return;
       }
 
@@ -592,15 +606,15 @@ export default function AddEditHabitScreen() {
         completionType !== CompletionType.SIMPLE &&
         (!Number.isFinite(resolvedCompletionGoal) || resolvedCompletionGoal <= 0)
       ) {
-        setCompletionError("Choose a valid completion goal.");
+        setCompletionError(t("addHabit.validation.completionGoalRequired"));
         return;
       }
 
       setCompletionError(null);
 
-      const { repetition, errorMessage } = buildRepetitionConfig(repetitionType, selectedDays, customDays);
+      const { repetition, errorMessage } = buildRepetitionConfig(repetitionType, selectedDays, customDays, t);
       if (!repetition) {
-        setScheduleError(errorMessage || "Please enter a valid repetition pattern");
+        setScheduleError(errorMessage || t("addHabit.validation.repetitionRequired"));
         return;
       }
 
@@ -647,7 +661,7 @@ export default function AddEditHabitScreen() {
 
       const { error } = useHabitStore.getState();
       if (error) {
-        Alert.alert("Error", error);
+        Alert.alert(t("common.error"), error);
         return;
       }
 
@@ -670,7 +684,7 @@ export default function AddEditHabitScreen() {
 
       const { error } = useHabitStore.getState();
       if (error) {
-        Alert.alert("Error", error);
+        Alert.alert(t("common.error"), error);
         return;
       }
 
@@ -686,20 +700,20 @@ export default function AddEditHabitScreen() {
       return;
     }
 
-    Alert.alert("Delete Habit", "Are you sure you want to delete this habit? This action cannot be undone.", [
+    Alert.alert(t("addHabit.alerts.deleteTitle"), t("addHabit.alerts.deleteBody"), [
       {
-        text: "Cancel",
+        text: t("common.cancel"),
         style: "cancel",
       },
       {
-        text: "Delete",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           void handleConfirmedDelete();
         },
       },
     ]);
-  }, [habitId, isEditMode, handleConfirmedDelete]);
+  }, [habitId, isEditMode, handleConfirmedDelete, t]);
 
   return (
     <View
@@ -715,7 +729,7 @@ export default function AddEditHabitScreen() {
     >
       <Stack.Screen
         options={{
-          title: isEditMode ? "Edit Habit" : "New Habit",
+          title: isEditMode ? t("addHabit.sections.editHabitTitle") : t("addHabit.sections.newHabitTitle"),
           headerStyle: {
             backgroundColor: colors.bgApp,
           },
@@ -743,14 +757,14 @@ export default function AddEditHabitScreen() {
 
           <View style={styles.panelSection}>
             <AppText variant="label" color={colors.textSecondary} style={styles.panelSectionLabel}>
-              Setup panels
+              {t("addHabit.sections.setupPanels")}
             </AppText>
             <AppText variant="caption" color={colors.textTertiary} style={styles.panelSectionDescription}>
-              Open a panel to adjust details while keeping the main form compact.
+              {t("addHabit.sections.setupPanelsDescription")}
             </AppText>
 
             <SheetTriggerCard
-              label="Habit type"
+              label={t("addHabit.sections.habitType")}
               value={completionSummary}
               helperText={completionHelperText}
               icon={<CheckSquare size={18} color={colors.accent} />}
@@ -759,7 +773,7 @@ export default function AddEditHabitScreen() {
             />
 
             <SheetTriggerCard
-              label="Repeatability"
+              label={t("addHabit.sections.repeatability")}
               value={repetitionSummary}
               helperText={repetitionHelperText}
               icon={<CalendarDays size={18} color={colors.accent} />}
@@ -768,7 +782,7 @@ export default function AddEditHabitScreen() {
             />
 
             <SheetTriggerCard
-              label="Reminders"
+              label={t("addHabit.sections.reminders")}
               value={reminderSummary}
               helperText={reminderHelperText}
               icon={<Bell size={18} color={colors.accent} />}
@@ -779,15 +793,15 @@ export default function AddEditHabitScreen() {
           {isEditMode && (
             <View style={styles.dangerZone}>
               <AppText variant="label" color={colors.textSecondary} style={styles.dangerLabel}>
-                Danger zone
+                {t("addHabit.sections.dangerZone")}
               </AppText>
               <ScaleButton
-                label="Delete Habit"
+                label={t("addHabit.sections.deleteHabit")}
                 variant="destructive"
                 onPress={handleDelete}
                 style={styles.deleteButton}
                 disabled={isSubmitting}
-                accessibilityHint="Delete this habit permanently"
+                accessibilityHint={t("addHabit.sections.deleteHint")}
               />
             </View>
           )}
@@ -806,20 +820,20 @@ export default function AddEditHabitScreen() {
         >
           <View style={styles.primaryActionsRow}>
             <ScaleButton
-              label="Cancel"
+              label={t("common.cancel")}
               variant="secondary"
               onPress={handleCancel}
               style={styles.cancelButton}
-              accessibilityHint="Return to the previous screen without saving"
+              accessibilityHint={t("addHabit.sections.cancelHint")}
             />
             <ScaleButton
-              label={isEditMode ? "Save Changes" : "Create Habit"}
+              label={isEditMode ? t("addHabit.sections.saveChanges") : t("addHabit.sections.createHabit")}
               onPress={() => {
                 void handleSave();
               }}
               style={styles.saveButton}
               disabled={isSubmitting || (isEditMode && !isDirty)}
-              accessibilityHint="Save this habit and return to today"
+              accessibilityHint={t("addHabit.sections.saveHint")}
             />
           </View>
         </View>
@@ -876,7 +890,12 @@ export default function AddEditHabitScreen() {
               />
             )}
 
-            <ScaleButton label="Done" variant="secondary" onPress={closeSettingsSheet} style={styles.sheetDoneButton} />
+            <ScaleButton
+              label={t("common.done")}
+              variant="secondary"
+              onPress={closeSettingsSheet}
+              style={styles.sheetDoneButton}
+            />
           </BottomSheetView>
         </AppBottomSheet>
       ) : null}

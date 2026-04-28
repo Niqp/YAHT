@@ -52,17 +52,17 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
   private func registerCategory() {
     let doneAction = UNNotificationAction(
       identifier: Constants.doneActionId,
-      title: "Done",
+      title: localizedString("notification_action_done"),
       options: []
     )
     let snoozeAction = UNNotificationAction(
       identifier: Constants.snoozeActionId,
-      title: "Snooze",
+      title: localizedString("notification_action_snooze"),
       options: []
     )
     let openAction = UNNotificationAction(
       identifier: Constants.openActionId,
-      title: "Open",
+      title: localizedString("notification_action_open"),
       options: [.foreground]
     )
     let category = UNNotificationCategory(
@@ -301,8 +301,8 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     }
 
     let content = UNMutableNotificationContent()
-    content.title = "Friendly Reminder"
-    content.body = "It's time for: \(payload.habitTitle)"
+    content.title = localizedString("notification_reminder_title")
+    content.body = String(format: localizedString("notification_reminder_body"), payload.habitTitle)
     content.sound = .default
     content.categoryIdentifier = Constants.categoryId
     content.userInfo = data
@@ -314,6 +314,10 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
 
     UNUserNotificationCenter.current().add(request)
     upsertScheduleLedgerEntry(payload: payload, notificationId: notificationId, snoozedUntilMs: snoozedUntilMs)
+  }
+
+  private func localizedString(_ key: String) -> String {
+    NSLocalizedString(key, tableName: "YAHTNativeReminderActions", bundle: .main, value: key, comment: "")
   }
 
   private func claimResponse(_ responseKey: String, nowMs: Int64) -> Bool {

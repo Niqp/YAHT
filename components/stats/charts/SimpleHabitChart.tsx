@@ -1,6 +1,7 @@
 import { AppText } from "@/components/ui";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import type { ChartDay } from "@/types/habit";
 import { Check, Minus, X } from "lucide-react-native";
 import React from "react";
@@ -12,6 +13,7 @@ interface SimpleHabitChartProps {
 
 const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const doneColor = colors.accent;
 
   return (
@@ -22,7 +24,7 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
             <Check size={12} color={colors.textOnAccent} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
-            Done
+            {t("common.done")}
           </AppText>
         </View>
         <View style={styles.legendItem}>
@@ -30,7 +32,7 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
             <X size={12} color={colors.danger} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
-            Missed
+            {t("stats.missed")}
           </AppText>
         </View>
         <View style={styles.legendItem}>
@@ -38,7 +40,7 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
             <Minus size={12} color={colors.textTertiary} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
-            Not due
+            {t("stats.off")}
           </AppText>
         </View>
       </View>

@@ -1,6 +1,7 @@
 import { AppText, Card, ProgressBar } from "@/components/ui";
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import type { CompletionType, HabitStats as HabitStatsData } from "@/types/habit";
 import { Award, CheckSquare, Clock3, RotateCcw, Target, TrendingUp } from "lucide-react-native";
 import React from "react";
@@ -20,31 +21,32 @@ interface HabitStatsProps {
 
 const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const consistencyStats: StatItem[] = [
     {
-      label: "Current streak",
+      label: t("stats.currentStreak"),
       value: habitStats.currentStreak.toString(),
       icon: <RotateCcw size={16} color={colors.iconPrimary} strokeWidth={2} />,
     },
     {
-      label: "Best streak",
+      label: t("stats.bestStreak"),
       value: habitStats.bestStreak.toString(),
       icon: <Award size={16} color={colors.iconPrimary} strokeWidth={2} />,
     },
     {
-      label: "Total completions",
+      label: t("stats.totalCompletions"),
       value: habitStats.totalCompletions.toString(),
       icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
     },
     completionType === "simple"
       ? {
-          label: "Completed due days",
+          label: t("stats.completedDueDays"),
           value: `${habitStats.completedDueDays}/${habitStats.dueDaysSinceCreation}`,
           icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
         }
       : {
-          label: "Goal hit rate",
+          label: t("stats.goalHitRate"),
           value: `${habitStats.goalHitRate}%`,
           icon: <Target size={16} color={colors.iconPrimary} strokeWidth={2} />,
         },
@@ -54,15 +56,15 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
   let outputStats: StatItem[] = [];
 
   if (completionType === "repetitions") {
-    outputTitle = "Output";
+    outputTitle = t("stats.output");
     outputStats = [
       {
-        label: "Total reps",
+        label: t("stats.totalReps"),
         value: habitStats.totalRepetitions.toString(),
         icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
       },
       {
-        label: "Best day",
+        label: t("stats.bestDay"),
         value: habitStats.bestDayValue.toString(),
         icon: <TrendingUp size={16} color={colors.iconPrimary} strokeWidth={2} />,
       },
@@ -70,16 +72,16 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
   }
 
   if (completionType === "timed") {
-    outputTitle = "Output";
+    outputTitle = t("stats.output");
     outputStats = [
       {
-        label: "Total time",
+        label: t("stats.totalTime"),
         value: formatDurationLabel(habitStats.totalTimeSpent),
         icon: <Clock3 size={16} color={colors.iconPrimary} strokeWidth={2} />,
         valueVariant: "bodyMedium",
       },
       {
-        label: "Best day",
+        label: t("stats.bestDay"),
         value: formatDurationLabel(habitStats.bestDayValue),
         icon: <TrendingUp size={16} color={colors.iconPrimary} strokeWidth={2} />,
         valueVariant: "bodyMedium",
@@ -92,7 +94,7 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
       <Card padding="none">
         <View style={styles.consistencySection}>
           <View style={styles.headerRow}>
-            <AppText variant="title">Consistency</AppText>
+            <AppText variant="title">{t("stats.consistency")}</AppText>
             <AppText variant="title" color={colors.accent} tabularNums>
               {habitStats.adherenceSinceCreation}%
             </AppText>
@@ -105,7 +107,7 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
                 : "0/0"}
             </AppText>
             <AppText variant="bodyMedium" color={colors.textSecondary}>
-              {habitStats.dueDaysSinceCreation > 0 ? "Scheduled days completed" : "No scheduled days yet"}
+              {habitStats.dueDaysSinceCreation > 0 ? t("stats.scheduledDaysCompleted") : t("stats.noScheduledDaysYet")}
             </AppText>
           </View>
 

@@ -5,9 +5,11 @@ import { X } from "lucide-react-native";
 import type { Habit } from "@/types/habit";
 import { AppText } from "@/components/ui";
 import HabitTypeIndicator from "@/components/stats/HabitTypeIndicator";
+import { useTranslation } from "@/i18n";
 
 export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habit; onClose: () => void }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   let formattedTimeGoal = "";
   if (habit.completion.type === "timed") {
@@ -29,17 +31,17 @@ export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habi
         <HabitTypeIndicator completionType={habit.completion.type} />
         <AppText variant="caption" color={colors.textSecondary} numberOfLines={2}>
           {habit.completion.type === "simple"
-            ? "Goal: complete once"
+            ? t("habits.details.goalOnce")
             : habit.completion.type === "repetitions"
-              ? `Goal: ${habit.completion.goal || 0} repetitions`
-              : `Goal: ${formattedTimeGoal}`}
+              ? t("habits.details.goalRepetitions", { count: habit.completion.goal || 0 })
+              : t("habits.details.goalDuration", { duration: formattedTimeGoal })}
         </AppText>
       </View>
       <Pressable
         style={styles.closeButton}
         onPress={onClose}
         accessibilityRole="button"
-        accessibilityLabel="Close habit details"
+        accessibilityLabel={t("habits.details.close")}
       >
         <X size={18} color={colors.iconSecondary} />
       </Pressable>

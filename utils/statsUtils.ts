@@ -1,5 +1,6 @@
 import type { ChartDay, Habit, HabitChartData, HabitMap, HabitStats, OverallStats } from "../types/habit";
-import { getCurrentDateDayjs, getDateStamp, getDayjs, isHabitDueOnDate } from "./date";
+import { getCurrentDateDayjs, getDateStamp, getDayjs, getLocalizedShortDayName, isHabitDueOnDate } from "./date";
+import { getDeviceLocale } from "@/i18n/locale";
 
 const EMPTY_HABIT_STATS: HabitStats = {
   dueDaysSinceCreation: 0,
@@ -185,13 +186,14 @@ export const calculateHabitStats = (habit: Habit): HabitStats => {
  */
 export const generateChartData = (habit: Habit): HabitChartData => {
   const goal = getHabitGoal(habit);
+  const locale = getDeviceLocale();
 
   const days: ChartDay[] = getLastSevenDates().map((date) => {
     const historyEntry = habit.completionHistory[date];
 
     return {
       date,
-      label: getDayjs(date).format("ddd"),
+      label: getLocalizedShortDayName(date, locale),
       isDue: isHabitDueOnDate(habit, date),
       isCompleted: Boolean(historyEntry?.isCompleted),
       value: historyEntry?.value ?? (historyEntry?.isCompleted ? 1 : 0),

@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { HabitState } from "../habitStore";
+import { translate } from "@/i18n";
 
 export type CompletionData = {
   id: string;
@@ -68,7 +69,7 @@ export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionS
       });
     } catch (error) {
       console.error("Error completing habit:", error);
-      set({ error: "Failed to complete habit" });
+      set({ error: translate("errors.completeHabit") });
     }
   },
 

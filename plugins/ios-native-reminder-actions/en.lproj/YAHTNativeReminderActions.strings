@@ -1,0 +1,5 @@
+"notification_action_done" = "Done";
+"notification_action_snooze" = "Snooze";
+"notification_action_open" = "Open";
+"notification_reminder_title" = "Friendly Reminder";
+"notification_reminder_body" = "It's time for: %@";

@@ -1,12 +1,13 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { canScheduleExactAlarms, openSettings } from "react-native-permissions";
+import { translate } from "@/i18n";
 
 const TIMER_CHANNEL_ID = "timers";
-const TIMER_CHANNEL_NAME = "Timers";
+const getTimerChannelName = () => translate("notifications.channels.timers");
 
 const REMINDER_CHANNEL_ID = "reminders";
-const REMINDER_CHANNEL_NAME = "Reminders";
+const getReminderChannelName = () => translate("notifications.channels.reminders");
 const REMINDER_NOTIFICATION_CATEGORY_ID = "habitReminderActions";
 export const REMINDER_NOTIFICATION_PREFIX = "reminder-";
 const REMINDER_KIND = "habitReminder";
@@ -119,17 +120,17 @@ const ensureReminderCategory = async () => {
     await Notifications.setNotificationCategoryAsync(REMINDER_NOTIFICATION_CATEGORY_ID, [
       {
         identifier: REMINDER_ACTION_DONE_IDENTIFIER,
-        buttonTitle: "Done",
+        buttonTitle: translate("notifications.actions.done"),
         options: { opensAppToForeground: false },
       },
       {
         identifier: REMINDER_ACTION_SNOOZE_IDENTIFIER,
-        buttonTitle: "Snooze",
+        buttonTitle: translate("notifications.actions.snooze"),
         options: { opensAppToForeground: false },
       },
       {
         identifier: REMINDER_ACTION_OPEN_IDENTIFIER,
-        buttonTitle: "Open",
+        buttonTitle: translate("notifications.actions.open"),
         options: { opensAppToForeground: true },
       },
     ]);
@@ -313,7 +314,7 @@ export const prepareTimerNotifications = async ({
   return prepareNotificationsBase(
     TIMER_CHANNEL_ID,
     {
-      name: TIMER_CHANNEL_NAME,
+      name: getTimerChannelName(),
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
     },
@@ -331,8 +332,8 @@ export const scheduleTimerNotification = async (timerId: string, habitTitle: str
 
     const notificationId = getTimerNotificationId(timerId);
     const content: Notifications.NotificationContentInput = {
-      title: "Timer Reached its goal!",
-      body: `${habitTitle} timer has reached its goal, but is still running.`,
+      title: translate("notifications.timerTitle"),
+      body: translate("notifications.timerBody", { habitTitle }),
       sound: "default",
       color: "#023c69",
       priority: Notifications.AndroidNotificationPriority.MAX,
@@ -401,7 +402,7 @@ export const prepareReminderNotifications = async ({
   return prepareNotificationsBase(
     REMINDER_CHANNEL_ID,
     {
-      name: REMINDER_CHANNEL_NAME,
+      name: getReminderChannelName(),
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
     },
@@ -467,8 +468,11 @@ export const schedulePreparedReminderNotification = async ({
     };
 
     const content: Notifications.NotificationContentInput = {
-      title: attemptNumber > 0 ? "Still waiting" : "Friendly Reminder",
-      body: attemptNumber > 0 ? `${habitTitle} still needs attention.` : `It's time for: ${habitTitle}`,
+      title: attemptNumber > 0 ? translate("notifications.followUpTitle") : translate("notifications.reminderTitle"),
+      body:
+        attemptNumber > 0
+          ? translate("notifications.followUpBody", { habitTitle })
+          : translate("notifications.reminderBody", { habitTitle }),
       sound: "default",
       color: "#023c69",
       priority: Notifications.AndroidNotificationPriority.HIGH,
@@ -504,8 +508,8 @@ export const scheduleReminderQueueStopNotification = async ({
     return Notifications.scheduleNotificationAsync({
       identifier: "reminder-stop",
       content: {
-        title: "Open YAHT to continue reminders",
-        body: "Your reminder queue is full. Open YAHT to schedule the next reminders.",
+        title: translate("notifications.stopTitle"),
+        body: translate("notifications.stopBody"),
         sound: "default",
         color: "#023c69",
         priority: Notifications.AndroidNotificationPriority.HIGH,

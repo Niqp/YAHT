@@ -4,6 +4,7 @@ import { Minus, Plus } from "lucide-react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { Typography } from "@/constants/Typography";
+import { translate, useTranslation } from "@/i18n";
 
 interface RepetitionControlsProps {
   value: number;
@@ -20,9 +21,10 @@ export default function RepetitionControls({
   min = 1,
   max = 100,
   step = 1,
-  label = "Target repetitions:",
+  label = translate("form.targetRepetitions"),
 }: RepetitionControlsProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   // Allow empty input for better editing experience
   const [inputValue, setInputValue] = useState(value.toString());
@@ -134,7 +136,7 @@ export default function RepetitionControls({
 
       {/* Presets */}
       <View style={styles.presetsContainer}>
-        <Text style={[styles.presetsLabel, { color: colors.textSecondary }]}>Quick set:</Text>
+        <Text style={[styles.presetsLabel, { color: colors.textSecondary }]}>{t("form.quickSet")}</Text>
         <View style={styles.presetButtons}>
           {presets.map((preset) => (
             <TouchableOpacity

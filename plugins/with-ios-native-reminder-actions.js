@@ -1,5 +1,5 @@
 const { IOSConfig, withAppDelegate, withDangerousMod, withXcodeProject } = require("@expo/config-plugins");
-const { addBuildSourceFileToGroup } = require("@expo/config-plugins/build/ios/utils/Xcodeproj");
+const { addBuildSourceFileToGroup, addResourceFileToGroup } = require("@expo/config-plugins/build/ios/utils/Xcodeproj");
 const fs = require("fs");
 const path = require("path");
 
@@ -11,6 +11,8 @@ const SOURCE_FILES = [
   "YAHTNativeReminderStorage.mm",
   "YAHTNativeReminderActions-Bridging-Header.h",
 ];
+const LOCALIZATION_DIRS = ["en.lproj", "ru.lproj"];
+const LOCALIZATION_FILE = "YAHTNativeReminderActions.strings";
 
 const withIosNativeReminderActionFiles = (config) =>
   withDangerousMod(config, [
@@ -24,6 +26,16 @@ const withIosNativeReminderActionFiles = (config) =>
         SOURCE_FILES.map((fileName) =>
           fs.promises.copyFile(path.join(SOURCE_DIR, fileName), path.join(targetRoot, fileName))
         )
+      );
+      await Promise.all(
+        LOCALIZATION_DIRS.map(async (localeDir) => {
+          const targetLocaleDir = path.join(targetRoot, localeDir);
+          await fs.promises.mkdir(targetLocaleDir, { recursive: true });
+          await fs.promises.copyFile(
+            path.join(SOURCE_DIR, localeDir, LOCALIZATION_FILE),
+            path.join(targetLocaleDir, LOCALIZATION_FILE)
+          );
+        })
       );
 
       return config;
@@ -49,6 +61,14 @@ const withIosNativeReminderActionProject = (config) =>
       filepath: nativeSourceFilePath("YAHTNativeReminderStorage.mm"),
       groupName,
       project,
+    });
+    LOCALIZATION_DIRS.forEach((localeDir) => {
+      addResourceFileToGroup({
+        filepath: nativeSourceFilePath(`${localeDir}/${LOCALIZATION_FILE}`),
+        groupName,
+        isBuildFile: true,
+        project,
+      });
     });
 
     const bridgingHeaderPath = `${projectGroupName}/${TARGET_DIR}/YAHTNativeReminderActions-Bridging-Header.h`;

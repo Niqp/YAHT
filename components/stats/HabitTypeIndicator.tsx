@@ -1,6 +1,7 @@
 import { AppText } from "@/components/ui";
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import { CompletionType } from "@/types/habit";
 import { CheckSquare, Clock3, RotateCcw } from "lucide-react-native";
 import React from "react";
@@ -12,6 +13,7 @@ interface HabitTypeIndicatorProps {
 
 const HabitTypeIndicator: React.FC<HabitTypeIndicatorProps> = ({ completionType }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   let icon: React.ReactNode = null;
   let label = "";
@@ -19,15 +21,15 @@ const HabitTypeIndicator: React.FC<HabitTypeIndicatorProps> = ({ completionType 
   switch (completionType) {
     case "simple":
       icon = <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />;
-      label = "Simple";
+      label = t("habits.types.simple");
       break;
     case "repetitions":
       icon = <RotateCcw size={16} color={colors.iconPrimary} strokeWidth={2} />;
-      label = "Count";
+      label = t("habits.types.count");
       break;
     case "timed":
       icon = <Clock3 size={16} color={colors.iconPrimary} strokeWidth={2} />;
-      label = "Timer";
+      label = t("habits.types.timer");
       break;
   }
 

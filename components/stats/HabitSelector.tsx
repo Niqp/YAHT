@@ -1,6 +1,7 @@
 import { AppText, PressableCard } from "@/components/ui";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 import type { Habit } from "@/types/habit";
 import { ChevronDown } from "lucide-react-native";
 import React from "react";
@@ -15,6 +16,7 @@ interface HabitSelectorProps {
 
 const HabitSelector: React.FC<HabitSelectorProps> = ({ selectedHabit, onPress }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   if (!selectedHabit) return null;
 
@@ -24,8 +26,8 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ selectedHabit, onPress })
       backgroundColor={colors.bgSurface}
       bordered
       style={styles.selectorButton}
-      accessibilityLabel={`Choose habit. Currently selected: ${selectedHabit.title}`}
-      accessibilityHint="Opens the habit list"
+      accessibilityLabel={t("stats.chooseHabitAccessibility", { title: selectedHabit.title })}
+      accessibilityHint={t("stats.openHabitListHint")}
     >
       <View style={styles.selectorRow}>
         <View style={styles.selectedHabitContainer}>

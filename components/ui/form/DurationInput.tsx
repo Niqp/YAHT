@@ -3,21 +3,13 @@ import { StyleSheet, View } from "react-native";
 
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 
 import AppText from "../AppText";
 import PresetPills from "./PresetPills";
 import WheelPicker from "./WheelPicker";
 import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "./WheelPicker.shared";
 
-const HOUR_OPTIONS = Array.from({ length: 24 }, (_, index) => ({
-  value: index,
-  label: index === 1 ? "1 hr" : `${index} hrs`,
-}));
-
-const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) => ({
-  value: index,
-  label: index === 1 ? "1 min" : `${index} min`,
-}));
 const MIN_DURATION_MS = 60 * 1000;
 
 const DURATION_PRESETS = [
@@ -34,11 +26,31 @@ interface DurationInputProps {
 }
 function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInputProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const normalizedValueMs = Math.max(MIN_DURATION_MS, valueMs);
+  const hourOptions = useMemo(
+    () =>
+      Array.from({ length: 24 }, (_, index) => ({
+        value: index,
+        label: t("addHabit.units.hr", { count: index }),
+      })),
+    [t]
+  );
+  const allMinuteOptions = useMemo(
+    () =>
+      Array.from({ length: 60 }, (_, index) => ({
+        value: index,
+        label: t("addHabit.units.min", { count: index }),
+      })),
+    [t]
+  );
 
   const hours = Math.floor(normalizedValueMs / 3600000);
   const minutes = Math.floor((normalizedValueMs % 3600000) / 60000);
-  const minuteOptions = useMemo(() => (hours === 0 ? MINUTE_OPTIONS.slice(1) : MINUTE_OPTIONS), [hours]);
+  const minuteOptions = useMemo(
+    () => (hours === 0 ? allMinuteOptions.slice(1) : allMinuteOptions),
+    [allMinuteOptions, hours]
+  );
 
   useEffect(() => {
     if (valueMs < MIN_DURATION_MS) {
@@ -67,10 +79,10 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
         <View style={styles.wheelsRow}>
           <View style={styles.wheelColumn}>
             <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
-              Hours
+              {t("form.hour")}
             </AppText>
             <WheelPicker
-              data={HOUR_OPTIONS}
+              data={hourOptions}
               value={hours}
               onChange={handleHoursChange}
               style={styles.picker}
@@ -86,7 +98,7 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
 
           <View style={styles.wheelColumn}>
             <AppText variant="small" color={colors.textSecondary} style={styles.wheelLabel}>
-              Minutes
+              {t("form.minute")}
             </AppText>
             <WheelPicker
               data={minuteOptions}

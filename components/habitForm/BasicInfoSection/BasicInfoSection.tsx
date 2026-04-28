@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
+import { useTranslation } from "@/i18n";
 
 import { AppText } from "@/components/ui";
 import { EmojiPickerField, FormInput, FormSection } from "@/components/ui/form";
@@ -17,21 +18,22 @@ interface BasicInfoSectionProps {
 
 const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, icon, setIcon, errorMessage }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
-    <FormSection label="Basic info" description="Name your habit and give it an icon.">
+    <FormSection label={t("form.basicInfo")} description={t("form.basicInfoDescription")}>
       <View style={styles.row}>
         <EmojiPickerField value={icon} onChange={setIcon} />
 
         <View style={styles.titleField}>
           <FormInput
-            label="Habit title"
+            label={t("form.habitTitle")}
             hideLabel
             value={title}
             onChangeText={setTitle}
-            placeholder="Habit title..."
-            accessibilityLabel="Habit title"
-            accessibilityHint="Enter a clear habit title"
+            placeholder={t("form.habitTitlePlaceholder")}
+            accessibilityLabel={t("form.habitTitle")}
+            accessibilityHint={t("form.habitTitleHint")}
           />
         </View>
       </View>
@@ -42,7 +44,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
         </AppText>
       ) : (
         <AppText variant="small" color={colors.textTertiary} style={styles.feedbackText}>
-          Keep it short enough to scan at a glance.
+          {t("form.titleLengthHint")}
         </AppText>
       )}
     </FormSection>
