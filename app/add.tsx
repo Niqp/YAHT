@@ -7,7 +7,6 @@ import {
   SheetTriggerCard,
 } from "@/components/habitForm";
 import { AppBottomSheet, AppText, ScaleButton } from "@/components/ui";
-import { WheelPicker } from "@/components/ui/form";
 import { getElevation } from "@/constants/Elevation";
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";

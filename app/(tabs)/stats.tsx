@@ -12,7 +12,7 @@ import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import { BarChart2, Check } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 
 export default function StatsScreen() {
   const { colors } = useTheme();

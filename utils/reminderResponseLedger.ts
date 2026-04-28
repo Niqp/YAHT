@@ -55,7 +55,6 @@ const memoryStorage: PlainStorage = {
 
 const createNativeStorage = (): PlainStorage => {
   // Dynamic require so web/test bundles do not eagerly initialize MMKV.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { MMKV } = require("react-native-mmkv");
   const nativeStorage = new MMKV({ id: "reminder-response-ledger" });
 

@@ -37,15 +37,16 @@ const withIosNativeReminderActionProject = (config) =>
     const iosSourceRoot = IOSConfig.Paths.getSourceRoot(projectRoot);
     const projectGroupName = path.basename(iosSourceRoot);
     const groupName = `${projectGroupName}/${TARGET_DIR}`;
+    const nativeSourceFilePath = (fileName) => `${projectGroupName}/${TARGET_DIR}/${fileName}`;
 
     IOSConfig.XcodeUtils.ensureGroupRecursively(project, groupName);
     addBuildSourceFileToGroup({
-      filepath: `${TARGET_DIR}/YAHTNativeReminderActions.swift`,
+      filepath: nativeSourceFilePath("YAHTNativeReminderActions.swift"),
       groupName,
       project,
     });
     addBuildSourceFileToGroup({
-      filepath: `${TARGET_DIR}/YAHTNativeReminderStorage.mm`,
+      filepath: nativeSourceFilePath("YAHTNativeReminderStorage.mm"),
       groupName,
       project,
     });

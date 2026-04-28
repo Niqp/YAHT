@@ -12,7 +12,9 @@
     "cleanPrebuild": "expo prebuild --clean",
     "cleanRun": "expo prebuild --clean && expo run:android",
     "prod": "expo run:android --variant release",
+    "lint": "eslint .",
     "test": "jest",
+    "tsc": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
   },

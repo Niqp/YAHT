@@ -34,7 +34,7 @@ export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionS
         newCompleted = newValue >= (habit.completion.goal || 0);
       }
 
-      let newCompletionHistory = { ...habit.completionHistory };
+      const newCompletionHistory = { ...habit.completionHistory };
       const isTimerRunning = !!activeTimers[id]?.[date];
       const shouldDeleteEntry =
         habit.completion.type === "simple"

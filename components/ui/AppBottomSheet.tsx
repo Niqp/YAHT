@@ -11,7 +11,7 @@
  *  - Elevation: elevation-2
  */
 import React, { forwardRef, useCallback } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import BottomSheet, {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,

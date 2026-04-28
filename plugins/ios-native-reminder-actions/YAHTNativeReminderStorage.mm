@@ -1,7 +1,8 @@
 #import "YAHTNativeReminderStorage.h"
 
 #import <Foundation/Foundation.h>
-#import <MMKV/MMKV.h>
+#define FORCE_POSIX
+#import "MMKV.h"
 
 @implementation YAHTNativeReminderStorage
 

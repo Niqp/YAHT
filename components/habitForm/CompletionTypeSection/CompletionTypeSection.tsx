@@ -35,22 +35,6 @@ const REPETITION_PRESETS = [
   { label: "20", value: 20 },
 ] as const;
 
-const formatTimedGoal = (durationMs: number) => {
-  const totalMinutes = Math.max(1, Math.round(durationMs / 60000));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (hours > 0 && minutes > 0) {
-    return `${hours} ${hours === 1 ? "hr" : "hrs"} ${minutes} min`;
-  }
-
-  if (hours > 0) {
-    return `${hours} ${hours === 1 ? "hr" : "hrs"}`;
-  }
-
-  return `${minutes} min`;
-};
-
 const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   completionType,
   setCompletionType,

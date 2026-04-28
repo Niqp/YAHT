@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import * as Notifications from "expo-notifications";
 
 import { CompletionType, RepetitionType, type Habit } from "@/types/habit";
 import { reconcileReminderNotifications } from "@/utils/reminderScheduler";

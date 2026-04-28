@@ -35,7 +35,6 @@ const noopStorage = {
 // ── Native: MMKV adapter ───────────────────────────────────────────────────────
 function createNativeStorage() {
   // Dynamic require so web bundles never touch MMKV
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { MMKV } = require("react-native-mmkv");
   const storage = new MMKV();
   return {

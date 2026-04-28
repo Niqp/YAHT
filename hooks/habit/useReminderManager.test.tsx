@@ -2,7 +2,6 @@ import React from "react";
 import { act, render, waitFor } from "@testing-library/react-native";
 import dayjs from "dayjs";
 import * as Notifications from "expo-notifications";
-import { router } from "expo-router";
 import { AppState, type AppStateStatus } from "react-native";
 
 import { useReminderManager } from "@/hooks/habit/useReminderManager";

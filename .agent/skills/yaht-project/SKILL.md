@@ -242,7 +242,9 @@ All visual constants live in `constants/`. Import from there — never hardcode 
 | `npm run build:android:prod`  | Prebuild and assemble production APK   |
 | `npm run cleanRun`            | Clean prebuild + run Android           |
 | `npm run prod`                | Release build for Android              |
+| `npm run lint`                | Run ESLint                             |
 | `npm test`                    | Run Jest test suite                    |
+| `npm run tsc`                 | Run TypeScript type checking           |
 | `npm run format`              | Format all source files with Prettier  |
 | `npm run format:check`        | Check formatting (non-destructive, CI) |
 

@@ -33,7 +33,6 @@ const createStorage = (): PlainStorage | undefined => {
 
   try {
     // Dynamic require so web/test bundles do not eagerly initialize MMKV.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { MMKV } = require("react-native-mmkv");
     return new MMKV({ id: IOS_NATIVE_REMINDER_ACTION_STORAGE_ID });
   } catch {

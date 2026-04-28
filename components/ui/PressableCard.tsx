@@ -7,7 +7,7 @@
  *  - Minimum touch area enforced via minHeight
  */
 import React from "react";
-import { Platform, Pressable, StyleSheet, View, type PressableProps, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, type PressableProps, type ViewStyle } from "react-native";
 import { BorderRadius } from "@/constants/Spacing";
 import { getElevation } from "@/constants/Elevation";
 import { useTheme } from "@/hooks/useTheme";

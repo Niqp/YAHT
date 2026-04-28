@@ -5,7 +5,6 @@ import duration from "dayjs/plugin/duration";
 
 import { DateStamp, DateTimeStamp } from "@/types/date";
 import type { Habit } from "@/types/habit";
-import { timeMs } from "@/types/timer";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isToday);
@@ -44,7 +43,7 @@ export const isHabitDueOnDate = (habit: Habit, date: string): boolean => {
         return true;
       case "weekdays":
         return Array.isArray(habit.repetition.days) && habit.repetition.days.includes(dayOfWeek);
-      case "interval":
+      case "interval": {
         if (selectedDate.isSame(createdAtDate)) {
           return true;
         }
@@ -68,6 +67,7 @@ export const isHabitDueOnDate = (habit: Habit, date: string): boolean => {
         const nextDueDate = anchorDate.add(habit.repetition.days, "day");
 
         return selectedDate.isSameOrAfter(nextDueDate);
+      }
       default:
         return false;
     }

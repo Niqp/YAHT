@@ -12,7 +12,11 @@ interface HabitBottomSheetStatusProps {
   selectedDate: string;
 }
 
-const HabitBottomSheetStatus = ({ habit, isCompleted, selectedDate }: HabitBottomSheetStatusProps) => {
+const HabitBottomSheetStatus = ({
+  habit,
+  isCompleted: _isCompleted,
+  selectedDate: _selectedDate,
+}: HabitBottomSheetStatusProps) => {
   const { colors } = useTheme();
   const { habitStats, handleSelectHabit } = useStats();
 
