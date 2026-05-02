@@ -91,7 +91,10 @@ describe("reminder notification task", () => {
     await expect(taskExecutor({ data: payload })).resolves.toBe("NewData");
 
     expect(mockWaitForHabitStoreHydration).toHaveBeenCalledTimes(1);
-    expect(mockHandleReminderNotificationResponse).toHaveBeenCalledWith(payload, { allowNavigation: false });
+    expect(mockHandleReminderNotificationResponse).toHaveBeenCalledWith(payload, {
+      allowNavigation: false,
+      completionMode: "targeted-background",
+    });
   });
 
   it("maps Android headless dataString payloads before handling them", async () => {
@@ -113,7 +116,10 @@ describe("reminder notification task", () => {
           }),
         }),
       }),
-      { allowNavigation: false }
+      {
+        allowNavigation: false,
+        completionMode: "targeted-background",
+      }
     );
   });
 

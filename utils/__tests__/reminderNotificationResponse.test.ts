@@ -14,6 +14,9 @@ import { reconcileReminderNotifications } from "@/utils/reminderScheduler";
 
 const mockCancelReminderNotificationSeries = jest.fn();
 const mockClearLastNotificationResponse = jest.fn();
+const mockSchedulePreparedReminderNotification = jest.fn();
+const mockRemoveReminderScheduleLedgerEntriesForSeries = jest.fn();
+const mockReplaceReminderScheduleLedgerEntriesForSeries = jest.fn();
 const mockUpdateHabit = jest.fn();
 const mockUpdateCompletion = jest.fn();
 
@@ -30,6 +33,7 @@ jest.mock("@/utils/reminderScheduler", () => ({
 jest.mock("@/utils/notifications", () => {
   return {
     DEFAULT_REMINDER_SNOOZE_MS: 15 * 60 * 1000,
+    MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE: 3,
     REMINDER_ACTION_DONE_IDENTIFIER: "habitReminderDone",
     REMINDER_ACTION_SNOOZE_IDENTIFIER: "habitReminderSnooze",
     REMINDER_ACTION_OPEN_IDENTIFIER: "habitReminderOpen",
@@ -43,8 +47,16 @@ jest.mock("@/utils/notifications", () => {
       return data?.kind === "reminderQueueStop" ? data : undefined;
     },
     cancelReminderNotificationSeries: (...args: unknown[]) => mockCancelReminderNotificationSeries(...args),
+    schedulePreparedReminderNotification: (...args: unknown[]) => mockSchedulePreparedReminderNotification(...args),
   };
 });
+
+jest.mock("@/utils/reminderScheduleLedger", () => ({
+  removeReminderScheduleLedgerEntriesForSeries: (...args: unknown[]) =>
+    mockRemoveReminderScheduleLedgerEntriesForSeries(...args),
+  replaceReminderScheduleLedgerEntriesForSeries: (...args: unknown[]) =>
+    mockReplaceReminderScheduleLedgerEntriesForSeries(...args),
+}));
 
 const mockStoreState = {
   habits: {} as Record<string, Habit>,
@@ -148,6 +160,9 @@ describe("handleReminderNotificationResponse", () => {
     jest.clearAllMocks();
     setReminderResponseLedgerStorageForTests(createStorage());
     mockCancelReminderNotificationSeries.mockResolvedValue(undefined);
+    mockSchedulePreparedReminderNotification.mockImplementation((job) =>
+      Promise.resolve(`reminder-${job.reminderSeriesId}-${job.timestamp}`)
+    );
     mockUpdateHabit.mockResolvedValue(undefined);
     mockUpdateCompletion.mockResolvedValue(undefined);
     mockStoreState.habits = { h1: makeHabit() };
@@ -231,6 +246,142 @@ describe("handleReminderNotificationResponse", () => {
       })
     );
     expect(reconcileReminderNotifications).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses targeted background completion for snooze without full reconciliation", async () => {
+    const response = createNotificationResponse(
+      REMINDER_ACTION_SNOOZE_IDENTIFIER,
+      makeReminderData({ maxAttempts: 4, repeatIntervalMs: 300_000 }),
+      "reminder-h1-snooze"
+    );
+
+    await handleReminderNotificationResponse(response, {
+      nowMs: 1_000,
+      completionMode: "targeted-background",
+    });
+
+    expect(mockCancelReminderNotificationSeries).toHaveBeenCalledWith("series-h1-2026-03-21");
+    expect(mockSchedulePreparedReminderNotification).toHaveBeenCalledTimes(4);
+    expect(mockSchedulePreparedReminderNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        habitId: "h1",
+        habitTitle: "Stretch",
+        timestamp: 1_000 + DEFAULT_REMINDER_SNOOZE_MS,
+        reminderDate: "2026-03-21",
+        reminderSeriesId: "series-h1-2026-03-21",
+        attemptNumber: 0,
+        maxAttempts: 4,
+        repeatIntervalMs: 300_000,
+      })
+    );
+    expect(mockSchedulePreparedReminderNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timestamp: 1_000 + DEFAULT_REMINDER_SNOOZE_MS + 900_000,
+        attemptNumber: 3,
+      })
+    );
+    expect(mockReplaceReminderScheduleLedgerEntriesForSeries).toHaveBeenCalledWith(
+      "series-h1-2026-03-21",
+      expect.arrayContaining([
+        expect.objectContaining({
+          notificationId: `reminder-series-h1-2026-03-21-${1_000 + DEFAULT_REMINDER_SNOOZE_MS}`,
+          attemptNumber: 0,
+        }),
+        expect.objectContaining({
+          notificationId: `reminder-series-h1-2026-03-21-${1_000 + DEFAULT_REMINDER_SNOOZE_MS + 900_000}`,
+          attemptNumber: 3,
+        }),
+      ])
+    );
+    expect(reconcileReminderNotifications).not.toHaveBeenCalled();
+  });
+
+  it("uses targeted background completion for Done without full reconciliation", async () => {
+    await handleReminderNotificationResponse(
+      createNotificationResponse(REMINDER_ACTION_DONE_IDENTIFIER, makeReminderData(), "reminder-h1-done"),
+      {
+        nowMs: 1_000,
+        completionMode: "targeted-background",
+      }
+    );
+
+    expect(mockUpdateCompletion).toHaveBeenCalledWith({ id: "h1", date: "2026-03-21" });
+    expect(mockRemoveReminderScheduleLedgerEntriesForSeries).toHaveBeenCalledWith("series-h1-2026-03-21");
+    expect(reconcileReminderNotifications).not.toHaveBeenCalled();
+  });
+
+  it("schedules the next interval reminder series for targeted background Done without full reconciliation", async () => {
+    mockStoreState.habits = {
+      h1: makeHabit({
+        repetition: { type: RepetitionType.INTERVAL, days: 3 },
+        reminder: {
+          enabled: true,
+          hour: 9,
+          minute: 30,
+          repeatIfNotCompleted: true,
+          repeatIntervalMs: 600_000,
+        },
+      }),
+    };
+
+    await handleReminderNotificationResponse(
+      createNotificationResponse(REMINDER_ACTION_DONE_IDENTIFIER, makeReminderData(), "reminder-h1-done"),
+      {
+        nowMs: 1_000,
+        completionMode: "targeted-background",
+      }
+    );
+
+    expect(mockUpdateCompletion).toHaveBeenCalledWith({ id: "h1", date: "2026-03-21" });
+    expect(mockSchedulePreparedReminderNotification).toHaveBeenCalledTimes(4);
+    expect(mockSchedulePreparedReminderNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        habitId: "h1",
+        habitTitle: "Stretch",
+        timestamp: new Date("2026-03-24T09:30:00").getTime(),
+        reminderDate: "2026-03-24",
+        reminderSeriesId: "series-h1-2026-03-24",
+        attemptNumber: 0,
+        maxAttempts: 4,
+        repeatIntervalMs: 600_000,
+      })
+    );
+    expect(mockSchedulePreparedReminderNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timestamp: new Date("2026-03-24T09:30:00").getTime() + 1_800_000,
+        attemptNumber: 3,
+      })
+    );
+    expect(mockReplaceReminderScheduleLedgerEntriesForSeries).toHaveBeenCalledWith(
+      "series-h1-2026-03-24",
+      expect.arrayContaining([
+        expect.objectContaining({
+          notificationId: `reminder-series-h1-2026-03-24-${new Date("2026-03-24T09:30:00").getTime()}`,
+          attemptNumber: 0,
+        }),
+        expect.objectContaining({
+          notificationId: `reminder-series-h1-2026-03-24-${new Date("2026-03-24T09:30:00").getTime() + 1_800_000}`,
+          attemptNumber: 3,
+        }),
+      ])
+    );
+    expect(reconcileReminderNotifications).not.toHaveBeenCalled();
+  });
+
+  it("does not schedule a targeted snooze when the habit is missing", async () => {
+    mockStoreState.habits = {};
+
+    await handleReminderNotificationResponse(
+      createNotificationResponse(REMINDER_ACTION_SNOOZE_IDENTIFIER, makeReminderData(), "reminder-missing-snooze"),
+      {
+        nowMs: 1_000,
+        completionMode: "targeted-background",
+      }
+    );
+
+    expect(mockSchedulePreparedReminderNotification).not.toHaveBeenCalled();
+    expect(mockReplaceReminderScheduleLedgerEntriesForSeries).not.toHaveBeenCalled();
+    expect(reconcileReminderNotifications).not.toHaveBeenCalled();
   });
 
   it("requests navigation and reconciles for stop notifications", async () => {

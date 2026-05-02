@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
 import type { ReminderQueueJob, StopReminderQueueJob } from "@/utils/reminderQueue";
+import { REMINDER_NOTIFICATION_PREFIX } from "@/utils/notifications";
 
 export const REMINDER_SCHEDULE_LEDGER_VERSION = 1;
 
@@ -132,6 +133,62 @@ export const getReminderScheduleLedger = (): ReminderScheduleLedger => {
 
 export const saveReminderScheduleLedger = (ledger: ReminderScheduleLedger) => {
   getStorage().setItem(REMINDER_SCHEDULE_LEDGER_KEY, JSON.stringify(ledger));
+};
+
+const createReminderSignature = (job: ReminderQueueJob) =>
+  JSON.stringify({
+    version: REMINDER_SCHEDULE_LEDGER_VERSION,
+    platform: Platform.OS,
+    type: "normal",
+    habitId: job.habitId,
+    habitTitle: job.habitTitle,
+    timestamp: job.timestamp,
+    reminderDate: job.reminderDate,
+    reminderSeriesId: job.reminderSeriesId,
+    attemptNumber: job.attemptNumber,
+    maxAttempts: job.maxAttempts,
+    repeatIntervalMs: job.repeatIntervalMs,
+  });
+
+export const removeReminderScheduleLedgerEntriesForSeries = (reminderSeriesId: string) => {
+  const ledger = getReminderScheduleLedger();
+  const notificationPrefix = `${REMINDER_NOTIFICATION_PREFIX}${reminderSeriesId}-`;
+  const normalNotifications = ledger.normalNotifications.filter((entry) => {
+    if (entry.reminderSeriesId === reminderSeriesId) {
+      return false;
+    }
+
+    // Older/native ledger writers may only be identifiable by the stable notification ID prefix.
+    return !entry.notificationId.startsWith(notificationPrefix);
+  });
+
+  saveReminderScheduleLedger({
+    ...ledger,
+    generatedAtMs: Date.now(),
+    normalNotifications,
+  });
+};
+
+export const replaceReminderScheduleLedgerEntriesForSeries = (
+  reminderSeriesId: string,
+  jobs: ReminderQueueJob[],
+  scheduledAtMs = Date.now()
+) => {
+  const ledger = getReminderScheduleLedger();
+  const normalNotifications = ledger.normalNotifications.filter((entry) => entry.reminderSeriesId !== reminderSeriesId);
+
+  saveReminderScheduleLedger({
+    ...ledger,
+    generatedAtMs: scheduledAtMs,
+    normalNotifications: [
+      ...normalNotifications,
+      ...jobs.map((job) => ({
+        ...job,
+        signature: createReminderSignature(job),
+        scheduledAtMs,
+      })),
+    ],
+  });
 };
 
 export const clearReminderScheduleLedger = () => {

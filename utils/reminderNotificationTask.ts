@@ -37,7 +37,10 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       return BackgroundNotificationResult.NoData;
     }
 
-    const result = await handleReminderNotificationResponse(response, { allowNavigation: false });
+    const result = await handleReminderNotificationResponse(response, {
+      allowNavigation: false,
+      completionMode: "targeted-background",
+    });
     return result.handled ? BackgroundNotificationResult.NewData : BackgroundNotificationResult.NoData;
   } catch (taskError) {
     if (taskError instanceof Error) {

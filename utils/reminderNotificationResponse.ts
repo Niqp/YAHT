@@ -2,16 +2,24 @@ import dayjs from "dayjs";
 import * as Notifications from "expo-notifications";
 
 import { useHabitStore } from "@/store/habitStore";
-import { CompletionType } from "@/types/habit";
+import { CompletionType, RepetitionType } from "@/types/habit";
+import type { ReminderQueueJob } from "@/utils/reminderQueue";
 import {
   cancelReminderNotificationSeries,
   DEFAULT_REMINDER_SNOOZE_MS,
   getReminderNotificationData,
+  getReminderNotificationSeriesId,
   getReminderQueueStopNotificationData,
+  MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE,
   REMINDER_ACTION_DONE_IDENTIFIER,
   REMINDER_ACTION_OPEN_IDENTIFIER,
   REMINDER_ACTION_SNOOZE_IDENTIFIER,
+  schedulePreparedReminderNotification,
 } from "@/utils/notifications";
+import {
+  removeReminderScheduleLedgerEntriesForSeries,
+  replaceReminderScheduleLedgerEntriesForSeries,
+} from "@/utils/reminderScheduleLedger";
 import { claimReminderResponse } from "@/utils/reminderResponseLedger";
 import { reconcileReminderNotifications } from "@/utils/reminderScheduler";
 
@@ -25,6 +33,7 @@ export type ReminderNotificationResponseResult = {
 
 type ReminderNotificationResponseOptions = {
   allowNavigation?: boolean;
+  completionMode?: "full" | "targeted-background";
   nowMs?: number;
 };
 
@@ -32,6 +41,8 @@ const emptyResult: ReminderNotificationResponseResult = {
   handled: false,
   shouldNavigateToToday: false,
 };
+
+type TargetedReminderSeriesJob = Omit<ReminderQueueJob, "notificationId">;
 
 export const getReminderNotificationResponseKey = (response: Notifications.NotificationResponse) =>
   `${response.notification.request.identifier}:${response.actionIdentifier}`;
@@ -50,15 +61,15 @@ const clearLastNotificationResponse = () => {
   }
 };
 
-const clearHabitReminderSnooze = async (habitId: string, reminderDate: string) => {
+const clearHabitReminderSnooze = async (habitId: string, reminderDate: string): Promise<boolean> => {
   const { habits: currentHabits, updateHabit } = useHabitStore.getState();
   const habit = currentHabits[habitId];
   if (!habit?.reminder) {
-    return;
+    return false;
   }
 
   if (habit.reminder.snoozedDate !== reminderDate && typeof habit.reminder.snoozedUntilMs !== "number") {
-    return;
+    return false;
   }
 
   await updateHabit(habitId, {
@@ -68,13 +79,18 @@ const clearHabitReminderSnooze = async (habitId: string, reminderDate: string) =
       snoozedUntilMs: undefined,
     },
   });
+  return true;
 };
 
-const setHabitReminderSnooze = async (habitId: string, reminderDate: string, snoozedUntilMs: number) => {
+const setHabitReminderSnooze = async (
+  habitId: string,
+  reminderDate: string,
+  snoozedUntilMs: number
+): Promise<boolean> => {
   const { habits: currentHabits, updateHabit } = useHabitStore.getState();
   const habit = currentHabits[habitId];
   if (!habit?.reminder) {
-    return;
+    return false;
   }
 
   await updateHabit(habitId, {
@@ -84,32 +100,149 @@ const setHabitReminderSnooze = async (habitId: string, reminderDate: string, sno
       snoozedUntilMs,
     },
   });
+  return true;
 };
 
-const completeHabitFromReminder = async (habitId: string, reminderDate: string) => {
+const completeHabitFromReminder = async (habitId: string, reminderDate: string): Promise<boolean> => {
   const { habits: currentHabits, updateCompletion } = useHabitStore.getState();
   const habit = currentHabits[habitId];
   if (!habit) {
-    return;
+    return false;
   }
 
   if (habit.completionHistory[reminderDate]?.isCompleted) {
-    return;
+    return false;
   }
 
   if (habit.completion.type === CompletionType.SIMPLE) {
     await updateCompletion({ id: habitId, date: reminderDate });
-    return;
+    return true;
   }
 
   if (habit.completion.goal) {
     await updateCompletion({ id: habitId, date: reminderDate, value: habit.completion.goal });
+    return true;
   }
+
+  return false;
+};
+
+const buildTargetedReminderSeriesJobs = ({
+  habitId,
+  habitTitle,
+  reminderDate,
+  reminderSeriesId,
+  firstReminderTimestamp,
+  maxAttempts,
+  repeatIntervalMs,
+}: {
+  habitId: string;
+  habitTitle: string;
+  reminderDate: string;
+  reminderSeriesId: string;
+  firstReminderTimestamp: number;
+  maxAttempts: number;
+  repeatIntervalMs?: number;
+}): TargetedReminderSeriesJob[] => {
+  const normalizedMaxAttempts = Number.isFinite(maxAttempts) ? Math.max(1, Math.floor(maxAttempts)) : 1;
+  const jobs: TargetedReminderSeriesJob[] = [
+    {
+      habitId,
+      habitTitle,
+      timestamp: firstReminderTimestamp,
+      reminderDate,
+      reminderSeriesId,
+      attemptNumber: 0,
+      maxAttempts: normalizedMaxAttempts,
+      repeatIntervalMs,
+    },
+  ];
+
+  if (typeof repeatIntervalMs !== "number" || !Number.isFinite(repeatIntervalMs) || repeatIntervalMs <= 0) {
+    return jobs;
+  }
+
+  for (let attemptNumber = 1; attemptNumber < normalizedMaxAttempts; attemptNumber += 1) {
+    jobs.push({
+      habitId,
+      habitTitle,
+      timestamp: firstReminderTimestamp + repeatIntervalMs * attemptNumber,
+      reminderDate,
+      reminderSeriesId,
+      attemptNumber,
+      maxAttempts: normalizedMaxAttempts,
+      repeatIntervalMs,
+    });
+  }
+
+  return jobs;
+};
+
+const scheduleTargetedReminderSeries = async (reminderSeriesId: string, jobs: TargetedReminderSeriesJob[]) => {
+  const scheduledJobs = [];
+  for (const job of jobs) {
+    const scheduledId = await schedulePreparedReminderNotification(job);
+    if (scheduledId) {
+      scheduledJobs.push({
+        ...job,
+        notificationId: scheduledId,
+      });
+    }
+  }
+
+  if (scheduledJobs.length > 0) {
+    replaceReminderScheduleLedgerEntriesForSeries(reminderSeriesId, scheduledJobs);
+  }
+};
+
+const scheduleNextIntervalReminderSeries = async ({
+  habitId,
+  habitTitle,
+  reminderDate,
+  intervalDays,
+  reminderHour,
+  reminderMinute,
+  repeatIfNotCompleted,
+  repeatIntervalMs,
+  nowMs,
+}: {
+  habitId: string;
+  habitTitle: string;
+  reminderDate: string;
+  intervalDays: number;
+  reminderHour: number;
+  reminderMinute: number;
+  repeatIfNotCompleted: boolean;
+  repeatIntervalMs?: number;
+  nowMs: number;
+}) => {
+  let nextReminderDate = dayjs(reminderDate).add(intervalDays, "day");
+  let nextReminderTime = nextReminderDate.hour(reminderHour).minute(reminderMinute).second(0).millisecond(0);
+
+  while (!nextReminderTime.isAfter(nowMs)) {
+    nextReminderDate = nextReminderDate.add(intervalDays, "day");
+    nextReminderTime = nextReminderDate.hour(reminderHour).minute(reminderMinute).second(0).millisecond(0);
+  }
+
+  const nextReminderDateStamp = nextReminderDate.format("YYYY-MM-DD");
+  const nextReminderSeriesId = getReminderNotificationSeriesId(habitId, nextReminderDateStamp);
+  const normalizedRepeatIntervalMs = repeatIfNotCompleted ? repeatIntervalMs : undefined;
+  const jobs = buildTargetedReminderSeriesJobs({
+    habitId,
+    habitTitle,
+    reminderDate: nextReminderDateStamp,
+    reminderSeriesId: nextReminderSeriesId,
+    firstReminderTimestamp: nextReminderTime.valueOf(),
+    maxAttempts: normalizedRepeatIntervalMs ? MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE + 1 : 1,
+    repeatIntervalMs: normalizedRepeatIntervalMs,
+  });
+
+  await scheduleTargetedReminderSeries(nextReminderSeriesId, jobs);
 };
 
 export const handleReminderNotificationResponse = async (
   response: Notifications.NotificationResponse,
-  { allowNavigation = true, nowMs = Date.now() }: ReminderNotificationResponseOptions = {}
+  { allowNavigation = true, completionMode = "full", nowMs = Date.now() }: ReminderNotificationResponseOptions = {}
 ): Promise<ReminderNotificationResponseResult> => {
   const reminderData = getReminderNotificationData(response);
   const stopData = getReminderQueueStopNotificationData(response);
@@ -146,16 +279,60 @@ export const handleReminderNotificationResponse = async (
     return emptyResult;
   }
 
+  const usesTargetedCompletion = completionMode === "targeted-background" && isReminderQuickActionResponse(response);
+  const habitBeforeAction = useHabitStore.getState().habits[reminderData.habitId];
+  let needsFullReconcile = !usesTargetedCompletion;
   await cancelReminderNotificationSeries(reminderData.reminderSeriesId);
+  if (usesTargetedCompletion) {
+    removeReminderScheduleLedgerEntriesForSeries(reminderData.reminderSeriesId);
+  }
 
   switch (response.actionIdentifier) {
-    case REMINDER_ACTION_DONE_IDENTIFIER:
+    case REMINDER_ACTION_DONE_IDENTIFIER: {
       await clearHabitReminderSnooze(reminderData.habitId, reminderData.reminderDate);
-      await completeHabitFromReminder(reminderData.habitId, reminderData.reminderDate);
+      const didCompleteHabit = await completeHabitFromReminder(reminderData.habitId, reminderData.reminderDate);
+      if (usesTargetedCompletion && habitBeforeAction?.repetition.type === RepetitionType.INTERVAL) {
+        const reminder = habitBeforeAction.reminder;
+        if (reminder?.enabled) {
+          await scheduleNextIntervalReminderSeries({
+            habitId: habitBeforeAction.id,
+            habitTitle: habitBeforeAction.title,
+            reminderDate: reminderData.reminderDate,
+            intervalDays: habitBeforeAction.repetition.days,
+            reminderHour: reminder.hour,
+            reminderMinute: reminder.minute,
+            repeatIfNotCompleted: reminder.repeatIfNotCompleted,
+            repeatIntervalMs: reminder.repeatIntervalMs,
+            nowMs,
+          });
+        }
+      } else {
+        needsFullReconcile =
+          needsFullReconcile || (didCompleteHabit && habitBeforeAction?.repetition.type === RepetitionType.INTERVAL);
+      }
       break;
+    }
     case REMINDER_ACTION_SNOOZE_IDENTIFIER: {
       const snoozedUntilMs = dayjs(nowMs).add(DEFAULT_REMINDER_SNOOZE_MS, "ms").valueOf();
-      await setHabitReminderSnooze(reminderData.habitId, reminderData.reminderDate, snoozedUntilMs);
+      const didSetSnooze = await setHabitReminderSnooze(
+        reminderData.habitId,
+        reminderData.reminderDate,
+        snoozedUntilMs
+      );
+      if (usesTargetedCompletion && didSetSnooze) {
+        // Full reconciliation also treats a snooze as a fresh series starting at snoozedUntilMs.
+        const jobs = buildTargetedReminderSeriesJobs({
+          habitId: reminderData.habitId,
+          habitTitle: reminderData.habitTitle,
+          reminderDate: reminderData.reminderDate,
+          reminderSeriesId: reminderData.reminderSeriesId,
+          firstReminderTimestamp: snoozedUntilMs,
+          maxAttempts: reminderData.maxAttempts,
+          repeatIntervalMs: reminderData.repeatIntervalMs,
+        });
+
+        await scheduleTargetedReminderSeries(reminderData.reminderSeriesId, jobs);
+      }
       break;
     }
     case REMINDER_ACTION_OPEN_IDENTIFIER:
@@ -165,7 +342,9 @@ export const handleReminderNotificationResponse = async (
       return emptyResult;
   }
 
-  await reconcileReminderNotifications({ reason: "notification-response" });
+  if (needsFullReconcile) {
+    await reconcileReminderNotifications({ reason: "notification-response" });
+  }
   clearLastNotificationResponse();
 
   return {
