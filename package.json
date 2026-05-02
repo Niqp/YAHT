@@ -24,7 +24,7 @@
     "@formatjs/intl-locale": "^5.3.4",
     "@formatjs/intl-pluralrules": "^6.3.4",
     "@gorhom/bottom-sheet": "^5.2.8",
-    "@niqp/react-native-android-time-change": "file:../react-native-android-time-change",
+    "@niqp/react-native-android-time-change": "^0.1.1",
     "@quidone/react-native-wheel-picker": "^1.6.1",
     "@react-native-picker/picker": "^2.11.1",
     "@react-native-segmented-control/segmented-control": "^2.5.7",
