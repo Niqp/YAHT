@@ -72,6 +72,8 @@ export const en = {
     totalCompletions: "Total completions",
     completedDueDays: "Completed due days",
     goalHitRate: "Goal hit rate",
+    goalMet: "Goal met",
+    goal: "Goal",
     output: "Output",
     totalReps: "Total reps",
     bestDay: "Best day",
@@ -298,3 +300,9 @@ export const en = {
     importHabits: "Failed to import habits",
   },
 } as const;
+
+type WidenCatalog<T> = {
+  readonly [K in keyof T]: T[K] extends string ? string : WidenCatalog<T[K]>;
+};
+
+export type TranslationCatalog = WidenCatalog<typeof en>;

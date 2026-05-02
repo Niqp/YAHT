@@ -58,7 +58,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
             <Check size={12} color={colors.textOnAccent} strokeWidth={2} />
           </View>
           <AppText variant="tiny" color={colors.textSecondary}>
-            {t("stats.goalHitRate")}
+            {t("stats.goalMet")}
           </AppText>
         </View>
         <View style={styles.legendItem}>
@@ -70,7 +70,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
         <View style={styles.legendItem}>
           <View style={[styles.legendGoalMarker, { backgroundColor: colors.textTertiary }]} />
           <AppText variant="tiny" color={colors.textSecondary}>
-            {t("form.completionGoal")}
+            {t("stats.goal")}
           </AppText>
         </View>
         <View style={styles.legendItem}>

@@ -1,3 +1,5 @@
+import type { TranslationCatalog } from "./en";
+
 export const ru = {
   common: {
     cancel: "Отмена",
@@ -75,6 +77,8 @@ export const ru = {
     totalCompletions: "Всего выполнений",
     completedDueDays: "Выполненные дни",
     goalHitRate: "Достижение цели",
+    goalMet: "Цель достигнута",
+    goal: "Цель",
     output: "Результат",
     totalReps: "Всего повторений",
     bestDay: "Лучший день",
@@ -302,4 +306,4 @@ export const ru = {
     completeHabit: "Не удалось выполнить привычку",
     importHabits: "Не удалось импортировать привычки",
   },
-} as const;
+} as const satisfies TranslationCatalog;

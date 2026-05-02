@@ -12,10 +12,27 @@ dayjs.extend(isToday);
 dayjs.extend(duration);
 
 const WEEK_START_REFERENCE_DATE = "2026-02-15"; // Sunday
+const shortMonthYearFormatters = new Map<SupportedLocale, Intl.DateTimeFormat>();
+const shortWeekdayFormatters = new Map<SupportedLocale, Intl.DateTimeFormat>();
+const longWeekdayFormatters = new Map<SupportedLocale, Intl.DateTimeFormat>();
 
 const capitalizeFirstLetter = (value: string, locale: SupportedLocale): string => {
   if (!value) return value;
   return value.charAt(0).toLocaleUpperCase(locale) + value.slice(1);
+};
+
+const getCachedDateFormatter = (
+  cache: Map<SupportedLocale, Intl.DateTimeFormat>,
+  locale: SupportedLocale,
+  options: Intl.DateTimeFormatOptions
+) => {
+  let formatter = cache.get(locale);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, options);
+    cache.set(locale, formatter);
+  }
+
+  return formatter;
 };
 
 export const getCurrentDateDayjs = () => dayjs().startOf("day");
@@ -117,9 +134,13 @@ export const getMonthName = (date: dayjs.ConfigType): string => {
 const toIntlDate = (date: dayjs.ConfigType) => getDayjs(date).toDate();
 
 export const getLocalizedMonthYear = (date: dayjs.ConfigType, locale: SupportedLocale): string => {
-  const formatted = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" })
-    .format(toIntlDate(date))
-    .replace(/\sг\.$/, "");
+  const parts = getCachedDateFormatter(shortMonthYearFormatters, locale, {
+    month: "short",
+    year: "numeric",
+  }).formatToParts(toIntlDate(date));
+  const month = parts.find((part) => part.type === "month")?.value ?? "";
+  const year = parts.find((part) => part.type === "year")?.value ?? "";
+  const formatted = [month, year].filter(Boolean).join(" ");
 
   return capitalizeFirstLetter(formatted, locale);
 };
@@ -129,7 +150,9 @@ export const getShortDayName = (date: dayjs.ConfigType): string => {
 };
 
 export const getLocalizedShortDayName = (date: dayjs.ConfigType, locale: SupportedLocale): string => {
-  const formatted = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(toIntlDate(date)).replace(/\.$/, "");
+  const formatted = getCachedDateFormatter(shortWeekdayFormatters, locale, { weekday: "short" })
+    .format(toIntlDate(date))
+    .replace(/\.$/, "");
   return capitalizeFirstLetter(formatted, locale);
 };
 
@@ -161,7 +184,7 @@ export const getOrderedWeekDays = (
     ...Array.from({ length: 7 }, (_, dayIndex) => ({
       dayIndex,
       name: capitalizeFirstLetter(
-        new Intl.DateTimeFormat(locale, { weekday: "long" }).format(
+        getCachedDateFormatter(longWeekdayFormatters, locale, { weekday: "long" }).format(
           toIntlDate(addDays(WEEK_START_REFERENCE_DATE, dayIndex))
         ),
         locale
