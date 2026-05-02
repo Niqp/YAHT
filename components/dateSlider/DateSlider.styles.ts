@@ -48,7 +48,8 @@ const styles = StyleSheet.create({
   todayButton: {
     flexDirection: "row",
     alignItems: "center",
-    width: 76,
+    justifyContent: "flex-start",
+    width: 100,
     height: 28,
     borderRadius: BorderRadius.full,
   },
@@ -61,7 +62,10 @@ const styles = StyleSheet.create({
   todayButtonText: {
     fontSize: 12,
     fontWeight: "600",
+    lineHeight: 16,
     paddingRight: Spacing.sm,
+    textAlign: "center",
+    includeFontPadding: false,
   },
   flatListContent: {
     paddingHorizontal: Spacing.base,

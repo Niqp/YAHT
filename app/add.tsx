@@ -136,7 +136,7 @@ const getReminderSummary = (
   const displayMin = minute.toString().padStart(2, "0");
   let text = `${displayHour}:${displayMin}`;
   if (repeat) {
-    const interval = intervalMs === 60 * 60000 ? "1h" : `${Math.floor(intervalMs / 60000)}m`;
+    const interval = formatDurationLabel(intervalMs, t);
     text += ` (${t("addHabit.helpers.reminderRepeating", { interval })})`;
   }
   return text;

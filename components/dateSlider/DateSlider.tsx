@@ -60,7 +60,7 @@ interface DateItemProps {
 const ITEM_WIDTH = 57; // Width of each date item including margins
 const ITEM_HEIGHT = 70;
 const BUFFER_ITEMS = 15; // Number of items to load before/after visible range
-const TODAY_PILL_WIDTH = 76;
+const TODAY_PILL_WIDTH = 100;
 const TODAY_PILL_HEIGHT = 28;
 const TODAY_PILL_GAP = Spacing.sm;
 const TODAY_PILL_SHOW_DURATION = 260;

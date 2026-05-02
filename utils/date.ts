@@ -13,6 +13,11 @@ dayjs.extend(duration);
 
 const WEEK_START_REFERENCE_DATE = "2026-02-15"; // Sunday
 
+const capitalizeFirstLetter = (value: string, locale: SupportedLocale): string => {
+  if (!value) return value;
+  return value.charAt(0).toLocaleUpperCase(locale) + value.slice(1);
+};
+
 export const getCurrentDateDayjs = () => dayjs().startOf("day");
 export const getCurrentDateTimeDayjs = () => dayjs();
 export const getMidnightDayjs = (date: dayjs.ConfigType) => dayjs(date).startOf("day");
@@ -112,9 +117,11 @@ export const getMonthName = (date: dayjs.ConfigType): string => {
 const toIntlDate = (date: dayjs.ConfigType) => getDayjs(date).toDate();
 
 export const getLocalizedMonthYear = (date: dayjs.ConfigType, locale: SupportedLocale): string => {
-  return new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" })
+  const formatted = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" })
     .format(toIntlDate(date))
     .replace(/\sг\.$/, "");
+
+  return capitalizeFirstLetter(formatted, locale);
 };
 
 export const getShortDayName = (date: dayjs.ConfigType): string => {
@@ -122,7 +129,8 @@ export const getShortDayName = (date: dayjs.ConfigType): string => {
 };
 
 export const getLocalizedShortDayName = (date: dayjs.ConfigType, locale: SupportedLocale): string => {
-  return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(toIntlDate(date)).replace(/\.$/, "");
+  const formatted = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(toIntlDate(date)).replace(/\.$/, "");
+  return capitalizeFirstLetter(formatted, locale);
 };
 
 export const getDay = (date: dayjs.ConfigType): number => {
@@ -143,7 +151,8 @@ export const formatTime = (time: number): string => {
 };
 
 export const getOrderedWeekDays = (
-  startDay: number
+  startDay: number,
+  locale: SupportedLocale = "en"
 ): {
   dayIndex: number;
   name: string;
@@ -151,8 +160,11 @@ export const getOrderedWeekDays = (
   const weekDaysMap = [
     ...Array.from({ length: 7 }, (_, dayIndex) => ({
       dayIndex,
-      name: new Intl.DateTimeFormat("en", { weekday: "long" }).format(
-        toIntlDate(addDays(WEEK_START_REFERENCE_DATE, dayIndex))
+      name: capitalizeFirstLetter(
+        new Intl.DateTimeFormat(locale, { weekday: "long" }).format(
+          toIntlDate(addDays(WEEK_START_REFERENCE_DATE, dayIndex))
+        ),
+        locale
       ),
     })),
   ];

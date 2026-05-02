@@ -1,3 +1,9 @@
+import "@formatjs/intl-getcanonicallocales/polyfill-force.js";
+import "@formatjs/intl-locale/polyfill-force.js";
+import "@formatjs/intl-pluralrules/polyfill-force.js";
+import "@formatjs/intl-pluralrules/locale-data/en.js";
+import "@formatjs/intl-pluralrules/locale-data/ru.js";
+
 import i18n, { type TOptions } from "i18next";
 import ICU from "i18next-icu";
 import { initReactI18next, useTranslation as useReactTranslation } from "react-i18next";

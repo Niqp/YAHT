@@ -2,9 +2,10 @@ import React, { memo, useCallback, useMemo } from "react";
 import { CalendarDays, RotateCcw } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { RepetitionType } from "@/types/habit";
-import { getOrderedWeekDays } from "@/utils/date";
+import { addDays, getLocalizedShortDayName, getOrderedWeekDays } from "@/utils/date";
 import { haptic } from "@/utils/haptics";
 import { useTranslation } from "@/i18n";
+import { isSupportedLocale } from "@/i18n/locale";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppSegmentedControl, AppText } from "@/components/ui";
@@ -38,6 +39,8 @@ const chunkIntoRows = <T,>(items: ReadonlyArray<T>, size: number) => {
   return rows;
 };
 
+const WEEK_START_REFERENCE_DATE = "2026-02-15";
+
 const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   repetitionType,
   setRepetitionType,
@@ -50,7 +53,8 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   presentation = "card",
 }) => {
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const locale = isSupportedLocale(i18n.language) ? i18n.language : "en";
   const intervalOptions = useMemo(
     () =>
       Array.from({ length: 365 }, (_, index) => ({
@@ -68,14 +72,14 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     [t]
   );
 
-  const orderedWeekdays = useMemo(() => getOrderedWeekDays(weekStartDay), [weekStartDay]);
+  const orderedWeekdays = useMemo(() => getOrderedWeekDays(weekStartDay, locale), [locale, weekStartDay]);
   const weekdayOptions = useMemo(
     () =>
       orderedWeekdays.map((day) => ({
         value: day.dayIndex,
-        label: day.name.slice(0, 3),
+        label: getLocalizedShortDayName(addDays(WEEK_START_REFERENCE_DATE, day.dayIndex), locale),
       })),
-    [orderedWeekdays]
+    [locale, orderedWeekdays]
   );
   const segmentedIndex = useMemo(
     () => (repetitionType === RepetitionType.DAILY ? 0 : repetitionType === RepetitionType.WEEKDAYS ? 1 : 2),

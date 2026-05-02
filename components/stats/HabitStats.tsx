@@ -76,13 +76,13 @@ const HabitStats: React.FC<HabitStatsProps> = ({ completionType, habitStats }) =
     outputStats = [
       {
         label: t("stats.totalTime"),
-        value: formatDurationLabel(habitStats.totalTimeSpent),
+        value: formatDurationLabel(habitStats.totalTimeSpent, t),
         icon: <Clock3 size={16} color={colors.iconPrimary} strokeWidth={2} />,
         valueVariant: "bodyMedium",
       },
       {
         label: t("stats.bestDay"),
-        value: formatDurationLabel(habitStats.bestDayValue),
+        value: formatDurationLabel(habitStats.bestDayValue, t),
         icon: <TrendingUp size={16} color={colors.iconPrimary} strokeWidth={2} />,
         valueVariant: "bodyMedium",
       },
@@ -156,9 +156,11 @@ const StatList = ({ stats }: { stats: StatItem[] }) => {
   );
 };
 
-const formatDurationLabel = (valueMs: number) => {
+type TranslationFn = ReturnType<typeof useTranslation>["t"];
+
+const formatDurationLabel = (valueMs: number, t: TranslationFn) => {
   if (valueMs <= 0) {
-    return "0s";
+    return t("addHabit.units.sec", { count: 0 });
   }
 
   const totalSeconds = Math.floor(valueMs / 1000);
@@ -167,14 +169,18 @@ const formatDurationLabel = (valueMs: number) => {
   const seconds = totalSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
+    return minutes > 0
+      ? `${t("addHabit.units.hr", { count: hours })} ${t("addHabit.units.min", { count: minutes })}`
+      : t("addHabit.units.hr", { count: hours });
   }
 
   if (minutes > 0) {
-    return `${minutes}m ${seconds}s`;
+    return seconds > 0
+      ? `${t("addHabit.units.min", { count: minutes })} ${t("addHabit.units.sec", { count: seconds })}`
+      : t("addHabit.units.min", { count: minutes });
   }
 
-  return `${seconds}s`;
+  return t("addHabit.units.sec", { count: seconds });
 };
 
 const styles = StyleSheet.create({

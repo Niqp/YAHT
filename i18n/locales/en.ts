@@ -130,6 +130,7 @@ export const en = {
     units: {
       hr: "{count, plural, one {# hr} other {# hrs}}",
       min: "{count} min",
+      sec: "{count} sec",
       rep: "{count, plural, one {# rep} other {# reps}}",
       day: "{count, plural, one {# day} other {# days}}",
     },

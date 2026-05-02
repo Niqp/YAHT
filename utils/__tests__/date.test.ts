@@ -81,6 +81,11 @@ describe("getOrderedWeekDays", () => {
     const indices = days.map((d) => d.dayIndex).sort();
     expect(indices).toEqual([0, 1, 2, 3, 4, 5, 6]);
   });
+
+  it("returns localized weekday names", () => {
+    const days = getOrderedWeekDays(1, "ru");
+    expect(days[0]).toEqual({ dayIndex: 1, name: "Понедельник" });
+  });
 });
 
 // ─── addDays ─────────────────────────────────────────────────────────────────

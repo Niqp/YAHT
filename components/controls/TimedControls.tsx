@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -59,16 +59,26 @@ export default function IOSTimerPicker({
   const minuteScrollRef = useRef<ScrollView>(null);
 
   // Common time presets in milliseconds for quick selection
-  const presets = [
-    { label: "5m", value: 5 * 60 * 1000 },
-    { label: "10m", value: 10 * 60 * 1000 },
-    { label: "15m", value: 15 * 60 * 1000 },
-    { label: "30m", value: 30 * 60 * 1000 },
-    { label: "1h", value: 60 * 60 * 1000 },
-    { label: "2h", value: 120 * 60 * 1000 },
-    { label: "3h", value: 180 * 60 * 1000 },
-    { label: "4h", value: 240 * 60 * 1000 },
-  ];
+  const presets = useMemo(
+    () =>
+      [
+        { minutes: 5, value: 5 * 60 * 1000 },
+        { minutes: 10, value: 10 * 60 * 1000 },
+        { minutes: 15, value: 15 * 60 * 1000 },
+        { minutes: 30, value: 30 * 60 * 1000 },
+        { hours: 1, value: 60 * 60 * 1000 },
+        { hours: 2, value: 120 * 60 * 1000 },
+        { hours: 3, value: 180 * 60 * 1000 },
+        { hours: 4, value: 240 * 60 * 1000 },
+      ].map((preset) => ({
+        value: preset.value,
+        label:
+          "hours" in preset
+            ? t("addHabit.units.hr", { count: preset.hours })
+            : t("addHabit.units.min", { count: preset.minutes }),
+      })),
+    [t]
+  );
 
   // Update hours and minutes when value changes
   useEffect(() => {
@@ -80,10 +90,15 @@ export default function IOSTimerPicker({
 
   // Format time for display
   const formatDisplayTime = () => {
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+    if (hours > 0 && minutes > 0) {
+      return `${t("addHabit.units.hr", { count: hours })} ${t("addHabit.units.min", { count: minutes })}`;
     }
-    return `${minutes}m`;
+
+    if (hours > 0) {
+      return t("addHabit.units.hr", { count: hours });
+    }
+
+    return t("addHabit.units.min", { count: minutes });
   };
 
   // Handle hour scrolling end

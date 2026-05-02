@@ -14,26 +14,28 @@ interface PerformanceLineChartProps {
 
 const BAR_HEIGHT = 80;
 
-const formatCompactDuration = (valueMs: number) => {
+type TranslationFn = ReturnType<typeof useTranslation>["t"];
+
+const formatCompactDuration = (valueMs: number, t: TranslationFn) => {
   const totalSeconds = Math.floor(valueMs / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
   if (hours > 0) {
-    return `${hours}h`;
+    return t("addHabit.units.hr", { count: hours });
   }
 
   if (minutes > 0) {
-    return `${minutes}m`;
+    return t("addHabit.units.min", { count: minutes });
   }
 
-  return `${seconds}s`;
+  return t("addHabit.units.sec", { count: seconds });
 };
 
-const formatValueLabel = (completionType: CompletionType, value: number) => {
+const formatValueLabel = (completionType: CompletionType, value: number, t: TranslationFn) => {
   if (completionType === "timed") {
-    return formatCompactDuration(value);
+    return formatCompactDuration(value, t);
   }
 
   return value.toString();
@@ -90,7 +92,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
           return (
             <View key={day.date} style={styles.dayColumn}>
               <AppText variant="tiny" color={colors.textSecondary} numberOfLines={1} style={styles.valueLabel}>
-                {day.isDue ? (showValue ? formatValueLabel(completionType, day.value) : "0") : t("stats.off")}
+                {day.isDue ? (showValue ? formatValueLabel(completionType, day.value, t) : "0") : t("stats.off")}
               </AppText>
 
               <View

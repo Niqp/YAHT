@@ -20,6 +20,9 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
+    "@formatjs/intl-getcanonicallocales": "^3.2.5",
+    "@formatjs/intl-locale": "^5.3.4",
+    "@formatjs/intl-pluralrules": "^6.3.4",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@niqp/react-native-android-time-change": "file:../react-native-android-time-change",
     "@quidone/react-native-wheel-picker": "^1.6.1",

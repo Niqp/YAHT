@@ -13,10 +13,15 @@ export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habi
 
   let formattedTimeGoal = "";
   if (habit.completion.type === "timed") {
-    const totalMinutes = Math.floor((habit.completion.goal || 0) / 60);
+    const totalMinutes = Math.floor((habit.completion.goal || 0) / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const mins = totalMinutes % 60;
-    formattedTimeGoal = hours > 0 ? (mins > 0 ? `${hours}h ${mins}m` : `${hours}h`) : `${mins}m`;
+    formattedTimeGoal =
+      hours > 0
+        ? mins > 0
+          ? `${t("addHabit.units.hr", { count: hours })} ${t("addHabit.units.min", { count: mins })}`
+          : t("addHabit.units.hr", { count: hours })
+        : t("addHabit.units.min", { count: mins });
   }
 
   return (

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { StyleSheet, Switch, View } from "react-native";
 import { AppText } from "@/components/ui";
 import { FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
@@ -31,11 +31,11 @@ const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => ({
   label: i.toString().padStart(2, "0"),
 }));
 
-const INTERVAL_PRESETS = [
-  { label: "5m", value: 5 * 60000 },
-  { label: "15m", value: 15 * 60000 },
-  { label: "30m", value: 30 * 60000 },
-  { label: "1h", value: 60 * 60000 },
+const INTERVAL_PRESET_VALUES = [
+  { minutes: 5, value: 5 * 60000 },
+  { minutes: 15, value: 15 * 60000 },
+  { minutes: 30, value: 30 * 60000 },
+  { hours: 1, value: 60 * 60000 },
 ] as const;
 
 const ReminderSection: React.FC<ReminderSectionProps> = ({
@@ -53,6 +53,17 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
 }) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const intervalPresets = useMemo(
+    () =>
+      INTERVAL_PRESET_VALUES.map((preset) => ({
+        value: preset.value,
+        label:
+          "hours" in preset
+            ? t("addHabit.units.hr", { count: preset.hours })
+            : t("addHabit.units.min", { count: preset.minutes }),
+      })),
+    [t]
+  );
 
   const content = (
     <View style={styles.container}>
@@ -148,7 +159,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
           <AppText variant="small" color={colors.textSecondary} style={styles.sectionLabel}>
             {t("form.naggingInterval")}
           </AppText>
-          <PresetPills options={INTERVAL_PRESETS} selectedValue={repeatIntervalMs} onSelect={setRepeatIntervalMs} />
+          <PresetPills options={intervalPresets} selectedValue={repeatIntervalMs} onSelect={setRepeatIntervalMs} />
         </View>
       </View>
     </View>

@@ -27,7 +27,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | Date Library       | dayjs 1.x                                                                                                               | Plugins: `isSameOrAfter`, `isToday`, `duration`                                                                                                 |
 | Animations         | react-native-reanimated 3.16                                                                                            | + react-native-gesture-handler 2.20                                                                                                             |
 | UI                 | lucide-react-native 1.x (icons), @gorhom/bottom-sheet 5.x, expo-linear-gradient, expo-haptics, react-native-emoji-popup | Design system components in `components/ui/` and the native emoji picker used by `app/add.tsx`                                                  |
-| Localization       | expo-localization, i18next, react-i18next, i18next-icu                                                                  | System-locale English/Russian localization; ICU messages live in TypeScript catalogs under `i18n/locales/`                                      |
+| Localization       | expo-localization, i18next, react-i18next, i18next-icu, FormatJS Intl polyfills                                         | System-locale English/Russian localization; ICU messages live in TypeScript catalogs under `i18n/locales/`                                      |
 | Charts             | Custom React Native chart components                                                                                    | Stats views render bespoke chart components from `components/stats/charts/`                                                                     |
 | Notifications      | expo-notifications 0.32.x, expo-task-manager 14.x, react-native-permissions                                             | Derived bounded reminder queue, Android headless quick actions, iOS native quick actions, platform-specific triggers, Android alarm permissions |
 | Time Change Bridge | `@niqp/react-native-android-time-change`                                                                                | Local sibling RN Android library linked with `file:../react-native-android-time-change`                                                         |
@@ -126,6 +126,7 @@ Habit reminder intent is stored on each `Habit.reminder`; native notification id
 
 YAHT localizes app-owned UI and notification copy through i18next with ICU message formatting:
 
+- `i18n/index.ts` loads FormatJS `Intl.getCanonicalLocales`, `Intl.Locale`, and `Intl.PluralRules` polyfills before i18next so ICU plurals work in React Native runtimes.
 - `app/_layout.tsx` initializes i18n before rendering and re-syncs the active language from `expo-localization` when the app returns to the foreground.
 - Supported JS locales are resolved in `i18n/locale.ts`; English is the fallback and Russian is the first additional locale.
 - Message catalogs are TypeScript files in `i18n/locales/en.ts` and `i18n/locales/ru.ts`. Use ICU plural messages for count-sensitive text, especially Russian habit/day/repetition counts.

@@ -12,11 +12,11 @@ import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "./WheelPicker.sha
 
 const MIN_DURATION_MS = 60 * 1000;
 
-const DURATION_PRESETS = [
-  { label: "5m", value: 5 * 60 * 1000 },
-  { label: "15m", value: 15 * 60 * 1000 },
-  { label: "30m", value: 30 * 60 * 1000 },
-  { label: "1h", value: 60 * 60 * 1000 },
+const DURATION_PRESET_VALUES = [
+  { minutes: 5, value: 5 * 60 * 1000 },
+  { minutes: 15, value: 15 * 60 * 1000 },
+  { minutes: 30, value: 30 * 60 * 1000 },
+  { hours: 1, value: 60 * 60 * 1000 },
 ] as const;
 
 interface DurationInputProps {
@@ -28,6 +28,17 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
   const { colors } = useTheme();
   const { t } = useTranslation();
   const normalizedValueMs = Math.max(MIN_DURATION_MS, valueMs);
+  const durationPresets = useMemo(
+    () =>
+      DURATION_PRESET_VALUES.map((preset) => ({
+        value: preset.value,
+        label:
+          "hours" in preset
+            ? t("addHabit.units.hr", { count: preset.hours })
+            : t("addHabit.units.min", { count: preset.minutes }),
+      })),
+    [t]
+  );
   const hourOptions = useMemo(
     () =>
       Array.from({ length: 24 }, (_, index) => ({
@@ -115,7 +126,7 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
         </View>
       </View>
 
-      <PresetPills options={DURATION_PRESETS} selectedValue={valueMs} onSelect={onChangeMs} />
+      <PresetPills options={durationPresets} selectedValue={valueMs} onSelect={onChangeMs} />
     </View>
   );
 }

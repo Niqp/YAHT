@@ -134,6 +134,7 @@ export const ru = {
     units: {
       hr: "{count, plural, one {# ч} other {# ч}}",
       min: "{count} мин",
+      sec: "{count} сек",
       rep: "{count, plural, one {# повт.} other {# повт.}}",
       day: "{count, plural, one {# день} few {# дня} many {# дней} other {# дня}}",
     },
