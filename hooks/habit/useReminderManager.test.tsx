@@ -26,6 +26,7 @@ const mockGetLastNotificationResponse = jest.fn();
 const mockUpdateHabit = jest.fn();
 const mockUpdateCompletion = jest.fn();
 const mockSetSelectedDate = jest.fn();
+const mockSyncNativeReminderActionState = jest.fn(() => Promise.resolve());
 
 const makeDailyHabit = (overrides?: Partial<NonNullable<Habit["reminder"]>>): Habit => ({
   id: "h1",
@@ -135,6 +136,10 @@ jest.mock("@/utils/reminderScheduler", () => ({
   reconcileReminderNotifications: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock("@/utils/nativeReminderActions", () => ({
+  syncNativeReminderActionState: () => mockSyncNativeReminderActionState(),
+}));
+
 jest.mock("@/store/habitStore", () => {
   const useHabitStore: any = (selector: any) => selector(mockStoreState);
   useHabitStore.getState = () => mockStoreState;
@@ -173,6 +178,7 @@ describe("useReminderManager", () => {
     render(<TestComponent />);
 
     await waitFor(() => {
+      expect(mockSyncNativeReminderActionState).toHaveBeenCalled();
       expect(reconcileReminderNotifications).toHaveBeenCalledWith({
         reason: "habit-change",
         habits: mockStoreState.habits,
