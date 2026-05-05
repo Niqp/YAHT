@@ -5,9 +5,20 @@ import {
   handleReminderNotificationResponse,
   isReminderQuickActionResponse,
 } from "@/utils/reminderNotificationResponse";
+import { waitForHabitStoreHydration } from "@/utils/habitStoreHydration";
 
 let hasRegisteredTask = false;
 let hasRegisteredEarlyListener = false;
+let earlyReminderTaskQueue: Promise<unknown> = Promise.resolve();
+
+const enqueueEarlyReminderTask = <T>(task: () => Promise<T>) => {
+  const nextTask = earlyReminderTaskQueue.then(task, task);
+  earlyReminderTaskQueue = nextTask.then(
+    () => undefined,
+    () => undefined
+  );
+  return nextTask;
+};
 
 export const registerReminderNotificationTask = (): void => {
   if (!hasRegisteredTask) {
@@ -24,7 +35,17 @@ export const registerReminderNotificationTask = (): void => {
         return;
       }
 
-      void handleReminderNotificationResponse(response, { allowNavigation: false });
+      void enqueueEarlyReminderTask(async () => {
+        const isHydrated = await waitForHabitStoreHydration();
+        if (!isHydrated) {
+          return;
+        }
+
+        await handleReminderNotificationResponse(response, {
+          allowNavigation: false,
+          completionMode: "targeted-background",
+        });
+      });
     });
   }
 };

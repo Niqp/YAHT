@@ -3,3 +3,5 @@
 "notification_action_open" = "Открыть";
 "notification_reminder_title" = "Напоминание";
 "notification_reminder_body" = "Пора выполнить: %@";
+"notification_follow_up_title" = "Все еще ждет";
+"notification_follow_up_body" = "«%@» все еще требует внимания.";
