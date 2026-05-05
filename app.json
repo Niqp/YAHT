@@ -38,7 +38,7 @@
         }
       ],
       "expo-router",
-      "./plugins/with-ios-native-reminder-actions",
+      "./plugins/with-native-reminder-actions",
       "react-native-permissions"
     ],
     "scheme": "yaht-app",

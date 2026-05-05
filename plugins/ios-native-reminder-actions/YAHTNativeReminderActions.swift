@@ -16,6 +16,7 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     static let reminderKind = "habitReminder"
     static let reminderPrefix = "reminder-"
     static let defaultSnoozeMs: Int64 = 15 * 60 * 1000
+    static let maxFollowUpRemindersPerSchedule = 3
     static let responseLedgerTtlMs: Int64 = 48 * 60 * 60 * 1000
 
     static let habitStorageId = "mmkv.default"
@@ -38,6 +39,23 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     let scheduledFor: Int64
     let maxAttempts: Int
     let repeatIntervalMs: Int64?
+  }
+
+  private struct ReminderJob {
+    let notificationId: String
+    let habitId: String
+    let habitTitle: String
+    let timestamp: Int64
+    let reminderDate: String
+    let reminderSeriesId: String
+    let attemptNumber: Int
+    let maxAttempts: Int
+    let repeatIntervalMs: Int64?
+  }
+
+  private struct NextIntervalReminder {
+    let reminderDate: String
+    let timestamp: Int64
   }
 
   @objc static func install() {
@@ -133,19 +151,37 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
 
     switch payload.actionId {
     case Constants.doneActionId:
-      guard applyDone(payload) else {
-        return true
+      guard let habitSnapshot = readHabit(payload.habitId) else {
+        releaseResponseClaim(responseKey)
+        return false
       }
-      cancelReminderSeries(payload.reminderSeriesId)
+      guard applyDone(payload) else {
+        releaseResponseClaim(responseKey)
+        return false
+      }
       removeScheduleLedgerEntries(for: payload.reminderSeriesId)
+      cancelReminderSeries(payload.reminderSeriesId) {
+        self.scheduleNextIntervalSeriesIfNeeded(habitSnapshot: habitSnapshot, payload: payload, nowMs: nowMs)
+      }
       appendNativeAppliedRecord(payload: payload, handledAtMs: nowMs, snoozedUntilMs: nil)
     case Constants.snoozeActionId:
       let snoozedUntilMs = nowMs + Constants.defaultSnoozeMs
       guard applySnooze(payload, snoozedUntilMs: snoozedUntilMs) else {
-        return true
+        releaseResponseClaim(responseKey)
+        return false
       }
-      cancelReminderSeries(payload.reminderSeriesId)
-      scheduleSnoozedReminder(payload, snoozedUntilMs: snoozedUntilMs)
+      let jobs = buildReminderSeriesJobs(
+        habitId: payload.habitId,
+        habitTitle: payload.habitTitle,
+        reminderDate: payload.reminderDate,
+        reminderSeriesId: payload.reminderSeriesId,
+        firstReminderTimestamp: snoozedUntilMs,
+        maxAttempts: payload.maxAttempts,
+        repeatIntervalMs: payload.repeatIntervalMs
+      )
+      cancelReminderSeries(payload.reminderSeriesId) {
+        self.scheduleReminderSeries(payload.reminderSeriesId, jobs: jobs)
+      }
       appendNativeAppliedRecord(payload: payload, handledAtMs: nowMs, snoozedUntilMs: snoozedUntilMs)
     default:
       break
@@ -177,6 +213,19 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
       maxAttempts: Int(int64Value(data["maxAttempts"]) ?? 1),
       repeatIntervalMs: int64Value(data["repeatIntervalMs"])
     )
+  }
+
+  private func readHabit(_ habitId: String) -> [String: Any]? {
+    guard let rawValue = storageString(storageId: Constants.habitStorageId, key: Constants.habitStorageKey),
+      let root = jsonObject(rawValue) as? [String: Any],
+      let state = root["state"] as? [String: Any],
+      let habits = state["habits"] as? [String: Any],
+      let habit = habits[habitId] as? [String: Any]
+    else {
+      return nil
+    }
+
+    return habit
   }
 
   private func applyDone(_ payload: ReminderPayload) -> Bool {
@@ -253,15 +302,20 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     return mutateHabitStorage(mutate)
   }
 
-  private func cancelReminderSeries(_ reminderSeriesId: String) {
+  private func cancelReminderSeries(_ reminderSeriesId: String, completion: @escaping () -> Void) {
     let center = UNUserNotificationCenter.current()
+    let group = DispatchGroup()
+
+    group.enter()
     center.getPendingNotificationRequests { requests in
       let identifiers = requests
         .filter { self.notificationMatchesSeries($0.identifier, userInfo: $0.content.userInfo, reminderSeriesId: reminderSeriesId) }
         .map(\.identifier)
       center.removePendingNotificationRequests(withIdentifiers: identifiers)
+      group.leave()
     }
 
+    group.enter()
     center.getDeliveredNotifications { notifications in
       let identifiers = notifications
         .filter {
@@ -273,7 +327,10 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
         }
         .map { $0.request.identifier }
       center.removeDeliveredNotifications(withIdentifiers: identifiers)
+      group.leave()
     }
+
+    group.notify(queue: .main, execute: completion)
   }
 
   private func notificationMatchesSeries(_ identifier: String, userInfo: [AnyHashable: Any], reminderSeriesId: String) -> Bool {
@@ -284,36 +341,160 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     return identifier.hasPrefix("\(Constants.reminderPrefix)\(reminderSeriesId)-")
   }
 
-  private func scheduleSnoozedReminder(_ payload: ReminderPayload, snoozedUntilMs: Int64) {
-    let notificationId = "\(Constants.reminderPrefix)\(payload.reminderSeriesId)-\(snoozedUntilMs)"
+  private func scheduleNextIntervalSeriesIfNeeded(habitSnapshot: [String: Any], payload: ReminderPayload, nowMs: Int64) {
+    guard let repetition = habitSnapshot["repetition"] as? [String: Any],
+      repetition["type"] as? String == "interval",
+      let reminder = habitSnapshot["reminder"] as? [String: Any],
+      reminder["enabled"] as? Bool == true,
+      let intervalDays = int64Value(repetition["days"]),
+      intervalDays > 0
+    else {
+      return
+    }
+
+    let next = nextIntervalReminder(
+      reminderDate: payload.reminderDate,
+      intervalDays: Int(intervalDays),
+      reminderHour: Int(int64Value(reminder["hour"]) ?? 0),
+      reminderMinute: Int(int64Value(reminder["minute"]) ?? 0),
+      nowMs: nowMs
+    )
+    let repeatIfNotCompleted = reminder["repeatIfNotCompleted"] as? Bool == true
+    let normalizedRepeatIntervalMs = repeatIfNotCompleted ? int64Value(reminder["repeatIntervalMs"]) : nil
+    let nextSeriesId = "series-\(payload.habitId)-\(next.reminderDate)"
+    let jobs = buildReminderSeriesJobs(
+      habitId: payload.habitId,
+      habitTitle: habitSnapshot["title"] as? String ?? payload.habitTitle,
+      reminderDate: next.reminderDate,
+      reminderSeriesId: nextSeriesId,
+      firstReminderTimestamp: next.timestamp,
+      maxAttempts: normalizedRepeatIntervalMs != nil ? Constants.maxFollowUpRemindersPerSchedule + 1 : 1,
+      repeatIntervalMs: normalizedRepeatIntervalMs
+    )
+
+    scheduleReminderSeries(nextSeriesId, jobs: jobs)
+  }
+
+  private func nextIntervalReminder(
+    reminderDate: String,
+    intervalDays: Int,
+    reminderHour: Int,
+    reminderMinute: Int,
+    nowMs: Int64
+  ) -> NextIntervalReminder {
+    let parts = reminderDate.split(separator: "-").compactMap { Int($0) }
+    var components = DateComponents()
+    components.year = parts.count > 0 ? parts[0] : nil
+    components.month = parts.count > 1 ? parts[1] : nil
+    components.day = parts.count > 2 ? parts[2] : nil
+    components.hour = reminderHour
+    components.minute = reminderMinute
+    components.second = 0
+    components.nanosecond = 0
+
+    let calendar = Calendar.current
+    var nextDate = calendar.date(from: components) ?? Date(timeIntervalSince1970: TimeInterval(nowMs) / 1000)
+    nextDate = calendar.date(byAdding: .day, value: intervalDays, to: nextDate) ?? nextDate
+    while Int64(nextDate.timeIntervalSince1970 * 1000) <= nowMs {
+      nextDate = calendar.date(byAdding: .day, value: intervalDays, to: nextDate) ?? nextDate
+    }
+
+    let nextComponents = calendar.dateComponents([.year, .month, .day], from: nextDate)
+    let nextReminderDate = String(
+      format: "%04d-%02d-%02d",
+      nextComponents.year ?? 0,
+      nextComponents.month ?? 1,
+      nextComponents.day ?? 1
+    )
+    return NextIntervalReminder(reminderDate: nextReminderDate, timestamp: Int64(nextDate.timeIntervalSince1970 * 1000))
+  }
+
+  private func buildReminderSeriesJobs(
+    habitId: String,
+    habitTitle: String,
+    reminderDate: String,
+    reminderSeriesId: String,
+    firstReminderTimestamp: Int64,
+    maxAttempts: Int,
+    repeatIntervalMs: Int64?
+  ) -> [ReminderJob] {
+    let normalizedMaxAttempts = max(1, maxAttempts)
+    let normalizedRepeatIntervalMs = repeatIntervalMs.flatMap { $0 > 0 ? $0 : nil }
+    var jobs: [ReminderJob] = []
+
+    for attemptNumber in 0..<normalizedMaxAttempts {
+      if attemptNumber > 0 && normalizedRepeatIntervalMs == nil {
+        continue
+      }
+
+      let timestamp = firstReminderTimestamp + (normalizedRepeatIntervalMs ?? 0) * Int64(attemptNumber)
+      jobs.append(
+        ReminderJob(
+          notificationId: "\(Constants.reminderPrefix)\(reminderSeriesId)-\(timestamp)",
+          habitId: habitId,
+          habitTitle: habitTitle,
+          timestamp: timestamp,
+          reminderDate: reminderDate,
+          reminderSeriesId: reminderSeriesId,
+          attemptNumber: attemptNumber,
+          maxAttempts: normalizedMaxAttempts,
+          repeatIntervalMs: normalizedRepeatIntervalMs
+        )
+      )
+    }
+
+    return jobs
+  }
+
+  private func scheduleReminderSeries(_ reminderSeriesId: String, jobs: [ReminderJob]) {
+    let center = UNUserNotificationCenter.current()
+    for job in jobs {
+      let request = UNNotificationRequest(
+        identifier: job.notificationId,
+        content: notificationContent(job),
+        trigger: calendarTrigger(timestamp: job.timestamp)
+      )
+      center.add(request)
+    }
+
+    if !jobs.isEmpty {
+      replaceScheduleLedgerEntries(for: reminderSeriesId, jobs: jobs)
+    }
+  }
+
+  private func notificationContent(_ job: ReminderJob) -> UNMutableNotificationContent {
     var data: [String: Any] = [
       "kind": Constants.reminderKind,
-      "habitId": payload.habitId,
-      "habitTitle": payload.habitTitle,
-      "reminderDate": payload.reminderDate,
-      "reminderSeriesId": payload.reminderSeriesId,
-      "scheduledFor": snoozedUntilMs,
-      "attemptNumber": 0,
-      "maxAttempts": payload.maxAttempts,
+      "habitId": job.habitId,
+      "habitTitle": job.habitTitle,
+      "reminderDate": job.reminderDate,
+      "reminderSeriesId": job.reminderSeriesId,
+      "scheduledFor": job.timestamp,
+      "attemptNumber": job.attemptNumber,
+      "maxAttempts": job.maxAttempts,
     ]
-    if let repeatIntervalMs = payload.repeatIntervalMs {
+    if let repeatIntervalMs = job.repeatIntervalMs {
       data["repeatIntervalMs"] = repeatIntervalMs
     }
 
     let content = UNMutableNotificationContent()
-    content.title = localizedString("notification_reminder_title")
-    content.body = String(format: localizedString("notification_reminder_body"), payload.habitTitle)
+    if job.attemptNumber > 0 {
+      content.title = localizedString("notification_follow_up_title")
+      content.body = String(format: localizedString("notification_follow_up_body"), job.habitTitle)
+    } else {
+      content.title = localizedString("notification_reminder_title")
+      content.body = String(format: localizedString("notification_reminder_body"), job.habitTitle)
+    }
     content.sound = .default
     content.categoryIdentifier = Constants.categoryId
     content.userInfo = data
+    return content
+  }
 
-    let date = Date(timeIntervalSince1970: TimeInterval(snoozedUntilMs) / 1000)
+  private func calendarTrigger(timestamp: Int64) -> UNCalendarNotificationTrigger {
+    let date = Date(timeIntervalSince1970: TimeInterval(timestamp) / 1000)
     let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
-    let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-    let request = UNNotificationRequest(identifier: notificationId, content: content, trigger: trigger)
-
-    UNUserNotificationCenter.current().add(request)
-    upsertScheduleLedgerEntry(payload: payload, notificationId: notificationId, snoozedUntilMs: snoozedUntilMs)
+    return UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
   }
 
   private func localizedString(_ key: String) -> String {
@@ -337,6 +518,13 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     var nextEntries = entries
     nextEntries.append(["responseKey": responseKey, "handledAtMs": nowMs])
     return saveJson(nextEntries, storageId: Constants.responseLedgerStorageId, key: Constants.responseLedgerKey)
+  }
+
+  private func releaseResponseClaim(_ responseKey: String) {
+    let entries = responseLedgerEntries().filter { entry in
+      entry["responseKey"] as? String != responseKey
+    }
+    saveJson(entries, storageId: Constants.responseLedgerStorageId, key: Constants.responseLedgerKey)
   }
 
   private func responseLedgerEntries() -> [[String: Any]] {
@@ -369,30 +557,34 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     saveJson(ledger, storageId: Constants.scheduleLedgerStorageId, key: Constants.scheduleLedgerKey)
   }
 
-  private func upsertScheduleLedgerEntry(payload: ReminderPayload, notificationId: String, snoozedUntilMs: Int64) {
+  private func replaceScheduleLedgerEntries(for reminderSeriesId: String, jobs: [ReminderJob]) {
     var ledger = scheduleLedger() ?? ["version": 1, "generatedAtMs": currentTimeMs(), "normalNotifications": []]
     let existingEntries = ledger["normalNotifications"] as? [[String: Any]] ?? []
-    var nextEntries = existingEntries.filter { $0["reminderSeriesId"] as? String != payload.reminderSeriesId }
+    var nextEntries = existingEntries.filter { $0["reminderSeriesId"] as? String != reminderSeriesId }
+    let scheduledAtMs = currentTimeMs()
 
-    var entry: [String: Any] = [
-      "notificationId": notificationId,
-      "habitId": payload.habitId,
-      "habitTitle": payload.habitTitle,
-      "timestamp": snoozedUntilMs,
-      "reminderDate": payload.reminderDate,
-      "reminderSeriesId": payload.reminderSeriesId,
-      "attemptNumber": 0,
-      "maxAttempts": payload.maxAttempts,
-      "scheduledAtMs": currentTimeMs(),
-    ]
-    if let repeatIntervalMs = payload.repeatIntervalMs {
-      entry["repeatIntervalMs"] = repeatIntervalMs
+    for job in jobs {
+      var entry: [String: Any] = [
+        "notificationId": job.notificationId,
+        "habitId": job.habitId,
+        "habitTitle": job.habitTitle,
+        "timestamp": job.timestamp,
+        "reminderDate": job.reminderDate,
+        "reminderSeriesId": job.reminderSeriesId,
+        "attemptNumber": job.attemptNumber,
+        "maxAttempts": job.maxAttempts,
+        "scheduledAtMs": scheduledAtMs,
+      ]
+      if let repeatIntervalMs = job.repeatIntervalMs {
+        entry["repeatIntervalMs"] = repeatIntervalMs
+      }
+      entry["signature"] = reminderSignature(entry)
+      nextEntries.append(entry)
     }
-    entry["signature"] = reminderSignature(entry)
 
-    nextEntries.append(entry)
+    ledger["version"] = 1
     ledger["normalNotifications"] = nextEntries
-    ledger["generatedAtMs"] = currentTimeMs()
+    ledger["generatedAtMs"] = scheduledAtMs
     saveJson(ledger, storageId: Constants.scheduleLedgerStorageId, key: Constants.scheduleLedgerKey)
   }
 

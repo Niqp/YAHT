@@ -3,3 +3,5 @@
 "notification_action_open" = "Open";
 "notification_reminder_title" = "Friendly Reminder";
 "notification_reminder_body" = "It's time for: %@";
+"notification_follow_up_title" = "Still waiting";
+"notification_follow_up_body" = "%@ still needs attention.";
