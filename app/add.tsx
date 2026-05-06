@@ -91,6 +91,7 @@ const getRepetitionSummary = (
   repetitionType: RepetitionType,
   selectedDays: number[],
   customDays: number,
+  customMonths: number,
   t: TFunction
 ) => {
   switch (repetitionType) {
@@ -105,6 +106,10 @@ const getRepetitionSummary = (
     }
     case RepetitionType.INTERVAL:
       return customDays === 1 ? t("addHabit.helpers.everyDay") : t("addHabit.helpers.everyDays", { count: customDays });
+    case RepetitionType.MONTHLY:
+      return customMonths === 1
+        ? t("addHabit.helpers.everyMonth")
+        : t("addHabit.helpers.everyMonths", { count: customMonths });
     case RepetitionType.DAILY:
     default:
       return t("form.daily");
@@ -117,6 +122,8 @@ const getRepetitionHelperText = (repetitionType: RepetitionType, t: TFunction) =
       return t("addHabit.helpers.weekdays");
     case RepetitionType.INTERVAL:
       return t("addHabit.helpers.interval");
+    case RepetitionType.MONTHLY:
+      return t("addHabit.helpers.monthly");
     case RepetitionType.DAILY:
     default:
       return t("addHabit.helpers.daily");
@@ -154,6 +161,7 @@ const buildRepetitionConfig = (
   repetitionType: RepetitionType,
   selectedDays: number[],
   customDays: number,
+  customMonths: number,
   t: TFunction
 ): { repetition: RepetitionConfig | null; errorMessage?: string } => {
   switch (repetitionType) {
@@ -188,6 +196,23 @@ const buildRepetitionConfig = (
         repetition: {
           type: RepetitionType.INTERVAL,
           days: normalizedDays,
+        },
+      };
+    }
+    case RepetitionType.MONTHLY: {
+      const normalizedMonths = Math.floor(customMonths);
+
+      if (!Number.isFinite(normalizedMonths) || normalizedMonths < 1) {
+        return {
+          repetition: null,
+          errorMessage: t("addHabit.validation.monthlyRequired"),
+        };
+      }
+
+      return {
+        repetition: {
+          type: RepetitionType.MONTHLY,
+          months: normalizedMonths,
         },
       };
     }
@@ -232,6 +257,7 @@ export default function AddEditHabitScreen() {
   const [repetitionType, setRepetitionType] = useState<RepetitionType>(RepetitionType.DAILY);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [customDays, setCustomDays] = useState<number>(1);
+  const [customMonths, setCustomMonths] = useState<number>(1);
   const [completionType, setCompletionType] = useState<CompletionType>(CompletionType.SIMPLE);
   const [repetitionGoal, setRepetitionGoal] = useState<number>(DEFAULT_REPETITION_GOAL);
   const [timedGoalMs, setTimedGoalMs] = useState<number>(DEFAULT_TIMED_GOAL_MS);
@@ -372,6 +398,7 @@ export default function AddEditHabitScreen() {
       setRepetitionType(RepetitionType.DAILY);
       setSelectedDays([]);
       setCustomDays(1);
+      setCustomMonths(1);
       setCompletionType(CompletionType.SIMPLE);
       setRepetitionGoal(DEFAULT_REPETITION_GOAL);
       setTimedGoalMs(DEFAULT_TIMED_GOAL_MS);
@@ -407,6 +434,7 @@ export default function AddEditHabitScreen() {
 
     const nextSelectedDays = habit.repetition.type === RepetitionType.WEEKDAYS ? habit.repetition.days : [];
     const nextCustomDays = habit.repetition.type === RepetitionType.INTERVAL ? habit.repetition.days : 1;
+    const nextCustomMonths = habit.repetition.type === RepetitionType.MONTHLY ? habit.repetition.months : 1;
     const nextRepetitionGoal =
       habit.completion.type === CompletionType.REPETITIONS && typeof habit.completion.goal === "number"
         ? habit.completion.goal
@@ -421,6 +449,7 @@ export default function AddEditHabitScreen() {
     setRepetitionType(habit.repetition.type);
     setSelectedDays(nextSelectedDays);
     setCustomDays(nextCustomDays);
+    setCustomMonths(nextCustomMonths);
     setCompletionType(habit.completion.type);
     setRepetitionGoal(nextRepetitionGoal);
     setTimedGoalMs(nextTimedGoalMs);
@@ -479,6 +508,14 @@ export default function AddEditHabitScreen() {
   const handleCustomDaysChange = useCallback((nextDays: number) => {
     setCustomDays(nextDays);
     if (nextDays >= 1) {
+      setScheduleError(null);
+    }
+    setIsDirty(true);
+  }, []);
+
+  const handleCustomMonthsChange = useCallback((nextMonths: number) => {
+    setCustomMonths(nextMonths);
+    if (nextMonths >= 1) {
       setScheduleError(null);
     }
     setIsDirty(true);
@@ -569,7 +606,7 @@ export default function AddEditHabitScreen() {
         : DEFAULT_REPETITION_GOAL;
   const completionSummary = getCompletionSummary(completionType, repetitionGoal, timedGoalMs, t);
   const completionHelperText = getCompletionHelperText(completionType, t);
-  const repetitionSummary = getRepetitionSummary(repetitionType, selectedDays, customDays, t);
+  const repetitionSummary = getRepetitionSummary(repetitionType, selectedDays, customDays, customMonths, t);
   const repetitionHelperText = getRepetitionHelperText(repetitionType, t);
   const reminderSummary = getReminderSummary(
     reminderEnabled,
@@ -612,7 +649,7 @@ export default function AddEditHabitScreen() {
 
       setCompletionError(null);
 
-      const { repetition, errorMessage } = buildRepetitionConfig(repetitionType, selectedDays, customDays, t);
+      const { repetition, errorMessage } = buildRepetitionConfig(repetitionType, selectedDays, customDays, customMonths, t);
       if (!repetition) {
         setScheduleError(errorMessage || t("addHabit.validation.repetitionRequired"));
         return;
@@ -870,6 +907,8 @@ export default function AddEditHabitScreen() {
                 setSelectedDays={handleSelectedDaysChange}
                 customDays={customDays}
                 setCustomDays={handleCustomDaysChange}
+                customMonths={customMonths}
+                setCustomMonths={handleCustomMonthsChange}
                 weekStartDay={weekStartDay}
                 errorMessage={scheduleError}
                 presentation="sheet"

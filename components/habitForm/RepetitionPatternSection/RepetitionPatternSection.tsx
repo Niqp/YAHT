@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo } from "react";
-import { CalendarDays, RotateCcw } from "lucide-react-native";
+import { CalendarDays, CalendarCheck, RotateCcw } from "lucide-react-native";
 import { useTheme } from "@/hooks/useTheme";
 import { RepetitionType } from "@/types/habit";
 import { addDays, getLocalizedShortDayName, getOrderedWeekDays } from "@/utils/date";
@@ -24,6 +24,8 @@ interface RepetitionPatternSectionProps {
   setSelectedDays: (days: number[]) => void;
   customDays: number;
   setCustomDays: (days: number) => void;
+  customMonths: number;
+  setCustomMonths: (months: number) => void;
   weekStartDay: number;
   errorMessage?: string | null;
   presentation?: "card" | "sheet";
@@ -41,6 +43,13 @@ const chunkIntoRows = <T,>(items: ReadonlyArray<T>, size: number) => {
 
 const WEEK_START_REFERENCE_DATE = "2026-02-15";
 
+const SEGMENT_VALUES = [
+  RepetitionType.DAILY,
+  RepetitionType.WEEKDAYS,
+  RepetitionType.INTERVAL,
+  RepetitionType.MONTHLY,
+] as const;
+
 const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   repetitionType,
   setRepetitionType,
@@ -48,6 +57,8 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   setSelectedDays,
   customDays,
   setCustomDays,
+  customMonths,
+  setCustomMonths,
   weekStartDay,
   errorMessage,
   presentation = "card",
@@ -71,6 +82,22 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
       })),
     [t]
   );
+  const monthOptions = useMemo(
+    () =>
+      Array.from({ length: 24 }, (_, index) => ({
+        value: index + 1,
+        label: t("addHabit.units.month", { count: index + 1 }),
+      })),
+    [t]
+  );
+  const monthPresets = useMemo(
+    () =>
+      [1, 2, 3, 6].map((value) => ({
+        label: t("addHabit.units.month", { count: value }),
+        value,
+      })),
+    [t]
+  );
 
   const orderedWeekdays = useMemo(() => getOrderedWeekDays(weekStartDay, locale), [locale, weekStartDay]);
   const weekdayOptions = useMemo(
@@ -81,10 +108,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
       })),
     [locale, orderedWeekdays]
   );
-  const segmentedIndex = useMemo(
-    () => (repetitionType === RepetitionType.DAILY ? 0 : repetitionType === RepetitionType.WEEKDAYS ? 1 : 2),
-    [repetitionType]
-  );
+  const segmentedIndex = useMemo(() => SEGMENT_VALUES.indexOf(repetitionType), [repetitionType]);
   const weekdayRows = useMemo(() => chunkIntoRows(weekdayOptions, 3), [weekdayOptions]);
 
   const handleDayToggle = useCallback(
@@ -157,7 +181,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
           </View>
         </View>
       </View>
-    ) : (
+    ) : repetitionType === RepetitionType.INTERVAL ? (
       <View style={styles.panel}>
         <View style={styles.scheduleControlBlock}>
           <View style={styles.completionTypeDescription}>
@@ -182,17 +206,40 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
           <PresetPills options={intervalPresets} selectedValue={customDays} onSelect={setCustomDays} />
         </View>
       </View>
+    ) : (
+      <View style={styles.panel}>
+        <View style={styles.scheduleControlBlock}>
+          <View style={styles.completionTypeDescription}>
+            <CalendarCheck size={24} color={colors.accent} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+              {t("form.dueEveryMonths", { count: customMonths })}
+            </AppText>
+          </View>
+          <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
+            <WheelPicker
+              data={monthOptions}
+              value={customMonths}
+              onChange={setCustomMonths}
+              style={styles.picker}
+              virtualized
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
+              windowSize={5}
+              animateMount={presentation === "sheet"}
+            />
+          </View>
+          <PresetPills options={monthPresets} selectedValue={customMonths} onSelect={setCustomMonths} />
+        </View>
+      </View>
     );
 
   const content = (
     <>
       <AppSegmentedControl
-        values={[t("form.daily"), t("form.weekly"), t("form.interval")]}
+        values={[t("form.daily"), t("form.weekly"), t("form.interval"), t("form.monthly")]}
         selectedIndex={segmentedIndex}
         onChange={(index) => {
-          let next = RepetitionType.DAILY;
-          if (index === 1) next = RepetitionType.WEEKDAYS;
-          else if (index === 2) next = RepetitionType.INTERVAL;
+          const next = SEGMENT_VALUES[index] ?? RepetitionType.DAILY;
 
           if (next !== repetitionType) {
             void haptic.medium();

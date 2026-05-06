@@ -3,7 +3,7 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 
 import type { Habit, HabitMap, ReminderConfig } from "@/types/habit";
-import { isHabitDueOnDate } from "@/utils/date";
+import { isPrimaryDueDate } from "@/utils/date";
 import {
   getReminderNotificationIdentifier,
   getReminderNotificationSeriesId,
@@ -148,7 +148,7 @@ const addHabitCandidatesForDate = (
   }
 
   const reminderDate = targetDate.format("YYYY-MM-DD");
-  if (habit.completionHistory[reminderDate]?.isCompleted || !isHabitDueOnDate(habit, reminderDate)) {
+  if (habit.completionHistory[reminderDate]?.isCompleted || !isPrimaryDueDate(habit, reminderDate)) {
     return;
   }
 

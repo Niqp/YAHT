@@ -11,6 +11,7 @@ export enum RepetitionType {
   DAILY = "daily",
   WEEKDAYS = "weekdays",
   INTERVAL = "interval",
+  MONTHLY = "monthly",
 }
 
 export type CompletionConfig =
@@ -21,7 +22,8 @@ export type CompletionConfig =
 export type RepetitionConfig =
   | { type: RepetitionType.DAILY }
   | { type: RepetitionType.WEEKDAYS; days: number[] } // 0-6 where 0 is Sunday
-  | { type: RepetitionType.INTERVAL; days: number }; // Every X days
+  | { type: RepetitionType.INTERVAL; days: number } // Every X days
+  | { type: RepetitionType.MONTHLY; months: number }; // Every X months, due from 1st
 
 export interface HabitMap {
   [id: string]: Habit;

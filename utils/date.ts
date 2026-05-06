@@ -88,11 +88,122 @@ export const isHabitDueOnDate = (habit: Habit, date: string): boolean => {
 
         return selectedDate.isSameOrAfter(nextDueDate);
       }
+      case "monthly": {
+        if (typeof habit.repetition.months !== "number" || habit.repetition.months <= 0) {
+          return false;
+        }
+
+        const monthsSinceCreation =
+          (selectedDate.year() - createdAtDate.year()) * 12 +
+          (selectedDate.month() - createdAtDate.month());
+
+        if (monthsSinceCreation < 0) return false;
+        if (monthsSinceCreation % habit.repetition.months !== 0) return false;
+
+        // Eligible month — check if already completed this month (on or before selectedDate)
+        const selectedYear = selectedDate.year();
+        const selectedMonth = selectedDate.month();
+
+        const completedThisMonth = Object.keys(habit.completionHistory).some((historyDate) => {
+          if (!habit.completionHistory[historyDate]?.isCompleted) return false;
+          const d = getMidnightDayjs(historyDate);
+          return d.year() === selectedYear && d.month() === selectedMonth && !d.isAfter(selectedDate);
+        });
+
+        return !completedThisMonth;
+      }
       default:
         return false;
     }
   } catch (error) {
     console.error("Error in isHabitDueOnDate:", error, "habit:", habit, "date:", date);
+    return false;
+  }
+};
+
+/**
+ * Returns true only on the proper start date of each due period.
+ * Unlike isHabitDueOnDate (which returns true for every overdue day),
+ * this returns true only on the first day a period becomes active:
+ * - DAILY / WEEKDAYS: every scheduled day (same as isHabitDueOnDate)
+ * - INTERVAL: only the exact day the interval elapses (not subsequent overdue days)
+ * - MONTHLY: only the 1st of eligible months (or createdAt for the creation month)
+ *
+ * Used by the reminder queue (schedule only on proper dates) and can be combined
+ * with isHabitDueOnDate to derive overdue status:
+ *   isOverdue = isHabitDueOnDate(habit, date) && !isPrimaryDueDate(habit, date)
+ */
+export const isPrimaryDueDate = (habit: Habit, date: string): boolean => {
+  if (!habit || !date) return false;
+
+  try {
+    const selectedDate = getMidnightDayjs(date);
+    const createdAtDate = getMidnightDayjs(habit.createdAt);
+
+    if (selectedDate.isBefore(createdAtDate)) {
+      return false;
+    }
+
+    switch (habit.repetition.type) {
+      case "daily":
+        return true;
+
+      case "weekdays":
+        return Array.isArray(habit.repetition.days) && habit.repetition.days.includes(selectedDate.day());
+
+      case "interval": {
+        if (selectedDate.isSame(createdAtDate)) {
+          return true;
+        }
+
+        if (typeof habit.repetition.days !== "number" || habit.repetition.days <= 0) {
+          return false;
+        }
+
+        const lastCompletedDate = Object.keys(habit.completionHistory)
+          .filter((historyDate) => {
+            if (!habit.completionHistory[historyDate]?.isCompleted) {
+              return false;
+            }
+
+            return !getMidnightDayjs(historyDate).isAfter(selectedDate);
+          })
+          .sort()
+          .at(-1);
+
+        const anchorDate = lastCompletedDate ? getMidnightDayjs(lastCompletedDate) : createdAtDate;
+        const nextDueDate = anchorDate.add(habit.repetition.days, "day");
+
+        // Key difference: isSame instead of isSameOrAfter
+        return selectedDate.isSame(nextDueDate);
+      }
+
+      case "monthly": {
+        if (typeof habit.repetition.months !== "number" || habit.repetition.months <= 0) {
+          return false;
+        }
+
+        const monthsSinceCreation =
+          (selectedDate.year() - createdAtDate.year()) * 12 +
+          (selectedDate.month() - createdAtDate.month());
+
+        if (monthsSinceCreation < 0) return false;
+        if (monthsSinceCreation % habit.repetition.months !== 0) return false;
+
+        // Creation month: only on createdAt itself
+        if (monthsSinceCreation === 0) {
+          return selectedDate.isSame(createdAtDate);
+        }
+
+        // Subsequent months: only on the 1st
+        return selectedDate.date() === 1;
+      }
+
+      default:
+        return false;
+    }
+  } catch (error) {
+    console.error("Error in isPrimaryDueDate:", error, "habit:", habit, "date:", date);
     return false;
   }
 };
