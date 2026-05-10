@@ -18,6 +18,8 @@ export const en = {
   },
   habits: {
     toDo: "To Do",
+    scheduled: "Scheduled",
+    missed: "Missed",
     emptyDay: "No habits for this day",
     emptyHint: "Tap the + button to add your first habit",
     add: "Add a habit",

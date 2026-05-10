@@ -20,6 +20,8 @@ export const ru = {
   },
   habits: {
     toDo: "К выполнению",
+    scheduled: "Запланировано",
+    missed: "Пропущено",
     emptyDay: "На этот день привычек нет",
     emptyHint: "Нажмите +, чтобы добавить первую привычку",
     add: "Добавить привычку",
@@ -247,8 +249,7 @@ export const ru = {
     dailyCaption: "Держите эту привычку в списке каждый день.",
     pickWeekdays: "Выберите дни недели, когда привычка должна появляться.",
     dueEveryDays: "Показывать каждые {count, plural, one {# день} few {# дня} many {# дней} other {# дня}}.",
-    dueEveryMonths:
-      "Показывать каждые {count, plural, one {месяц} few {# месяца} many {# месяцев} other {# месяца}}.",
+    dueEveryMonths: "Показывать каждые {count, plural, one {месяц} few {# месяца} many {# месяцев} other {# месяца}}.",
     monthlyCaption: "Выполняйте раз в месяц, начиная с первого числа.",
     reminders: "Напоминания",
     remindersDescription: "Настройте уведомления, чтобы не забывать.",

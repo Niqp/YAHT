@@ -5,7 +5,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
 import { useHabitStore } from "@/store/habitStore";
 import type { Habit } from "@/types/habit";
-import { shouldShowHabitOnDate } from "@/utils/date";
+import { getCurrentDateStamp, shouldShowHabitOnDate } from "@/utils/date";
+import { getHabitPresentationStatus, type HabitPresentationStatus } from "@/utils/habitPresentation";
 import { AppText } from "@/components/ui";
 import { Spacing } from "@/constants/Spacing";
 import HabitItem from "../habit/HabitItem";
@@ -15,6 +16,17 @@ import TaskGroupSeparator from "./TaskGroupSeparator/TaskGroupSeparator";
 interface HabitListProps {
   handleHabitAction: (habit: Habit) => void;
 }
+
+type HabitListItem = {
+  habit: Habit;
+  presentationStatus: HabitPresentationStatus;
+};
+
+type HabitSection = {
+  title: string;
+  completed: boolean;
+  data: HabitListItem[];
+};
 
 export default function HabitList({ handleHabitAction }: HabitListProps) {
   const { colors } = useTheme();
@@ -37,16 +49,43 @@ export default function HabitList({ handleHabitAction }: HabitListProps) {
   const groupedHabits = useMemo(() => {
     if (!filteredHabits || filteredHabits.length === 0) return [];
     try {
-      const incompleteHabits = filteredHabits.filter(
-        (habit: Habit) => !habit.completionHistory?.[selectedDate]?.isCompleted
-      );
-      const completedHabits = filteredHabits.filter(
-        (habit: Habit) => habit.completionHistory?.[selectedDate]?.isCompleted
-      );
+      const today = getCurrentDateStamp();
+      const missedHabits: HabitListItem[] = [];
+      const incompleteHabits: HabitListItem[] = [];
+      const scheduledHabits: HabitListItem[] = [];
+      const completedHabits: HabitListItem[] = [];
 
-      const sections = [];
+      filteredHabits.forEach((habit: Habit) => {
+        const presentationStatus = getHabitPresentationStatus(habit, selectedDate, today);
+        const item = { habit, presentationStatus };
+
+        if (presentationStatus === "scheduled") {
+          scheduledHabits.push(item);
+          return;
+        }
+
+        if (presentationStatus === "missed") {
+          missedHabits.push(item);
+          return;
+        }
+
+        if (habit.completionHistory?.[selectedDate]?.isCompleted) {
+          completedHabits.push(item);
+          return;
+        }
+
+        incompleteHabits.push(item);
+      });
+
+      const sections: HabitSection[] = [];
+      if (missedHabits.length > 0) {
+        sections.push({ title: t("habits.missed"), data: missedHabits, completed: false });
+      }
       if (incompleteHabits.length > 0) {
         sections.push({ title: t("habits.toDo"), data: incompleteHabits, completed: false });
+      }
+      if (scheduledHabits.length > 0) {
+        sections.push({ title: t("habits.scheduled"), data: scheduledHabits, completed: false });
       }
       if (completedHabits.length > 0) {
         sections.push({ title: t("common.completed"), data: completedHabits, completed: true });
@@ -59,18 +98,24 @@ export default function HabitList({ handleHabitAction }: HabitListProps) {
   }, [filteredHabits, selectedDate, t]);
 
   const renderSectionHeader = useCallback(
-    ({ section }: { section: { title: string; completed: boolean; data: Habit[] } }) => (
+    ({ section }: { section: HabitSection }) => (
       <TaskGroupSeparator title={section.title} completed={section.completed} count={section.data.length} />
     ),
     []
   );
 
-  const keyExtractor = useCallback((item: Habit) => item.id, []);
+  const keyExtractor = useCallback((item: HabitListItem) => item.habit.id, []);
 
   const renderHabitItem = useCallback(
-    ({ item }: { item: Habit }) => {
-      if (!item) return null;
-      return <HabitItem habitId={item.id} onLongPress={handleHabitAction} />;
+    ({ item }: { item: HabitListItem }) => {
+      if (!item?.habit) return null;
+      return (
+        <HabitItem
+          habitId={item.habit.id}
+          onLongPress={handleHabitAction}
+          presentationStatus={item.presentationStatus}
+        />
+      );
     },
     [handleHabitAction]
   );

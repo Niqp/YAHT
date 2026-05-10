@@ -46,6 +46,7 @@ export type ColorTheme = {
 
   danger: string;
   dangerSoftBg: string;
+  dangerSoftBorder: string;
   warning: string;
   warningSoftBg: string;
 
@@ -130,6 +131,7 @@ const sepiaLight: ColorTheme = {
 
   danger: "#C0523E",
   dangerSoftBg: "rgba(192,82,62,0.10)",
+  dangerSoftBorder: "rgba(192,82,62,0.34)",
   warning: "#C4813D",
   warningSoftBg: "rgba(196,129,61,0.10)",
 
@@ -214,6 +216,7 @@ const sepiaDark: ColorTheme = {
 
   danger: "#E07060",
   dangerSoftBg: "rgba(224,112,96,0.10)",
+  dangerSoftBorder: "rgba(224,112,96,0.46)",
   warning: "#D4944A",
   warningSoftBg: "rgba(212,148,74,0.10)",
 
@@ -298,6 +301,7 @@ const clearLight: ColorTheme = {
 
   danger: "#C62828",
   dangerSoftBg: "rgba(198,40,40,0.10)",
+  dangerSoftBorder: "rgba(198,40,40,0.34)",
   warning: "#E65100",
   warningSoftBg: "rgba(230,81,0,0.10)",
 
@@ -382,6 +386,7 @@ const clearDark: ColorTheme = {
 
   danger: "#EF5350",
   dangerSoftBg: "rgba(239,83,80,0.10)",
+  dangerSoftBorder: "rgba(239,83,80,0.44)",
   warning: "#FFA726",
   warningSoftBg: "rgba(255,167,38,0.10)",
 
@@ -468,6 +473,7 @@ const oledDark: ColorTheme = {
 
   danger: "#EF5350",
   dangerSoftBg: "rgba(239,83,80,0.12)",
+  dangerSoftBorder: "rgba(239,83,80,0.50)",
   warning: "#FFA726",
   warningSoftBg: "rgba(255,167,38,0.12)",
 

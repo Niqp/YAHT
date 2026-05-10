@@ -3,6 +3,7 @@ import { useHabitDisplay } from "@/hooks/habit/useHabitDisplay";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
 import { Habit, CompletionType } from "@/types/habit";
+import type { HabitPresentationStatus } from "@/utils/habitPresentation";
 import { getEpochMilliseconds } from "@/utils/date";
 import { haptic } from "@/utils/haptics";
 import { MoreVertical } from "lucide-react-native";
@@ -26,9 +27,10 @@ import { useTranslation } from "@/i18n";
 interface HabitItemProps {
   habitId: Habit["id"];
   onLongPress: (habit: Habit) => void;
+  presentationStatus?: HabitPresentationStatus;
 }
 
-export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
+export default function HabitItem({ habitId, onLongPress, presentationStatus = "normal" }: HabitItemProps) {
   if (!habitId) return null;
 
   const habit = useHabitStore((state) => state.habits[habitId]);
@@ -80,6 +82,8 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
   const isTimedHabit = completionType === CompletionType.TIMED;
   const isActiveTimedHabit = isTimedHabit && isTimerActive;
   const timerHighlightColor = isCompleted ? colors.success : colors.accent;
+  const isScheduledPresentation = presentationStatus === "scheduled";
+  const isMissedPresentation = presentationStatus === "missed";
 
   React.useEffect(() => {
     if (!isActiveTimedHabit) {
@@ -106,6 +110,13 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
   });
 
   const progressBarWidth = `${progress}%` as const;
+  const presentationFillWidth = isMissedPresentation ? "100%" : progressBarWidth;
+  const presentationFillColor = isMissedPresentation
+    ? colors.dangerSoftBg
+    : isCompleted
+      ? colors.success
+      : colors.accent;
+  const presentationFillOpacity = isMissedPresentation ? 1 : 0.15;
 
   const { getSubtitleText } = useHabitDisplay({
     habit,
@@ -148,12 +159,13 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
     <>
       {/* Progress indicator */}
       <View
+        testID={`habit-item-progress-${habitId}`}
         style={[
           styles.progressBar,
           {
-            width: progressBarWidth,
-            backgroundColor: isCompleted ? colors.success : colors.accent,
-            opacity: 0.15,
+            width: presentationFillWidth,
+            backgroundColor: presentationFillColor,
+            opacity: presentationFillOpacity,
           },
         ]}
       />
@@ -174,8 +186,16 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
           style={[
             styles.iconContainer,
             {
-              backgroundColor: isCompleted ? colors.successSoftBg : colors.bgInset,
-              borderColor: isCompleted ? colors.successSoftBorder : colors.borderSubtle,
+              backgroundColor: isMissedPresentation
+                ? colors.dangerSoftBg
+                : isCompleted
+                  ? colors.successSoftBg
+                  : colors.bgInset,
+              borderColor: isMissedPresentation
+                ? colors.dangerSoftBorder
+                : isCompleted
+                  ? colors.successSoftBorder
+                  : colors.borderSubtle,
             },
           ]}
         >
@@ -224,16 +244,26 @@ export default function HabitItem({ habitId, onLongPress }: HabitItemProps) {
 
   return (
     <Animated.View
+      testID={`habit-item-${habitId}`}
       style={[
         styles.container,
         animatedStyle,
         {
-          borderColor: isActiveTimedHabit ? timerHighlightColor : isCompleted ? colors.success : colors.borderDefault,
+          borderColor: isMissedPresentation
+            ? colors.dangerSoftBorder
+            : isActiveTimedHabit
+              ? timerHighlightColor
+              : isCompleted
+                ? colors.success
+                : colors.borderDefault,
+          backgroundColor: colors.bgSurface,
+          opacity: isScheduledPresentation ? 0.55 : 1,
           ...getElevation(1, colors.shadow),
         },
       ]}
     >
       <View
+        testID={`habit-item-content-${habitId}`}
         style={[
           styles.contentWrapper,
           {
