@@ -19,13 +19,11 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     static let maxFollowUpRemindersPerSchedule = 3
     static let responseLedgerTtlMs: Int64 = 48 * 60 * 60 * 1000
 
-    static let habitStorageId = "mmkv.default"
+    static let habitStorageId = "yaht-persistence"
+    static let runtimeStorageId = "yaht-runtime"
     static let habitStorageKey = "habits-storage"
-    static let responseLedgerStorageId = "reminder-response-ledger"
     static let responseLedgerKey = "reminder-response-ledger"
-    static let scheduleLedgerStorageId = "reminder-schedule-ledger"
     static let scheduleLedgerKey = "reminder-schedule-ledger"
-    static let nativeAppliedStorageId = "ios-native-reminder-actions"
     static let nativeAppliedKey = "ios-native-reminder-actions"
   }
 
@@ -511,24 +509,24 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     }
 
     if entries.contains(where: { $0["responseKey"] as? String == responseKey }) {
-      saveJson(entries, storageId: Constants.responseLedgerStorageId, key: Constants.responseLedgerKey)
+      saveJson(entries, storageId: Constants.runtimeStorageId, key: Constants.responseLedgerKey)
       return false
     }
 
     var nextEntries = entries
     nextEntries.append(["responseKey": responseKey, "handledAtMs": nowMs])
-    return saveJson(nextEntries, storageId: Constants.responseLedgerStorageId, key: Constants.responseLedgerKey)
+    return saveJson(nextEntries, storageId: Constants.runtimeStorageId, key: Constants.responseLedgerKey)
   }
 
   private func releaseResponseClaim(_ responseKey: String) {
     let entries = responseLedgerEntries().filter { entry in
       entry["responseKey"] as? String != responseKey
     }
-    saveJson(entries, storageId: Constants.responseLedgerStorageId, key: Constants.responseLedgerKey)
+    saveJson(entries, storageId: Constants.runtimeStorageId, key: Constants.responseLedgerKey)
   }
 
   private func responseLedgerEntries() -> [[String: Any]] {
-    guard let rawValue = storageString(storageId: Constants.responseLedgerStorageId, key: Constants.responseLedgerKey),
+    guard let rawValue = storageString(storageId: Constants.runtimeStorageId, key: Constants.responseLedgerKey),
       let entries = jsonObject(rawValue) as? [[String: Any]]
     else {
       return []
@@ -554,7 +552,7 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
       return true
     }
 
-    saveJson(ledger, storageId: Constants.scheduleLedgerStorageId, key: Constants.scheduleLedgerKey)
+    saveJson(ledger, storageId: Constants.runtimeStorageId, key: Constants.scheduleLedgerKey)
   }
 
   private func replaceScheduleLedgerEntries(for reminderSeriesId: String, jobs: [ReminderJob]) {
@@ -585,11 +583,11 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     ledger["version"] = 1
     ledger["normalNotifications"] = nextEntries
     ledger["generatedAtMs"] = scheduledAtMs
-    saveJson(ledger, storageId: Constants.scheduleLedgerStorageId, key: Constants.scheduleLedgerKey)
+    saveJson(ledger, storageId: Constants.runtimeStorageId, key: Constants.scheduleLedgerKey)
   }
 
   private func scheduleLedger() -> [String: Any]? {
-    guard let rawValue = storageString(storageId: Constants.scheduleLedgerStorageId, key: Constants.scheduleLedgerKey) else {
+    guard let rawValue = storageString(storageId: Constants.runtimeStorageId, key: Constants.scheduleLedgerKey) else {
       return nil
     }
 
@@ -629,11 +627,11 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     }
 
     records.append(record)
-    saveJson(records, storageId: Constants.nativeAppliedStorageId, key: Constants.nativeAppliedKey)
+    saveJson(records, storageId: Constants.runtimeStorageId, key: Constants.nativeAppliedKey)
   }
 
   private func nativeAppliedRecords() -> [[String: Any]] {
-    guard let rawValue = storageString(storageId: Constants.nativeAppliedStorageId, key: Constants.nativeAppliedKey),
+    guard let rawValue = storageString(storageId: Constants.runtimeStorageId, key: Constants.nativeAppliedKey),
       let records = jsonObject(rawValue) as? [[String: Any]]
     else {
       return []

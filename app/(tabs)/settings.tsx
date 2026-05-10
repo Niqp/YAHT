@@ -1,6 +1,7 @@
 import React from "react";
 import Constants from "expo-constants";
-import { ChevronRight, Code2, Download, Trash2, Upload } from "lucide-react-native";
+import { router } from "expo-router";
+import { Bug, ChevronRight, Code2, Download, Trash2, Upload } from "lucide-react-native";
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { AppSegmentedControl, AppText } from "@/components/ui";
@@ -79,6 +80,10 @@ export default function SettingsScreen() {
       console.error("Error opening repository:", error);
       Alert.alert(t("settings.unableToOpenLinkTitle"), t("settings.unableToOpenLinkBody"));
     }
+  };
+
+  const handleOpenReminderDebugLogs = () => {
+    router.push({ pathname: "/debug-reminder", params: { inspect: "1" } });
   };
 
   const handleReset = () => {
@@ -177,6 +182,13 @@ export default function SettingsScreen() {
 
         <SettingsSection title={t("settings.about")}>
           <StaticRow title={t("settings.version")} value={`v${appVersion}`} />
+          <SectionDivider />
+          <ActionRow
+            icon={<Bug size={18} color={colors.iconPrimary} />}
+            title={t("settings.reminderDebugLogs")}
+            description={t("settings.reminderDebugLogsDescription")}
+            onPress={handleOpenReminderDebugLogs}
+          />
           <SectionDivider />
           <ActionRow
             icon={<Code2 size={18} color={colors.iconPrimary} />}

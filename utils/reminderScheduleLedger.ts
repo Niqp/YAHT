@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 
 import type { ReminderQueueJob, StopReminderQueueJob } from "@/utils/reminderQueue";
 import { REMINDER_NOTIFICATION_PREFIX } from "@/utils/notifications";
+import { YAHT_RUNTIME_STORAGE_ID } from "@/utils/storageIds";
 
 export const REMINDER_SCHEDULE_LEDGER_VERSION = 1;
 
@@ -71,7 +72,7 @@ const memoryStorage: PlainStorage = {
 const createNativeStorage = (): PlainStorage => {
   // Dynamic require so web/test bundles do not eagerly initialize MMKV.
   const { MMKV } = require("react-native-mmkv");
-  const nativeStorage = new MMKV({ id: "reminder-schedule-ledger" });
+  const nativeStorage = new MMKV({ id: YAHT_RUNTIME_STORAGE_ID });
 
   return {
     getItem: (key) => nativeStorage.getString(key) ?? null,

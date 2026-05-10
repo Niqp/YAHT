@@ -3,10 +3,15 @@ import { Platform } from "react-native";
 import { syncNativeReminderActionState } from "@/utils/nativeReminderActions";
 
 const mockDrainIosNativeReminderActions = jest.fn(() => Promise.resolve());
+const mockDrainAndroidNativeReminderActions = jest.fn(() => Promise.resolve());
 const mockRehydrate = jest.fn(() => Promise.resolve());
 
 jest.mock("@/utils/iosNativeReminderActions", () => ({
   drainIosNativeReminderActions: () => mockDrainIosNativeReminderActions(),
+}));
+
+jest.mock("@/utils/androidNativeReminderActions", () => ({
+  drainAndroidNativeReminderActions: () => mockDrainAndroidNativeReminderActions(),
 }));
 
 jest.mock("@/store/habitStore", () => {
@@ -29,6 +34,7 @@ describe("syncNativeReminderActionState", () => {
 
     expect(mockDrainIosNativeReminderActions).toHaveBeenCalledTimes(1);
     expect(mockRehydrate).toHaveBeenCalledTimes(1);
+    expect(mockDrainAndroidNativeReminderActions).toHaveBeenCalledTimes(1);
   });
 
   it("does not rehydrate the main habit store on non-Android platforms", async () => {
@@ -38,5 +44,6 @@ describe("syncNativeReminderActionState", () => {
 
     expect(mockDrainIosNativeReminderActions).toHaveBeenCalledTimes(1);
     expect(mockRehydrate).not.toHaveBeenCalled();
+    expect(mockDrainAndroidNativeReminderActions).toHaveBeenCalledTimes(1);
   });
 });

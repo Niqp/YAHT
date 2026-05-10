@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { canScheduleExactAlarms, openSettings } from "react-native-permissions";
 import { translate } from "@/i18n";
+import { YAHT_RUNTIME_STORAGE_ID } from "@/utils/storageIds";
 
 const TIMER_CHANNEL_ID = "timers";
 const getTimerChannelName = () => translate("notifications.channels.timers");
@@ -16,14 +17,16 @@ const REMINDER_QUEUE_STOP_KIND = "reminderQueueStop";
 export const DEFAULT_REMINDER_SNOOZE_MS = 15 * 60 * 1000;
 export const MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE = 3;
 
-// Keep these constants in sync with plugins/ios-native-reminder-actions.
-// The iOS native notification delegate reads these payload/action IDs and MMKV keys
+// Keep these constants in sync with plugins/*-native-reminder-actions.
+// Native notification handlers read these payload/action IDs and MMKV keys
 // before React Native is running.
 export const REMINDER_ACTION_DONE_IDENTIFIER = "habitReminderDone";
 export const REMINDER_ACTION_SNOOZE_IDENTIFIER = "habitReminderSnooze";
 export const REMINDER_ACTION_OPEN_IDENTIFIER = "habitReminderOpen";
-export const IOS_NATIVE_REMINDER_ACTION_STORAGE_ID = "ios-native-reminder-actions";
+export const IOS_NATIVE_REMINDER_ACTION_STORAGE_ID = YAHT_RUNTIME_STORAGE_ID;
 export const IOS_NATIVE_REMINDER_ACTION_STORAGE_KEY = "ios-native-reminder-actions";
+export const ANDROID_NATIVE_REMINDER_ACTION_STORAGE_ID = YAHT_RUNTIME_STORAGE_ID;
+export const ANDROID_NATIVE_REMINDER_ACTION_STORAGE_KEY = "android-native-reminder-actions";
 
 export type ReminderNotificationData = {
   kind: typeof REMINDER_KIND;

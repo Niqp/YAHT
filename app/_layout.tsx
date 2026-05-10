@@ -91,6 +91,7 @@ export default function RootLayout() {
                   headerShown: false,
                 }}
               />
+              <Stack.Screen name="debug-reminder" options={{ headerShown: false }} />
             </Stack>
           </BottomSheetModalProvider>
         </ThemeProvider>

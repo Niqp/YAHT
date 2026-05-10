@@ -16,7 +16,9 @@ describe("native reminder actions plugin", () => {
   it("registers a higher-priority Android notification event receiver", () => {
     const pluginSource = readProjectFile("plugins/with-native-reminder-actions.js");
 
-    expect(pluginSource).toContain('const EXPO_NOTIFICATION_EVENT_ACTION = "expo.modules.notifications.NOTIFICATION_EVENT";');
+    expect(pluginSource).toContain(
+      'const EXPO_NOTIFICATION_EVENT_ACTION = "expo.modules.notifications.NOTIFICATION_EVENT";'
+    );
     expect(pluginSource).toContain('const receiverName = ".notifications.YAHTNativeReminderActionsService";');
     expect(pluginSource).toContain('"android:priority": "1"');
   });
@@ -31,8 +33,9 @@ describe("native reminder actions plugin", () => {
     expect(pluginSource).toContain("YAHTNativeReminderActionsService.kt");
     expect(pluginSource).toContain("ANDROID_RESOURCE_DIR");
     expect(serviceSource).toContain("class YAHTNativeReminderActionsService : NotificationsService()");
+    expect(serviceSource).toContain('private const val HABIT_STORAGE_ID = "yaht-persistence"');
+    expect(serviceSource).toContain('private const val RUNTIME_STORAGE_ID = "yaht-runtime"');
     expect(serviceSource).toContain('private const val HABIT_STORAGE_KEY = "habits-storage"');
-    expect(serviceSource).not.toContain("android-native-reminder-actions");
   });
 
   it("provides Android native notification copy resources", () => {

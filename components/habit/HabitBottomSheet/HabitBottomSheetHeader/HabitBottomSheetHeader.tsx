@@ -4,7 +4,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { X } from "lucide-react-native";
 import type { Habit } from "@/types/habit";
 import { AppText } from "@/components/ui";
-import HabitTypeIndicator from "@/components/stats/HabitTypeIndicator";
+import HabitTypeIndicator from "@/components/habit/HabitTypeIndicator";
 import { useTranslation } from "@/i18n";
 
 export default function HabitBottomSheetHeader({ habit, onClose }: { habit: Habit; onClose: () => void }) {

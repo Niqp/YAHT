@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
 import { useHabitStore } from "@/store/habitStore";
+import { drainAndroidNativeReminderActions } from "@/utils/androidNativeReminderActions";
 import { drainIosNativeReminderActions } from "@/utils/iosNativeReminderActions";
 
 type PersistedHabitStore = typeof useHabitStore & {
@@ -20,4 +21,5 @@ const rehydrateAndroidHabitStore = async () => {
 export const syncNativeReminderActionState = async () => {
   await drainIosNativeReminderActions();
   await rehydrateAndroidHabitStore();
+  await drainAndroidNativeReminderActions();
 };

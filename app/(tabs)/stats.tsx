@@ -1,8 +1,8 @@
+import HabitSummaryCard from "@/components/habit/HabitSummaryCard";
 import HabitDetailView from "@/components/stats/HabitDetailView";
 import HabitSelector from "@/components/stats/HabitSelector";
-import HabitTypeIndicator from "@/components/stats/HabitTypeIndicator";
 import OverallStats from "@/components/stats/OverallStats";
-import { AppBottomSheet, AppText, PressableCard, ScaleButton } from "@/components/ui";
+import { AppBottomSheet, AppText, ScaleButton } from "@/components/ui";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useStats } from "@/hooks/useStats";
 import type { Habit } from "@/types/habit";
@@ -11,7 +11,7 @@ import { useTranslation } from "@/i18n";
 import type BottomSheet from "@gorhom/bottom-sheet";
 import { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
-import { BarChart2, Check } from "lucide-react-native";
+import { BarChart2, CheckCircle } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 
@@ -140,40 +140,18 @@ export default function StatsScreen() {
             const isSelected = selectedHabit?.id === habit.id;
 
             return (
-              <PressableCard
+              <HabitSummaryCard
+                habit={habit}
                 onPress={() => handleHabitSheetSelect(habit)}
-                backgroundColor={isSelected ? colors.accentSoftBg : colors.bgSurface}
-                bordered
-                style={isSelected ? [styles.sheetItem, { borderColor: colors.accentSoftBorder }] : styles.sheetItem}
+                selected={isSelected}
                 accessibilityLabel={t("stats.selectHabitAccessibility", { title: habit.title })}
                 accessibilityState={{ selected: isSelected }}
-              >
-                <View style={styles.sheetItemRow}>
-                  <View style={styles.sheetItemLeading}>
-                    <View style={[styles.sheetItemIconContainer, { backgroundColor: colors.bgInset }]}>
-                      <AppText style={styles.sheetItemIcon}>{habit.icon}</AppText>
-                    </View>
-
-                    <View style={styles.sheetItemTextBlock}>
-                      <AppText variant="bodyMedium" numberOfLines={1}>
-                        {habit.title}
-                      </AppText>
-                      <HabitTypeIndicator completionType={habit.completion.type} />
-                    </View>
+                trailing={
+                  <View style={styles.sheetSelectionMarker}>
+                    {isSelected ? <CheckCircle size={20} color={colors.accent} strokeWidth={2} /> : null}
                   </View>
-
-                  {isSelected ? (
-                    <View
-                      style={[
-                        styles.selectedMarker,
-                        { backgroundColor: colors.accentSoftBg, borderColor: colors.accentSoftBorder },
-                      ]}
-                    >
-                      <Check size={14} color={colors.accent} strokeWidth={2} />
-                    </View>
-                  ) : null}
-                </View>
-              </PressableCard>
+                }
+              />
             );
           }}
         />
@@ -222,43 +200,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxxl,
     gap: Spacing.sm,
   },
-  sheetItem: {
-    minHeight: 60,
-  },
-  sheetItemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.md,
-  },
-  sheetItemLeading: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: Spacing.md,
-  },
-  sheetItemIconContainer: {
-    width: Spacing.xxl,
-    height: Spacing.xxl,
-    borderRadius: BorderRadius.full,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sheetItemIcon: {
-    fontSize: 20,
-    lineHeight: 22,
-  },
-  sheetItemTextBlock: {
-    flex: 1,
-    gap: Spacing.xxs,
-  },
-  selectedMarker: {
-    width: Spacing.lg,
-    height: Spacing.lg,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
+  sheetSelectionMarker: {
     alignItems: "center",
     justifyContent: "center",
   },

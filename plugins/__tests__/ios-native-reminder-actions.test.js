@@ -31,6 +31,8 @@ describe("iOS native reminder actions plugin", () => {
   it("keeps native iOS quick actions at targeted-background parity with Android and JS", () => {
     const swiftSource = readProjectFile("plugins/ios-native-reminder-actions/YAHTNativeReminderActions.swift");
 
+    expect(swiftSource).toContain('static let habitStorageId = "yaht-persistence"');
+    expect(swiftSource).toContain('static let runtimeStorageId = "yaht-runtime"');
     expect(swiftSource).toContain("releaseResponseClaim(responseKey)");
     expect(swiftSource).toContain("scheduleNextIntervalSeriesIfNeeded(habitSnapshot: habitSnapshot");
     expect(swiftSource).toContain("buildReminderSeriesJobs(");

@@ -15,6 +15,7 @@ import expo.modules.notifications.notifications.presentation.builders.ExpoNotifi
 import expo.modules.notifications.notifications.triggers.DateTrigger
 import expo.modules.notifications.service.NotificationsService
 import com.tencent.mmkv.MMKV
+import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
@@ -49,11 +50,15 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     val response = try {
       getNotificationResponseFromBroadcastIntent(intent)
     } catch (error: Exception) {
+      Log.d(LOG_TAG, "Could not parse notification response intent; delegating to Expo.", error)
+      appendDebugRecord(context, "intent-parse-failed", detail = error.message)
       super.onReceiveNotificationResponse(context, intent)
       return
     }
 
     if (!handleReminderResponse(context.applicationContext, response)) {
+      Log.d(LOG_TAG, "Native reminder response was not handled; delegating to Expo.")
+      appendDebugRecord(context, "delegating-to-expo")
       super.onReceiveNotificationResponse(context, intent)
     }
   }
@@ -61,29 +66,55 @@ class YAHTNativeReminderActionsService : NotificationsService() {
   private fun handleReminderResponse(context: Context, response: NotificationResponse): Boolean {
     val actionId = response.actionIdentifier
     if (actionId != DONE_ACTION_ID && actionId != SNOOZE_ACTION_ID) {
+      Log.d(LOG_TAG, "Ignoring non-reminder action: $actionId")
+      appendDebugRecord(context, "ignored-action", actionId = actionId)
       return false
     }
 
-    val payload = parsePayload(response) ?: return false
+    val payload = parsePayload(response) ?: run {
+      Log.d(LOG_TAG, "Could not parse reminder payload for action: $actionId")
+      appendDebugRecord(context, "payload-parse-failed", actionId = actionId)
+      return false
+    }
+    Log.d(
+      LOG_TAG,
+      "Parsed reminder payload action=${payload.actionId} notification=${payload.notificationId} habit=${payload.habitId} date=${payload.reminderDate} series=${payload.reminderSeriesId}"
+    )
+    appendDebugRecord(context, "payload-parsed", payload)
     dismissNotification(context, payload.notificationId)
+    appendDebugRecord(context, "notification-dismissed", payload)
 
     val nowMs = currentTimeMs()
     val responseKey = "${payload.notificationId}:${payload.actionId}"
 
     synchronized(NATIVE_RESPONSE_LOCK) {
       if (!claimResponse(context, responseKey, nowMs)) {
+        Log.d(LOG_TAG, "Response already claimed: $responseKey")
+        appendDebugRecord(context, "response-already-claimed", payload, detail = responseKey)
         return true
       }
+      Log.d(LOG_TAG, "Response claimed: $responseKey")
+      appendDebugRecord(context, "response-claimed", payload, detail = responseKey)
 
       val handled = try {
         when (payload.actionId) {
           DONE_ACTION_ID -> {
-            val habitSnapshot = readHabit(context, payload.habitId) ?: return falseAfterReleasingClaim(context, responseKey)
-            if (!applyDone(context, payload)) {
+            val habitSnapshot = readHabit(context, payload.habitId)
+            if (habitSnapshot == null) {
+              Log.d(LOG_TAG, "Done action failed: habit not found in MMKV for ${payload.habitId}")
+              appendDebugRecord(context, "done-habit-missing", payload)
               return falseAfterReleasingClaim(context, responseKey)
             }
 
-            cancelReminderSeries(context, payload.reminderSeriesId)
+            val didApplyDone = applyDone(context, payload)
+            Log.d(LOG_TAG, "Done action mutation result for ${payload.habitId}: $didApplyDone")
+            appendDebugRecord(context, "done-mutation-result", payload, detail = didApplyDone.toString())
+            if (!didApplyDone) {
+              return falseAfterReleasingClaim(context, responseKey)
+            }
+            appendAppliedActionRecord(context, payload, responseKey)
+
+            cancelReminderSeries(context, payload.reminderSeriesId, payload)
             removeScheduleLedgerEntries(context, payload.reminderSeriesId)
             scheduleNextIntervalSeriesIfNeeded(context, habitSnapshot, payload, nowMs)
             true
@@ -91,11 +122,15 @@ class YAHTNativeReminderActionsService : NotificationsService() {
 
           SNOOZE_ACTION_ID -> {
             val snoozedUntilMs = nowMs + DEFAULT_SNOOZE_MS
-            if (!applySnooze(context, payload, snoozedUntilMs)) {
+            val didApplySnooze = applySnooze(context, payload, snoozedUntilMs)
+            Log.d(LOG_TAG, "Snooze action mutation result for ${payload.habitId}: $didApplySnooze")
+            appendDebugRecord(context, "snooze-mutation-result", payload, detail = didApplySnooze.toString())
+            if (!didApplySnooze) {
               return falseAfterReleasingClaim(context, responseKey)
             }
+            appendAppliedActionRecord(context, payload, responseKey, snoozedUntilMs)
 
-            cancelReminderSeries(context, payload.reminderSeriesId)
+            cancelReminderSeries(context, payload.reminderSeriesId, payload)
             val jobs = buildReminderSeriesJobs(
               habitId = payload.habitId,
               habitTitle = payload.habitTitle,
@@ -113,12 +148,17 @@ class YAHTNativeReminderActionsService : NotificationsService() {
         }
       } catch (error: Exception) {
         Log.e(LOG_TAG, "Native reminder response failed; delegating to Expo.", error)
+        appendDebugRecord(context, "native-exception", payload, detail = error.message)
         false
       }
 
       if (!handled) {
+        Log.d(LOG_TAG, "Native handler did not complete; releasing response claim: $responseKey")
+        appendDebugRecord(context, "native-not-handled", payload, detail = responseKey)
         releaseResponseClaim(context, responseKey)
       }
+      Log.d(LOG_TAG, "Native reminder response handled=$handled action=${payload.actionId} notification=${payload.notificationId}")
+      appendDebugRecord(context, "native-handler-result", payload, detail = handled.toString())
       return handled
     }
   }
@@ -189,25 +229,143 @@ class YAHTNativeReminderActionsService : NotificationsService() {
 
   private fun mutateHabit(context: Context, habitId: String, mutate: (JSONObject) -> Boolean): Boolean {
     val storage = mmkv(context, HABIT_STORAGE_ID)
-    val root = JSONObject(storage.decodeString(HABIT_STORAGE_KEY) ?: return false)
-    val state = root.optJSONObject("state") ?: return false
-    val habits = state.optJSONObject("habits") ?: return false
-    val habit = habits.optJSONObject(habitId) ?: return false
+    val rawStore = storage.decodeString(HABIT_STORAGE_KEY)
+    if (rawStore == null) {
+      Log.d(LOG_TAG, "mutateHabit failed: habits-storage key missing.")
+      appendDebugRecord(context, "mutate-store-missing", detail = habitId)
+      return false
+    }
+
+    val root = JSONObject(rawStore)
+    val state = root.optJSONObject("state") ?: run {
+      Log.d(LOG_TAG, "mutateHabit failed: persisted state missing.")
+      appendDebugRecord(context, "mutate-state-missing", detail = habitId)
+      return false
+    }
+    val habits = state.optJSONObject("habits") ?: run {
+      Log.d(LOG_TAG, "mutateHabit failed: persisted habits map missing.")
+      appendDebugRecord(context, "mutate-habits-missing", detail = habitId)
+      return false
+    }
+    val habit = habits.optJSONObject(habitId) ?: run {
+      Log.d(LOG_TAG, "mutateHabit failed: habit $habitId missing.")
+      appendDebugRecord(context, "mutate-habit-missing", detail = habitId)
+      return false
+    }
 
     if (!mutate(habit)) {
+      Log.d(LOG_TAG, "mutateHabit callback declined mutation for $habitId.")
+      appendDebugRecord(context, "mutate-callback-declined", detail = habitId)
       return false
     }
 
     habits.put(habitId, habit)
     state.put("habits", habits)
     root.put("state", state)
-    return storage.encode(HABIT_STORAGE_KEY, root.toString())
+    val didEncode = storage.encode(HABIT_STORAGE_KEY, root.toString())
+    Log.d(LOG_TAG, "mutateHabit encode result for $habitId: $didEncode")
+    return didEncode
   }
 
   private fun readHabit(context: Context, habitId: String): JSONObject? {
     val storage = mmkv(context, HABIT_STORAGE_ID)
-    val root = JSONObject(storage.decodeString(HABIT_STORAGE_KEY) ?: return null)
-    return root.optJSONObject("state")?.optJSONObject("habits")?.optJSONObject(habitId)
+    val rawStore = storage.decodeString(HABIT_STORAGE_KEY)
+    if (rawStore == null) {
+      Log.d(LOG_TAG, "readHabit failed: habits-storage key missing.")
+      appendDebugRecord(context, "read-store-missing", detail = habitId)
+      return null
+    }
+
+    val root = JSONObject(rawStore)
+    val habit = root.optJSONObject("state")?.optJSONObject("habits")?.optJSONObject(habitId)
+    Log.d(LOG_TAG, "readHabit result for $habitId: ${habit != null}")
+    return habit
+  }
+
+  private fun appendDebugRecord(
+    context: Context,
+    event: String,
+    payload: ReminderPayload? = null,
+    actionId: String? = null,
+    detail: String? = null
+  ) {
+    val record = JSONObject()
+      .put("handledAtMs", currentTimeMs())
+      .put("event", event)
+
+    payload?.let {
+      record
+        .put("actionId", it.actionId)
+        .put("notificationId", it.notificationId)
+        .put("habitId", it.habitId)
+        .put("habitTitle", it.habitTitle)
+        .put("reminderDate", it.reminderDate)
+        .put("reminderSeriesId", it.reminderSeriesId)
+        .put("scheduledFor", it.scheduledFor)
+    }
+
+    actionId?.let { record.put("actionId", it) }
+    detail?.let { record.put("detail", it) }
+
+    try {
+      val storage = mmkv(context, RUNTIME_STORAGE_ID)
+      val entries = JSONArray(storage.decodeString(DEBUG_LEDGER_KEY) ?: "[]")
+      storage.encode(DEBUG_LEDGER_KEY, appendBoundedRecord(entries, record).toString())
+    } catch (error: Exception) {
+      Log.d(LOG_TAG, "Failed to append MMKV debug record.", error)
+    }
+
+    try {
+      val debugFile = File(context.filesDir, DEBUG_FILE_NAME)
+      val entries = JSONArray(if (debugFile.exists()) debugFile.readText() else "[]")
+      debugFile.writeText(appendBoundedRecord(entries, record).toString())
+    } catch (error: Exception) {
+      Log.d(LOG_TAG, "Failed to append file debug record.", error)
+    }
+  }
+
+  private fun appendAppliedActionRecord(
+    context: Context,
+    payload: ReminderPayload,
+    responseKey: String,
+    snoozedUntilMs: Long? = null
+  ) {
+    val record = JSONObject()
+      .put("responseKey", responseKey)
+      .put("actionIdentifier", payload.actionId)
+      .put("habitId", payload.habitId)
+      .put("reminderDate", payload.reminderDate)
+      .put("handledAtMs", currentTimeMs())
+
+    snoozedUntilMs?.let { record.put("snoozedUntilMs", it) }
+
+    try {
+      val storage = mmkv(context, RUNTIME_STORAGE_ID)
+      val entries = JSONArray(storage.decodeString(ANDROID_NATIVE_REMINDER_ACTION_STORAGE_KEY) ?: "[]")
+      storage.encode(ANDROID_NATIVE_REMINDER_ACTION_STORAGE_KEY, appendBoundedRecord(entries, record).toString())
+    } catch (error: Exception) {
+      Log.d(LOG_TAG, "Failed to append MMKV applied action record.", error)
+    }
+
+    try {
+      val appliedActionFile = File(context.filesDir, ANDROID_NATIVE_REMINDER_ACTION_FILE_NAME)
+      val entries = JSONArray(if (appliedActionFile.exists()) appliedActionFile.readText() else "[]")
+      appliedActionFile.writeText(appendBoundedRecord(entries, record).toString())
+    } catch (error: Exception) {
+      Log.d(LOG_TAG, "Failed to append file applied action record.", error)
+    }
+  }
+
+  private fun appendBoundedRecord(entries: JSONArray, record: JSONObject): JSONArray {
+    val nextEntries = JSONArray()
+    val startIndex = maxOf(0, entries.length() - DEBUG_LEDGER_MAX_RECORDS + 1)
+
+    for (index in startIndex until entries.length()) {
+      entries.optJSONObject(index)?.let { nextEntries.put(it) }
+    }
+
+    nextEntries.put(record)
+    return nextEntries
   }
 
   private fun scheduleNextIntervalSeriesIfNeeded(
@@ -367,20 +525,66 @@ class YAHTNativeReminderActionsService : NotificationsService() {
       .build()
   }
 
-  private fun cancelReminderSeries(context: Context, reminderSeriesId: String) {
-    val scheduledIds = getSchedulingDelegate(context)
-      .getAllScheduledNotifications()
-      .filter { notificationMatchesSeries(it.identifier, it.content.body, reminderSeriesId) }
-      .map { it.identifier }
-    if (scheduledIds.isNotEmpty()) {
-      getSchedulingDelegate(context).removeScheduledNotifications(scheduledIds)
+  private fun cancelReminderSeries(context: Context, reminderSeriesId: String, payload: ReminderPayload? = null) {
+    val schedulingDelegate = getSchedulingDelegate(context)
+    val scheduledIds = try {
+      schedulingDelegate
+        .getAllScheduledNotifications()
+        .filter { notificationMatchesSeries(it.identifier, it.content.body, reminderSeriesId) }
+        .map { it.identifier }
+    } catch (error: Exception) {
+      Log.d(LOG_TAG, "Failed to inspect scheduled reminder series notifications.", error)
+      appendDebugRecord(context, "cancel-series-inspect-failed", payload, detail = error.message)
+      emptyList()
+    }
+    val ledgerIds = try {
+      readScheduleLedgerNotificationIds(context, reminderSeriesId)
+    } catch (error: Exception) {
+      Log.d(LOG_TAG, "Failed to read scheduled reminder series ledger ids.", error)
+      appendDebugRecord(context, "cancel-series-ledger-read-failed", payload, detail = error.message)
+      emptyList()
+    }
+    val idsToCancel = (scheduledIds + ledgerIds).distinct()
+
+    Log.d(
+      LOG_TAG,
+      "Cancel reminder series $reminderSeriesId: scheduled=${scheduledIds.size} ledger=${ledgerIds.size} total=${idsToCancel.size}"
+    )
+    appendDebugRecord(
+      context,
+      "cancel-series-candidates",
+      payload,
+      detail = "scheduled=${scheduledIds.size}; ledger=${ledgerIds.size}; total=${idsToCancel.size}; ids=${idsToCancel.joinToString(",")}"
+    )
+
+    if (idsToCancel.isNotEmpty()) {
+      try {
+        schedulingDelegate.removeScheduledNotifications(idsToCancel)
+        appendDebugRecord(context, "cancel-series-removed", payload, detail = idsToCancel.size.toString())
+      } catch (error: Exception) {
+        Log.d(LOG_TAG, "Failed to remove scheduled reminder series notifications.", error)
+        appendDebugRecord(context, "cancel-series-remove-failed", payload, detail = error.message)
+      }
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-      manager.activeNotifications
-        .filter { notificationMatchesSeries(it.tag ?: "", unmarshaledRequestBody(it.notification.extras), reminderSeriesId) }
-        .forEach { NotificationManagerCompat.from(context).cancel(it.tag, it.id) }
+      try {
+        var dismissedCount = 0
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.activeNotifications
+          .filter {
+            val tag = it.tag ?: ""
+            idsToCancel.contains(tag) || notificationMatchesSeries(tag, unmarshaledRequestBody(it.notification.extras), reminderSeriesId)
+          }
+          .forEach {
+            NotificationManagerCompat.from(context).cancel(it.tag, it.id)
+            dismissedCount += 1
+          }
+        appendDebugRecord(context, "cancel-series-active-dismissed", payload, detail = dismissedCount.toString())
+      } catch (error: Exception) {
+        Log.d(LOG_TAG, "Failed to inspect active reminder series notifications.", error)
+        appendDebugRecord(context, "cancel-series-active-failed", payload, detail = error.message)
+      }
     }
   }
 
@@ -406,7 +610,7 @@ class YAHTNativeReminderActionsService : NotificationsService() {
   }
 
   private fun claimResponse(context: Context, responseKey: String, nowMs: Long): Boolean {
-    val storage = mmkv(context, RESPONSE_LEDGER_STORAGE_ID)
+    val storage = mmkv(context, RUNTIME_STORAGE_ID)
     val cutoffMs = nowMs - RESPONSE_LEDGER_TTL_MS
     val entries = JSONArray(storage.decodeString(RESPONSE_LEDGER_KEY) ?: "[]")
     val nextEntries = JSONArray()
@@ -432,7 +636,7 @@ class YAHTNativeReminderActionsService : NotificationsService() {
   }
 
   private fun releaseResponseClaim(context: Context, responseKey: String) {
-    val storage = mmkv(context, RESPONSE_LEDGER_STORAGE_ID)
+    val storage = mmkv(context, RUNTIME_STORAGE_ID)
     val entries = JSONArray(storage.decodeString(RESPONSE_LEDGER_KEY) ?: "[]")
     val nextEntries = JSONArray()
 
@@ -446,8 +650,26 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     storage.encode(RESPONSE_LEDGER_KEY, nextEntries.toString())
   }
 
+  private fun readScheduleLedgerNotificationIds(context: Context, reminderSeriesId: String): List<String> {
+    val storage = mmkv(context, RUNTIME_STORAGE_ID)
+    val ledger = JSONObject(storage.decodeString(SCHEDULE_LEDGER_KEY) ?: return emptyList())
+    val entries = ledger.optJSONArray("normalNotifications") ?: return emptyList()
+    val notificationPrefix = "$REMINDER_PREFIX$reminderSeriesId-"
+    val notificationIds = mutableListOf<String>()
+
+    for (index in 0 until entries.length()) {
+      val entry = entries.optJSONObject(index) ?: continue
+      val notificationId = entry.optString("notificationId")
+      if (entry.optString("reminderSeriesId") == reminderSeriesId || notificationId.startsWith(notificationPrefix)) {
+        notificationIds.add(notificationId)
+      }
+    }
+
+    return notificationIds
+  }
+
   private fun removeScheduleLedgerEntries(context: Context, reminderSeriesId: String) {
-    val storage = mmkv(context, SCHEDULE_LEDGER_STORAGE_ID)
+    val storage = mmkv(context, RUNTIME_STORAGE_ID)
     val ledger = JSONObject(storage.decodeString(SCHEDULE_LEDGER_KEY) ?: return)
     val entries = ledger.optJSONArray("normalNotifications") ?: JSONArray()
     val nextEntries = JSONArray()
@@ -468,7 +690,7 @@ class YAHTNativeReminderActionsService : NotificationsService() {
   }
 
   private fun replaceScheduleLedgerEntries(context: Context, reminderSeriesId: String, jobs: List<ReminderJob>) {
-    val storage = mmkv(context, SCHEDULE_LEDGER_STORAGE_ID)
+    val storage = mmkv(context, RUNTIME_STORAGE_ID)
     val ledger = JSONObject(
       storage.decodeString(SCHEDULE_LEDGER_KEY)
         ?: JSONObject().put("version", 1).put("generatedAtMs", currentTimeMs()).put("normalNotifications", JSONArray()).toString()
@@ -530,8 +752,7 @@ class YAHTNativeReminderActionsService : NotificationsService() {
 
   private fun mmkv(context: Context, storageId: String): MMKV {
     initializeMmkv(context)
-    // react-native-mmkv's JS `new MMKV()` maps to Tencent MMKV's default "mmkv.default" instance.
-    return if (storageId == HABIT_STORAGE_ID) MMKV.defaultMMKV() else MMKV.mmkvWithID(storageId)
+    return MMKV.mmkvWithID(storageId)
   }
 
   private fun initializeMmkv(context: Context) {
@@ -573,11 +794,15 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     private const val DEFAULT_SNOOZE_MS = 15 * 60 * 1000L
     private const val MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE = 3
     private const val RESPONSE_LEDGER_TTL_MS = 48 * 60 * 60 * 1000L
-    private const val HABIT_STORAGE_ID = "mmkv.default"
+    private const val HABIT_STORAGE_ID = "yaht-persistence"
+    private const val RUNTIME_STORAGE_ID = "yaht-runtime"
     private const val HABIT_STORAGE_KEY = "habits-storage"
-    private const val RESPONSE_LEDGER_STORAGE_ID = "reminder-response-ledger"
     private const val RESPONSE_LEDGER_KEY = "reminder-response-ledger"
-    private const val SCHEDULE_LEDGER_STORAGE_ID = "reminder-schedule-ledger"
     private const val SCHEDULE_LEDGER_KEY = "reminder-schedule-ledger"
+    private const val ANDROID_NATIVE_REMINDER_ACTION_STORAGE_KEY = "android-native-reminder-actions"
+    private const val ANDROID_NATIVE_REMINDER_ACTION_FILE_NAME = "yaht-android-native-reminder-actions.json"
+    private const val DEBUG_LEDGER_KEY = "reminder-action-debug-ledger"
+    private const val DEBUG_FILE_NAME = "yaht-reminder-action-debug.json"
+    private const val DEBUG_LEDGER_MAX_RECORDS = 40
   }
 }

@@ -7,13 +7,19 @@
  */
 
 jest.mock("react-native-mmkv", () => {
-  const mockInstance = {
+  const mockCreateInstance = () => ({
     getString: jest.fn(),
     set: jest.fn(),
     delete: jest.fn(),
-  };
-  const MockMMKV = jest.fn().mockImplementation(() => mockInstance);
-  (MockMMKV as unknown as { _instance: typeof mockInstance })._instance = mockInstance;
+  });
+  const mockInstances = new Map<string, ReturnType<typeof mockCreateInstance>>();
+  const MockMMKV = jest.fn().mockImplementation(({ id = "mmkv.default" } = {}) => {
+    if (!mockInstances.has(id)) {
+      mockInstances.set(id, mockCreateInstance());
+    }
+    return mockInstances.get(id);
+  });
+  (MockMMKV as unknown as { _instances: typeof mockInstances })._instances = mockInstances;
   return { MMKV: MockMMKV };
 });
 
@@ -22,13 +28,16 @@ import { mmkvStorage } from "@/utils/storage";
 
 const mockInstance = (
   MMKV as unknown as {
-    _instance: {
-      getString: jest.Mock;
-      set: jest.Mock;
-      delete: jest.Mock;
-    };
+    _instances: Map<
+      string,
+      {
+        getString: jest.Mock;
+        set: jest.Mock;
+        delete: jest.Mock;
+      }
+    >;
   }
-)._instance as {
+)._instances.get("yaht-persistence") as {
   getString: jest.Mock;
   set: jest.Mock;
   delete: jest.Mock;
@@ -36,7 +45,13 @@ const mockInstance = (
 
 describe("mmkvStorage", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockInstance.getString.mockReset();
+    mockInstance.set.mockReset();
+    mockInstance.delete.mockReset();
+  });
+
+  it("uses the named YAHT persistence MMKV store", () => {
+    expect(MMKV).toHaveBeenCalledWith({ id: "yaht-persistence" });
   });
 
   describe("getItem", () => {

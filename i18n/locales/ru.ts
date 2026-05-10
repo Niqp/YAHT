@@ -118,6 +118,8 @@ export const ru = {
     resetAllDataDescription: "Удалить привычки, таймеры и сохраненный прогресс с этого устройства.",
     about: "О приложении",
     version: "Версия",
+    reminderDebugLogs: "Журнал напоминаний",
+    reminderDebugLogsDescription: "Показать журнал действий уведомлений на этом устройстве.",
     sourceCode: "Исходный код",
     sourceCodeDescription: "Открыть публичный репозиторий GitHub.",
     unableToOpenLinkTitle: "Не удалось открыть ссылку",

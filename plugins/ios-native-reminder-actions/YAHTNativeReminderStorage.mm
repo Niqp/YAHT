@@ -24,10 +24,6 @@
 + (MMKV *)storageForId:(NSString *)storageId
 {
   [self ensureMMKVInitialized];
-  if ([storageId isEqualToString:@"mmkv.default"]) {
-    return MMKV::defaultMMKV();
-  }
-
   return MMKV::mmkvWithID(std::string(storageId.UTF8String));
 }
 

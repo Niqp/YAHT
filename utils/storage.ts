@@ -1,6 +1,8 @@
 import { Platform } from "react-native";
 import { createJSONStorage } from "zustand/middleware";
 
+import { YAHT_PERSISTENCE_STORAGE_ID } from "@/utils/storageIds";
+
 // ── Web: localStorage adapter ──────────────────────────────────────────────────
 const webStorage = {
   getItem: (name: string) => {
@@ -36,7 +38,8 @@ const noopStorage = {
 function createNativeStorage() {
   // Dynamic require so web bundles never touch MMKV
   const { MMKV } = require("react-native-mmkv");
-  const storage = new MMKV();
+  const storage = new MMKV({ id: YAHT_PERSISTENCE_STORAGE_ID });
+
   return {
     getItem: (name: string) => {
       const value = storage.getString(name);

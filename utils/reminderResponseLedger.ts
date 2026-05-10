@@ -1,5 +1,7 @@
 import { Platform } from "react-native";
 
+import { YAHT_RUNTIME_STORAGE_ID } from "@/utils/storageIds";
+
 export const REMINDER_RESPONSE_LEDGER_TTL_MS = 48 * 60 * 60 * 1000;
 
 const REMINDER_RESPONSE_LEDGER_KEY = "reminder-response-ledger";
@@ -56,7 +58,7 @@ const memoryStorage: PlainStorage = {
 const createNativeStorage = (): PlainStorage => {
   // Dynamic require so web/test bundles do not eagerly initialize MMKV.
   const { MMKV } = require("react-native-mmkv");
-  const nativeStorage = new MMKV({ id: "reminder-response-ledger" });
+  const nativeStorage = new MMKV({ id: YAHT_RUNTIME_STORAGE_ID });
 
   return {
     getItem: (key) => nativeStorage.getString(key) ?? null,

@@ -6,6 +6,7 @@ import {
   isReminderQuickActionResponse,
 } from "@/utils/reminderNotificationResponse";
 import { waitForHabitStoreHydration } from "@/utils/habitStoreHydration";
+import { appendReminderActionDebugRecord } from "@/utils/reminderActionDebugLog";
 
 let hasRegisteredTask = false;
 let hasRegisteredEarlyListener = false;
@@ -37,13 +38,25 @@ export const registerReminderNotificationTask = (): void => {
 
       void enqueueEarlyReminderTask(async () => {
         const isHydrated = await waitForHabitStoreHydration();
+        appendReminderActionDebugRecord({
+          event: "js-early-listener-hydration",
+          actionId: response.actionIdentifier,
+          notificationId: response.notification.request.identifier,
+          detail: `hydrated=${isHydrated}`,
+        });
         if (!isHydrated) {
           return;
         }
 
-        await handleReminderNotificationResponse(response, {
+        const result = await handleReminderNotificationResponse(response, {
           allowNavigation: false,
           completionMode: "targeted-background",
+        });
+        appendReminderActionDebugRecord({
+          event: "js-early-listener-result",
+          actionId: response.actionIdentifier,
+          notificationId: response.notification.request.identifier,
+          detail: `handled=${result.handled}`,
         });
       });
     });
