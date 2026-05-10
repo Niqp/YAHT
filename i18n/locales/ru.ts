@@ -64,6 +64,7 @@ export const ru = {
     openHabitListHint: "Открывает список привычек",
     today: "Сегодня",
     last7Days: "Последние 7 дней",
+    allTime: "За все время",
     nothingScheduledToday: "На сегодня ничего не запланировано",
     nothingScheduledYet: "Пока ничего не запланировано",
     activeHabitsLabel: "Активные привычки",

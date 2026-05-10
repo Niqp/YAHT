@@ -3,6 +3,7 @@ import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
 import type { ChartDay } from "@/types/habit";
+import { getCurrentDateDayjs, getDayjs } from "@/utils/date";
 import { Check, Minus, X } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -47,8 +48,10 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
 
       <View style={styles.simpleHabitChartContainer}>
         {days.map((day) => {
-          const isCompleted = day.isDue && day.isCompleted;
-          const isOffDay = !day.isDue;
+          const isFutureDay = getDayjs(day.date).startOf("day").isAfter(getCurrentDateDayjs());
+          const isDue = day.isDue && !isFutureDay;
+          const isCompleted = isDue && day.isCompleted;
+          const isOffDay = !isDue;
           const iconColor = isCompleted ? colors.textOnAccent : isOffDay ? colors.textTertiary : colors.danger;
 
           return (
@@ -57,6 +60,7 @@ const SimpleHabitChart: React.FC<SimpleHabitChartProps> = ({ days }) => {
                 {day.label}
               </AppText>
               <View
+                testID={`simple-habit-chart-day-${day.date}`}
                 style={[
                   styles.completionIndicator,
                   {

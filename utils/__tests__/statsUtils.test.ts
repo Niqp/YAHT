@@ -27,22 +27,29 @@ describe("calculateOverallStats", () => {
       dueLast7Days: 0,
       completedLast7Days: 0,
       last7DayAdherence: 0,
+      dueAllTime: 0,
+      completedAllTime: 0,
+      allTimeAdherence: 0,
     });
   });
 
-  it("counts active habits, due today, and the recent completion window", () => {
+  it("counts active habits, due today, the recent completion window, and all time", () => {
     const today = stamp(0);
+    const threeDaysAgo = stamp(3);
+    const yesterday = stamp(1);
     const habits: HabitMap = {
       h1: makeHabit({
         id: "h1",
-        createdAt: today,
+        createdAt: threeDaysAgo,
         completionHistory: {
+          [threeDaysAgo]: { isCompleted: true },
+          [yesterday]: { isCompleted: true },
           [today]: { isCompleted: true },
         },
       }),
       h2: makeHabit({
         id: "h2",
-        createdAt: today,
+        createdAt: yesterday,
       }),
     };
 
@@ -52,9 +59,12 @@ describe("calculateOverallStats", () => {
     expect(stats.dueToday).toBe(2);
     expect(stats.completedToday).toBe(1);
     expect(stats.todayAdherence).toBe(50);
-    expect(stats.dueLast7Days).toBe(2);
-    expect(stats.completedLast7Days).toBe(1);
+    expect(stats.dueLast7Days).toBe(6);
+    expect(stats.completedLast7Days).toBe(3);
     expect(stats.last7DayAdherence).toBe(50);
+    expect(stats.dueAllTime).toBe(6);
+    expect(stats.completedAllTime).toBe(3);
+    expect(stats.allTimeAdherence).toBe(50);
   });
 
   it("returns 0 last7DayAdherence when nothing was due in the last seven days", () => {

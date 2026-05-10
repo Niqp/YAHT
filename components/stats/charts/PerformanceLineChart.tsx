@@ -3,6 +3,7 @@ import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
 import type { ChartDay, CompletionType } from "@/types/habit";
+import { getCurrentDateDayjs, getDayjs } from "@/utils/date";
 import { Check, Minus } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
@@ -46,7 +47,10 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
   const { t } = useTranslation();
 
   const scaleMax = useMemo(() => {
-    const values = days.filter((day) => day.isDue).flatMap((day) => [day.value, day.goal ?? 0]);
+    const today = getCurrentDateDayjs();
+    const values = days
+      .filter((day) => day.isDue && !getDayjs(day.date).startOf("day").isAfter(today))
+      .flatMap((day) => [day.value, day.goal ?? 0]);
     return Math.max(1, ...values);
   }, [days]);
 
@@ -85,14 +89,16 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
 
       <View style={styles.columnsRow}>
         {days.map((day) => {
-          const barHeight = day.isDue ? Math.max(0, Math.round((day.value / scaleMax) * BAR_HEIGHT)) : 0;
-          const goalBottom = day.isDue && day.goal ? Math.round((day.goal / scaleMax) * BAR_HEIGHT) : null;
-          const showValue = day.isDue && day.value > 0;
+          const isFutureDay = getDayjs(day.date).startOf("day").isAfter(getCurrentDateDayjs());
+          const isDue = day.isDue && !isFutureDay;
+          const barHeight = isDue ? Math.max(0, Math.round((day.value / scaleMax) * BAR_HEIGHT)) : 0;
+          const goalBottom = isDue && day.goal ? Math.round((day.goal / scaleMax) * BAR_HEIGHT) : null;
+          const showValue = isDue && day.value > 0;
 
           return (
             <View key={day.date} style={styles.dayColumn}>
               <AppText variant="tiny" color={colors.textSecondary} numberOfLines={1} style={styles.valueLabel}>
-                {day.isDue ? (showValue ? formatValueLabel(completionType, day.value, t) : "0") : t("stats.off")}
+                {isDue ? (showValue ? formatValueLabel(completionType, day.value, t) : "0") : t("stats.off")}
               </AppText>
 
               <View
@@ -116,7 +122,7 @@ const PerformanceLineChart: React.FC<PerformanceLineChartProps> = ({ days, compl
                   />
                 ) : null}
 
-                {day.isDue ? (
+                {isDue ? (
                   day.value > 0 ? (
                     <View
                       style={[

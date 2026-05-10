@@ -59,6 +59,7 @@ export const en = {
     openHabitListHint: "Opens the habit list",
     today: "Today",
     last7Days: "Last 7 days",
+    allTime: "All time",
     nothingScheduledToday: "Nothing scheduled today",
     nothingScheduledYet: "Nothing scheduled yet",
     activeHabitsLabel: "Active habits",

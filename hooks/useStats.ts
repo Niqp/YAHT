@@ -11,6 +11,9 @@ const EMPTY_OVERALL_STATS: OverallStats = {
   dueLast7Days: 0,
   completedLast7Days: 0,
   last7DayAdherence: 0,
+  dueAllTime: 0,
+  completedAllTime: 0,
+  allTimeAdherence: 0,
 };
 
 const EMPTY_CHART_DATA: HabitChartData = { days: [] };

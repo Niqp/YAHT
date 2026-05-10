@@ -79,6 +79,8 @@ export const calculateOverallStats = (habitsMap: HabitMap): OverallStats => {
 
   let dueInLastSevenDays = 0;
   let completedInLastSevenDays = 0;
+  let dueAllTime = 0;
+  let completedAllTime = 0;
 
   habits.forEach((habit) => {
     lastSevenDates.forEach((date) => {
@@ -92,6 +94,14 @@ export const calculateOverallStats = (habitsMap: HabitMap): OverallStats => {
         completedInLastSevenDays += 1;
       }
     });
+
+    getDueDates(habit, habit.createdAt, today).forEach((date) => {
+      dueAllTime += 1;
+
+      if (habit.completionHistory[date]?.isCompleted) {
+        completedAllTime += 1;
+      }
+    });
   });
 
   return {
@@ -102,6 +112,9 @@ export const calculateOverallStats = (habitsMap: HabitMap): OverallStats => {
     dueLast7Days: dueInLastSevenDays,
     completedLast7Days: completedInLastSevenDays,
     last7DayAdherence: asPercent(completedInLastSevenDays, dueInLastSevenDays),
+    dueAllTime,
+    completedAllTime,
+    allTimeAdherence: asPercent(completedAllTime, dueAllTime),
   };
 };
 
@@ -190,11 +203,12 @@ export const generateChartData = (habit: Habit): HabitChartData => {
 
   const days: ChartDay[] = getLastSevenDates().map((date) => {
     const historyEntry = habit.completionHistory[date];
+    const isFutureDate = getDayjs(date).startOf("day").isAfter(getCurrentDateDayjs());
 
     return {
       date,
       label: getLocalizedShortDayName(date, locale),
-      isDue: isHabitDueOnDate(habit, date),
+      isDue: !isFutureDate && isHabitDueOnDate(habit, date),
       isCompleted: Boolean(historyEntry?.isCompleted),
       value: historyEntry?.value ?? (historyEntry?.isCompleted ? 1 : 0),
       goal,

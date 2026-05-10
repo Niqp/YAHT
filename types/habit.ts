@@ -78,6 +78,9 @@ export interface OverallStats {
   dueLast7Days: number;
   completedLast7Days: number;
   last7DayAdherence: number;
+  dueAllTime: number;
+  completedAllTime: number;
+  allTimeAdherence: number;
 }
 
 export interface ChartDay {

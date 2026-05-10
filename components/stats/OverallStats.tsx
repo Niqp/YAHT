@@ -3,7 +3,7 @@ import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
 import type { OverallStats as OverallStatsData } from "@/types/habit";
-import { CalendarDays, CheckCheck, CheckSquare, X } from "lucide-react-native";
+import { CalendarDays, CheckCheck, CheckSquare, History, X } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -28,39 +28,11 @@ interface OverviewCardProps {
 const OverallStats: React.FC<OverallStatsProps> = ({ stats }) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const remainingToday = Math.max(stats.dueToday - stats.completedToday, 0);
   const missedLast7Days = Math.max(stats.dueLast7Days - stats.completedLast7Days, 0);
+  const missedAllTime = Math.max(stats.dueAllTime - stats.completedAllTime, 0);
 
   return (
     <View style={styles.stack}>
-      <OverviewCard
-        title={t("stats.today")}
-        accentValue={`${stats.todayAdherence}%`}
-        heroValue={stats.dueToday === 0 ? "0/0" : `${stats.completedToday}/${stats.dueToday}`}
-        heroLabel={stats.dueToday === 0 ? t("stats.nothingScheduledToday") : t("common.completed")}
-        progressValue={stats.todayAdherence}
-        metrics={[
-          {
-            key: "activeHabits",
-            label: t("stats.activeHabitsLabel"),
-            value: stats.activeHabits.toString(),
-            icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
-          },
-          {
-            key: "dueToday",
-            label: t("stats.dueToday"),
-            value: stats.dueToday.toString(),
-            icon: <CalendarDays size={16} color={colors.iconPrimary} strokeWidth={2} />,
-          },
-          {
-            key: "remainingToday",
-            label: t("stats.remaining"),
-            value: remainingToday.toString(),
-            icon: <X size={16} color={colors.iconPrimary} strokeWidth={2} />,
-          },
-        ]}
-      />
-
       <OverviewCard
         title={t("stats.last7Days")}
         accentValue={`${stats.last7DayAdherence}%`}
@@ -84,6 +56,34 @@ const OverallStats: React.FC<OverallStatsProps> = ({ stats }) => {
             key: "missedLast7Days",
             label: t("stats.missed"),
             value: missedLast7Days.toString(),
+            icon: <X size={16} color={colors.iconPrimary} strokeWidth={2} />,
+          },
+        ]}
+      />
+
+      <OverviewCard
+        title={t("stats.allTime")}
+        accentValue={`${stats.allTimeAdherence}%`}
+        heroValue={stats.dueAllTime === 0 ? "0/0" : `${stats.completedAllTime}/${stats.dueAllTime}`}
+        heroLabel={stats.dueAllTime === 0 ? t("stats.nothingScheduledYet") : t("common.completed")}
+        progressValue={stats.allTimeAdherence}
+        metrics={[
+          {
+            key: "activeHabits",
+            label: t("stats.activeHabitsLabel"),
+            value: stats.activeHabits.toString(),
+            icon: <CheckSquare size={16} color={colors.iconPrimary} strokeWidth={2} />,
+          },
+          {
+            key: "dueAllTime",
+            label: t("stats.habitChecks"),
+            value: stats.dueAllTime.toString(),
+            icon: <History size={16} color={colors.iconPrimary} strokeWidth={2} />,
+          },
+          {
+            key: "missedAllTime",
+            label: t("stats.missed"),
+            value: missedAllTime.toString(),
             icon: <X size={16} color={colors.iconPrimary} strokeWidth={2} />,
           },
         ]}
