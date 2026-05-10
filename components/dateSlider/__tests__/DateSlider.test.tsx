@@ -35,11 +35,12 @@ type MockRecyclerListViewProps = {
 
 let mockStore: UseBoundStore<StoreApi<MockHabitStoreState>>;
 let mockCurrentDate = TODAY;
+let mockTodayLabel = "Today";
 let appStateChangeListener: ((state: string) => void) | null = null;
 
-const createMockStore = () =>
+const createMockStore = (selectedDate = TODAY) =>
   create<MockHabitStoreState>((set) => ({
-    selectedDate: TODAY,
+    selectedDate,
     habits: {},
     setSelectedDate: jest.fn((date: string) => {
       set({ selectedDate: date });
@@ -81,6 +82,27 @@ jest.mock("@/hooks/useAllHabitsStreak", () => ({
   useAllHabitsStreak: () => 0,
 }));
 
+jest.mock("@/i18n", () => ({
+  useTranslation: () => ({
+    i18n: { language: "en" },
+    t: (key: string, values?: { date?: string }) => {
+      if (key === "date.today") {
+        return mockTodayLabel;
+      }
+
+      if (key === "date.selectDate") {
+        return `Select ${values?.date}`;
+      }
+
+      if (key === "date.goToToday") {
+        return "Go to today";
+      }
+
+      return key;
+    },
+  }),
+}));
+
 jest.mock("@react-navigation/native", () => ({
   useIsFocused: () => true,
 }));
@@ -104,8 +126,29 @@ jest.mock("react-native-reanimated", () => {
 
   return {
     ...reanimatedMock,
-    useSharedValue: (initialValue: number) => ({ value: initialValue }),
+    useSharedValue: (initialValue: number) => {
+      const mockReact = jest.requireActual<typeof import("react")>("react");
+      return mockReact.useRef({ value: initialValue }).current;
+    },
     useAnimatedStyle: (updater: () => Record<string, unknown>) => updater(),
+    interpolate: (value: number, inputRange: number[], outputRange: number[]) => {
+      if (value <= inputRange[0]) {
+        return outputRange[0];
+      }
+
+      for (let index = 1; index < inputRange.length; index += 1) {
+        if (value <= inputRange[index]) {
+          const inputStart = inputRange[index - 1];
+          const inputEnd = inputRange[index];
+          const outputStart = outputRange[index - 1];
+          const outputEnd = outputRange[index];
+          const progress = (value - inputStart) / (inputEnd - inputStart);
+          return outputStart + (outputEnd - outputStart) * progress;
+        }
+      }
+
+      return outputRange[outputRange.length - 1];
+    },
     useReducedMotion: () => false,
     withSpring: (value: number) => value,
     withTiming: (value: number) => value,
@@ -163,10 +206,17 @@ const getBackgroundColor = (testId: string) => {
   return flattened?.backgroundColor;
 };
 
+const getWidth = (testId: string) => {
+  const element = screen.getByTestId(testId);
+  const flattened = StyleSheet.flatten(element.props.style) as { width?: number };
+  return flattened?.width;
+};
+
 describe("DateSlider", () => {
   beforeEach(() => {
     jest.restoreAllMocks();
     mockCurrentDate = TODAY;
+    mockTodayLabel = "Today";
     appStateChangeListener = null;
     mockStore = createMockStore();
     jest.spyOn(AppState, "addEventListener").mockImplementation((_eventType, listener) => {
@@ -222,5 +272,20 @@ describe("DateSlider", () => {
 
     expect(setSelectedDateMock).toHaveBeenCalledWith(NEXT_DAY);
     expect(mockStore.getState().selectedDate).toBe(NEXT_DAY);
+  });
+
+  it("sizes the Today button to the measured localized label width", () => {
+    mockTodayLabel = "Сегодня";
+    mockStore = createMockStore(PREVIOUS_DAY);
+
+    render(<DateSlider />);
+
+    act(() => {
+      fireEvent(screen.getByTestId("date-slider-today-label"), "layout", {
+        nativeEvent: { layout: { width: 52 } },
+      });
+    });
+
+    expect(getWidth("date-slider-today-button")).toBe(88);
   });
 });

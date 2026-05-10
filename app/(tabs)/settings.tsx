@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import { Bug, ChevronRight, Code2, Download, Trash2, Upload } from "lucide-react-native";
@@ -15,6 +15,7 @@ import { exportData, importData } from "@/utils/fileOperations";
 
 const APP_VERSION = Constants.expoConfig?.version;
 const REPOSITORY_URL = "https://github.com/Niqp/YAHT";
+const DEBUG_ACCESS_TAP_COUNT = 7;
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
@@ -33,6 +34,8 @@ export default function SettingsScreen() {
   const resetStore = useHabitStore((state) => state.resetStore);
   const themeRenderKey = `${colorTheme}-${mode}-${isDarkMode ? "dark" : "light"}`;
   const appVersion = APP_VERSION ?? t("common.unknown");
+  const [versionTapCount, setVersionTapCount] = useState(0);
+  const isReminderDebugVisible = versionTapCount >= DEBUG_ACCESS_TAP_COUNT;
 
   const themeModeOptions: { label: string; value: ThemeMode }[] = [
     { label: t("settings.light"), value: "light" },
@@ -85,6 +88,10 @@ export default function SettingsScreen() {
   const handleOpenReminderDebugLogs = () => {
     router.push({ pathname: "/debug-reminder", params: { inspect: "1" } });
   };
+
+  const handleVersionPress = useCallback(() => {
+    setVersionTapCount((count) => Math.min(count + 1, DEBUG_ACCESS_TAP_COUNT));
+  }, []);
 
   const handleReset = () => {
     Alert.alert(
@@ -181,15 +188,19 @@ export default function SettingsScreen() {
         </SettingsSection>
 
         <SettingsSection title={t("settings.about")}>
-          <StaticRow title={t("settings.version")} value={`v${appVersion}`} />
+          <StaticRow title={t("settings.version")} value={`v${appVersion}`} onPress={handleVersionPress} />
           <SectionDivider />
-          <ActionRow
-            icon={<Bug size={18} color={colors.iconPrimary} />}
-            title={t("settings.reminderDebugLogs")}
-            description={t("settings.reminderDebugLogsDescription")}
-            onPress={handleOpenReminderDebugLogs}
-          />
-          <SectionDivider />
+          {isReminderDebugVisible ? (
+            <>
+              <ActionRow
+                icon={<Bug size={18} color={colors.iconPrimary} />}
+                title={t("settings.reminderDebugLogs")}
+                description={t("settings.reminderDebugLogsDescription")}
+                onPress={handleOpenReminderDebugLogs}
+              />
+              <SectionDivider />
+            </>
+          ) : null}
           <ActionRow
             icon={<Code2 size={18} color={colors.iconPrimary} />}
             title={t("settings.sourceCode")}
@@ -257,20 +268,35 @@ function SegmentedSettingRow({ title, description, values, selectedIndex, onChan
 
 interface StaticRowProps {
   title: string;
+  onPress?: () => void;
   value: string;
 }
 
-function StaticRow({ title, value }: StaticRowProps) {
+function StaticRow({ title, onPress, value }: StaticRowProps) {
   const { colors } = useTheme();
-
-  return (
-    <View style={styles.staticRow}>
+  const rowContent = (
+    <>
       <AppText variant="bodyMedium">{title}</AppText>
       <AppText variant="caption" color={colors.textSecondary} style={styles.staticValue}>
         {value}
       </AppText>
-    </View>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPress}
+        android_ripple={Platform.OS === "android" ? { color: colors.ripple, borderless: false } : undefined}
+        style={({ pressed }) => [styles.staticRow, pressed && Platform.OS === "ios" ? styles.actionRowPressed : null]}
+      >
+        {rowContent}
+      </Pressable>
+    );
+  }
+
+  return <View style={styles.staticRow}>{rowContent}</View>;
 }
 
 interface ActionRowProps {

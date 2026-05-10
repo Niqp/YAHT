@@ -60,11 +60,19 @@ interface DateItemProps {
 const ITEM_WIDTH = 57; // Width of each date item including margins
 const ITEM_HEIGHT = 70;
 const BUFFER_ITEMS = 15; // Number of items to load before/after visible range
-const TODAY_PILL_WIDTH = 100;
 const TODAY_PILL_HEIGHT = 28;
+const TODAY_PILL_ICON_WIDTH = TODAY_PILL_HEIGHT;
+const TODAY_PILL_TEXT_END_PADDING = Spacing.sm;
+const TODAY_PILL_MIN_WIDTH = 64;
 const TODAY_PILL_GAP = Spacing.sm;
 const TODAY_PILL_SHOW_DURATION = 260;
 const TODAY_PILL_HIDE_DURATION = 200;
+const TODAY_PILL_ESTIMATED_CHAR_WIDTH = 7;
+
+const getTodayPillWidth = (labelWidth: number) =>
+  Math.max(TODAY_PILL_MIN_WIDTH, TODAY_PILL_ICON_WIDTH + Math.ceil(labelWidth) + TODAY_PILL_TEXT_END_PADDING);
+
+const estimateTodayLabelWidth = (label: string) => label.length * TODAY_PILL_ESTIMATED_CHAR_WIDTH;
 
 // Memoize the DateItem component to prevent unnecessary re-renders
 const DateItem = memo(({ item, isSelected, isToday, onPress, selectDateLabel }: DateItemProps) => {
@@ -163,6 +171,8 @@ export default function DateSlider() {
   const streak = useAllHabitsStreak();
   const reducedMotion = useReducedMotion();
   const visibleItems = useMemo(() => Math.ceil(listWidth / ITEM_WIDTH), [listWidth]);
+  const todayLabel = t("date.today");
+  const [measuredTodayLabel, setMeasuredTodayLabel] = useState({ label: "", width: 0 });
 
   // Track whether the today pill is visible in the scroll viewport
   const [isTodayPillVisible, setIsTodayPillVisible] = useState(true);
@@ -172,6 +182,11 @@ export default function DateSlider() {
 
   // Single progress value drives the whole Today pill transition.
   const todayPillProgress = useSharedValue(0);
+  const todayLabelWidth =
+    measuredTodayLabel.label === todayLabel && measuredTodayLabel.width > 0
+      ? measuredTodayLabel.width
+      : estimateTodayLabelWidth(todayLabel);
+  const todayPillExpandedWidth = getTodayPillWidth(todayLabelWidth);
 
   useEffect(() => {
     setListWidth(Math.max(1, Math.round(viewportWidth)));
@@ -243,7 +258,7 @@ export default function DateSlider() {
   }, [reducedMotion, showTodayButton, todayPillProgress]);
 
   const todayPillStyle = useAnimatedStyle(() => ({
-    width: interpolate(todayPillProgress.value, [0, 0.3, 1], [0, TODAY_PILL_HEIGHT, TODAY_PILL_WIDTH]),
+    width: interpolate(todayPillProgress.value, [0, 0.3, 1], [0, TODAY_PILL_HEIGHT, todayPillExpandedWidth]),
     height: TODAY_PILL_HEIGHT,
     opacity: interpolate(todayPillProgress.value, [0, 0.12, 1], [0, 1, 1]),
     marginRight: interpolate(todayPillProgress.value, [0, 1], [0, TODAY_PILL_GAP]),
@@ -380,6 +395,18 @@ export default function DateSlider() {
     }
   }, [todayIndex, today, setSelectedDate]);
 
+  const handleTodayLabelLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const measuredWidth = Math.ceil(event.nativeEvent.layout.width);
+      setMeasuredTodayLabel((currentValue) =>
+        currentValue.label === todayLabel && currentValue.width === measuredWidth
+          ? currentValue
+          : { label: todayLabel, width: measuredWidth }
+      );
+    },
+    [todayLabel]
+  );
+
   return (
     <LinearGradient
       colors={[colors.gradientHeaderStart, colors.gradientHeaderMid, colors.gradientHeaderEnd] as const}
@@ -393,11 +420,13 @@ export default function DateSlider() {
         <View style={styles.pillRow}>
           {/* Today button — animated expand/collapse */}
           <Animated.View
+            testID="date-slider-today-button-container"
             pointerEvents={showTodayButton ? "auto" : "none"}
             style={[styles.todayButtonContainer, todayPillStyle]}
           >
             <TouchableOpacity
-              style={[styles.todayButton, { backgroundColor: colors.buttonPrimaryBg }]}
+              testID="date-slider-today-button"
+              style={[styles.todayButton, { width: todayPillExpandedWidth, backgroundColor: colors.buttonPrimaryBg }]}
               onPress={scrollToToday}
               accessibilityRole="button"
               accessibilityLabel={t("date.goToToday")}
@@ -406,7 +435,14 @@ export default function DateSlider() {
                 <ChevronLeft size={14} color={colors.buttonPrimaryText} />
               </View>
               <Animated.View style={todayTextStyle}>
-                <Text style={[styles.todayButtonText, { color: colors.buttonPrimaryText }]}>{t("date.today")}</Text>
+                <Text
+                  testID="date-slider-today-label"
+                  style={[styles.todayButtonText, { color: colors.buttonPrimaryText }]}
+                  numberOfLines={1}
+                  onLayout={handleTodayLabelLayout}
+                >
+                  {todayLabel}
+                </Text>
               </Animated.View>
             </TouchableOpacity>
           </Animated.View>
