@@ -3,6 +3,7 @@ import type { StateCreator } from "zustand";
 import type { Habit, HabitMap } from "../../types/habit";
 import type { HabitState } from "../habitStore";
 import { getCurrentDateStamp } from "@/utils/date";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import { translate } from "@/i18n";
 
 export interface CRUDSlice {
@@ -36,8 +37,15 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
           error: null,
         };
       });
+      logEvent("habit.created", {
+        habitId: newHabit.id,
+        completionType: newHabit.completion.type,
+        repetitionType: newHabit.repetition.type,
+        reminderEnabled: !!newHabit.reminder?.enabled,
+      });
     } catch (error) {
       console.error("Error adding habit:", error);
+      logError("habit.create.failed", { operation: "addHabit", error });
       set({ error: translate("errors.addHabit") });
     }
   },
@@ -57,8 +65,15 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
           error: null,
         };
       });
+      logEvent("habit.updated", {
+        habitId: id,
+        completionType: get().habits[id]?.completion.type,
+        repetitionType: get().habits[id]?.repetition.type,
+        reminderEnabled: !!get().habits[id]?.reminder?.enabled,
+      });
     } catch (error) {
       console.error("Error updating habit:", error);
+      logError("habit.update.failed", { operation: "updateHabit", habitId: id, error });
       set({ error: translate("errors.updateHabit") });
     }
   },
@@ -77,8 +92,10 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
           error: null,
         };
       });
+      logEvent("habit.deleted", { habitId: id });
     } catch (error) {
       console.error("Error deleting habit:", error);
+      logError("habit.delete.failed", { operation: "deleteHabit", habitId: id, error });
       set({ error: translate("errors.deleteHabit") });
     }
   },
@@ -95,5 +112,6 @@ export const createCRUDSlice: StateCreator<HabitState, [], [], CRUDSlice> = (set
       selectedDate: getCurrentDateStamp(),
       error: null,
     });
+    logEvent("habit.reset", { operation: "resetStore" });
   },
 });

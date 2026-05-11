@@ -13,6 +13,7 @@ import { useReminderManager } from "@/hooks/habit/useReminderManager";
 import { useTimeChangeManager } from "@/hooks/useTimeChangeManager";
 import { useTheme } from "@/hooks/useTheme";
 import { initializeI18n, syncI18nToDeviceLocale } from "@/i18n";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 
 initializeI18n();
 
@@ -24,8 +25,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
+      logEvent("app.state.changed", { appState: nextState });
       if (nextState === "active") {
-        void syncI18nToDeviceLocale();
+        void syncI18nToDeviceLocale()
+          .then(() => logEvent("locale.sync.completed", { appState: nextState }))
+          .catch((error) => logError("locale.sync.failed", { operation: "syncI18nToDeviceLocale", error }));
       }
     });
 
@@ -91,7 +95,6 @@ export default function RootLayout() {
                   headerShown: false,
                 }}
               />
-              <Stack.Screen name="debug-reminder" options={{ headerShown: false }} />
             </Stack>
           </BottomSheetModalProvider>
         </ThemeProvider>

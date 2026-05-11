@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from "react";
 import Constants from "expo-constants";
-import { router } from "expo-router";
 import { Bug, ChevronRight, Code2, Download, Trash2, Upload } from "lucide-react-native";
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
@@ -11,6 +10,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
 import { useHabitStore } from "@/store/habitStore";
 import type { ThemeMode, TimedHabitGoalBehavior, WeekStartDay } from "@/store/themeStore";
+import { exportDiagnosticReport } from "@/utils/diagnostics/diagnosticExport";
 import { exportData, importData } from "@/utils/fileOperations";
 
 const APP_VERSION = Constants.expoConfig?.version;
@@ -85,8 +85,17 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleOpenReminderDebugLogs = () => {
-    router.push({ pathname: "/debug-reminder", params: { inspect: "1" } });
+  const handleExportDiagnosticLogs = async () => {
+    try {
+      const result = await exportDiagnosticReport();
+      Alert.alert(
+        t("diagnostics.exportSuccessTitle"),
+        t("diagnostics.exportSuccessBody", { fileName: result.fileName })
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("common.unknown");
+      Alert.alert(t("diagnostics.exportFailedTitle"), t("diagnostics.exportFailedBody", { message }));
+    }
   };
 
   const handleVersionPress = useCallback(() => {
@@ -194,9 +203,9 @@ export default function SettingsScreen() {
             <>
               <ActionRow
                 icon={<Bug size={18} color={colors.iconPrimary} />}
-                title={t("settings.reminderDebugLogs")}
-                description={t("settings.reminderDebugLogsDescription")}
-                onPress={handleOpenReminderDebugLogs}
+                title={t("settings.exportDiagnosticLogs")}
+                description={t("settings.exportDiagnosticLogsDescription")}
+                onPress={handleExportDiagnosticLogs}
               />
               <SectionDivider />
             </>

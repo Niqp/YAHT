@@ -8,6 +8,7 @@ import {
   isReminderQuickActionResponse,
 } from "@/utils/reminderNotificationResponse";
 import { waitForHabitStoreHydration } from "@/utils/habitStoreHydration";
+import { logError, logEvent, logWarn } from "@/utils/diagnostics/diagnosticLogger";
 import { appendReminderActionDebugRecord } from "@/utils/reminderActionDebugLog";
 
 export const REMINDER_NOTIFICATION_TASK = "YAHTReminderNotificationTask";
@@ -24,6 +25,7 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       event: "js-task-error",
       detail: error instanceof Error ? error.message : "unknown task error",
     });
+    logError("reminder.task.failed", { operation: "defineTask", error });
     return BackgroundNotificationResult.Failed;
   }
 
@@ -32,6 +34,7 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       event: "js-task-no-data",
       detail: "payload is not a notification response",
     });
+    logWarn("reminder.task.noData", { operation: "mapNotificationResponse" });
     return BackgroundNotificationResult.NoData;
   }
 
@@ -43,6 +46,11 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       notificationId: response.notification.request.identifier,
       detail: "not a quick action",
     });
+    logWarn("reminder.task.ignored", {
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      reason: "not-quick-action",
+    });
     return BackgroundNotificationResult.NoData;
   }
 
@@ -53,6 +61,11 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       actionId: response.actionIdentifier,
       notificationId: response.notification.request.identifier,
       detail: `hydrated=${isHydrated}`,
+    });
+    logEvent("reminder.task.hydrationChecked", {
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      hydrated: isHydrated,
     });
     if (!isHydrated) {
       return BackgroundNotificationResult.NoData;
@@ -68,6 +81,11 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       notificationId: response.notification.request.identifier,
       detail: `handled=${result.handled}`,
     });
+    logEvent("reminder.task.completed", {
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      handled: result.handled,
+    });
     return result.handled ? BackgroundNotificationResult.NewData : BackgroundNotificationResult.NoData;
   } catch (taskError) {
     if (taskError instanceof Error) {
@@ -78,6 +96,12 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(REMINDER_NOTIFICAT
       actionId: response.actionIdentifier,
       notificationId: response.notification.request.identifier,
       detail: taskError instanceof Error ? taskError.message : "unknown task error",
+    });
+    logError("reminder.task.failed", {
+      operation: "handleReminderNotificationResponse",
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      error: taskError,
     });
     return BackgroundNotificationResult.Failed;
   }

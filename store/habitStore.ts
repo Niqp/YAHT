@@ -10,6 +10,7 @@ import { createCRUDSlice } from "./habit/crudSlice";
 import { createImportSlice } from "./habit/importSlice";
 import { createTimerSlice } from "./habit/timerSlice";
 import { getCurrentDateStamp } from "@/utils/date";
+import { logEvent } from "@/utils/diagnostics/diagnosticLogger";
 
 export interface HabitState {
   _hasHydrated: boolean;
@@ -69,7 +70,12 @@ export const useHabitStore = create<HabitState>()(
         activeTimers: state.activeTimers,
       }),
       onRehydrateStorage: (state) => {
-        return () => state.setHydrationState(true);
+        return (_state, error) => {
+          state.setHydrationState(true);
+          logEvent(error ? "habit.hydration.failed" : "habit.hydration.completed", {
+            error: error instanceof Error ? error : undefined,
+          });
+        };
       },
     }
   )

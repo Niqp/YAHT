@@ -8,6 +8,7 @@ import { getElapsedTimerMs } from "@/utils/timer";
 import { DateStamp } from "@/types/date";
 import { CompletionData } from "./completionSlice";
 import { useThemeStore } from "@/store/themeStore";
+import { logEvent } from "@/utils/diagnostics/diagnosticLogger";
 
 export interface TimerSlice {
   activeTimers: TimerMap;
@@ -65,6 +66,7 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
         },
       };
     });
+    logEvent("timer.started", { habitId, date, timerId, completionType: habit?.completion.type });
     return newLastResumedAt;
   },
 
@@ -81,6 +83,7 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
     const combinedTime = storedTime + elapsedTime;
 
     await get().updateCompletion({ id: habitId, date, value: combinedTime });
+    logEvent("timer.stopped", { habitId, date, timerId: timerToRemove.id, elapsedMs: elapsedTime, value: combinedTime });
 
     set((currentState) => {
       const nextActiveTimers = { ...currentState.activeTimers };
@@ -160,9 +163,17 @@ const processActiveTimers = async ({ set, get, nowIso, mode }: ProcessActiveTime
   if (completionUpdates.length > 0) {
     set({ activeTimers: nextActiveTimers });
     await get().updateCompletionMultiple(completionUpdates);
+    logEvent("timer.reconciled", {
+      mode,
+      count: completionUpdates.length,
+      timerCount: Object.keys(activeTimers).length,
+    });
   }
 
   await Promise.all(timerIdsToCancel.map((timerId) => cancelTimerNotification(timerId)));
+  if (timerIdsToCancel.length > 0) {
+    logEvent("timer.goalAutoStopped", { count: timerIdsToCancel.length });
+  }
 };
 
 const removeTimerFromMap = (activeTimers: TimerMap, habitId: string, date: string): TimerMap => {

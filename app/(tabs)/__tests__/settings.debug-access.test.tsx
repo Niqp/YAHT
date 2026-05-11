@@ -1,5 +1,6 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Alert } from "react-native";
 
 const mockResetStore = jest.fn();
 
@@ -78,38 +79,59 @@ jest.mock("@/utils/fileOperations", () => ({
   importData: jest.fn(),
 }));
 
+jest.mock("@/utils/diagnostics/diagnosticExport", () => ({
+  exportDiagnosticReport: jest.fn(async () => ({ fileName: "yaht-diagnostics.json", uri: "file:///picked/log.json" })),
+}));
+
 import SettingsScreen from "@/app/(tabs)/settings";
-import { router } from "expo-router";
+import { exportDiagnosticReport } from "@/utils/diagnostics/diagnosticExport";
 
 describe("SettingsScreen debug access", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("reveals reminder debug logs only after pressing the version card seven times", () => {
+  it("reveals diagnostic export only after pressing the version card seven times", () => {
     render(<SettingsScreen />);
 
-    expect(screen.queryByText("Reminder debug logs")).toBeNull();
+    expect(screen.queryByText("Export diagnostic logs")).toBeNull();
 
     for (let count = 0; count < 6; count += 1) {
       fireEvent.press(screen.getByText("Version"));
-      expect(screen.queryByText("Reminder debug logs")).toBeNull();
+      expect(screen.queryByText("Export diagnostic logs")).toBeNull();
     }
 
     fireEvent.press(screen.getByText("Version"));
 
-    expect(screen.getByText("Reminder debug logs")).toBeOnTheScreen();
+    expect(screen.getByText("Export diagnostic logs")).toBeOnTheScreen();
   });
 
-  it("opens the debug route after the hidden row is revealed", () => {
+  it("exports diagnostic logs after the hidden row is revealed", () => {
     render(<SettingsScreen />);
 
     for (let count = 0; count < 7; count += 1) {
       fireEvent.press(screen.getByText("Version"));
     }
 
-    fireEvent.press(screen.getByText("Reminder debug logs"));
+    fireEvent.press(screen.getByText("Export diagnostic logs"));
 
-    expect(router.push).toHaveBeenCalledWith({ pathname: "/debug-reminder", params: { inspect: "1" } });
+    expect(exportDiagnosticReport).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the diagnostic export failure message", async () => {
+    jest.mocked(exportDiagnosticReport).mockRejectedValueOnce(new Error("Directory unavailable"));
+    const alertSpy = jest.spyOn(Alert, "alert");
+
+    render(<SettingsScreen />);
+
+    for (let count = 0; count < 7; count += 1) {
+      fireEvent.press(screen.getByText("Version"));
+    }
+
+    fireEvent.press(screen.getByText("Export diagnostic logs"));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith("Export Failed", "Failed to save diagnostic logs: Directory unavailable");
+    });
   });
 });

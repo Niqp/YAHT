@@ -25,6 +25,10 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     static let responseLedgerKey = "reminder-response-ledger"
     static let scheduleLedgerKey = "reminder-schedule-ledger"
     static let nativeAppliedKey = "ios-native-reminder-actions"
+    static let diagnosticEventsKey = "diagnostic-events"
+    static let diagnosticMaxRecords = 1000
+    static let diagnosticMaxSerializedBytes = 1024 * 1024
+    static let diagnosticRetentionMs: Int64 = 7 * 24 * 60 * 60 * 1000
   }
 
   private struct ReminderPayload {
@@ -58,10 +62,12 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
 
   @objc static func install() {
     shared.registerCategory()
+    shared.appendDiagnosticEvent("ios.reminder.categoryInstalled", context: ["category": Constants.categoryId])
     let center = UNUserNotificationCenter.current()
     if center.delegate !== shared {
       shared.downstreamDelegate = center.delegate
       center.delegate = shared
+      shared.appendDiagnosticEvent("ios.reminder.delegateInstalled")
     }
   }
 
@@ -96,10 +102,12 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     didReceive response: UNNotificationResponse,
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
+    appendDiagnosticEvent("ios.reminder.responseReceived", context: ["actionId": response.actionIdentifier])
     if handleReminderResponse(response) {
       completionHandler()
       return
     }
+    appendDiagnosticEvent("ios.reminder.delegateHandoff", context: ["actionId": response.actionIdentifier])
 
     if let downstreamDelegate,
       downstreamDelegate.responds(
@@ -138,27 +146,36 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     guard response.actionIdentifier == Constants.doneActionId || response.actionIdentifier == Constants.snoozeActionId,
       let payload = parsePayload(response)
     else {
+      appendDiagnosticEvent("ios.reminder.payloadParseFailed", context: ["actionId": response.actionIdentifier])
       return false
     }
+    appendDiagnosticEvent("ios.reminder.payloadParsed", payload: payload)
 
     let nowMs = currentTimeMs()
     let responseKey = "\(payload.notificationId):\(payload.actionId)"
     guard claimResponse(responseKey, nowMs: nowMs) else {
+      appendDiagnosticEvent("ios.reminder.responseDuplicate", payload: payload, context: ["responseKey": responseKey])
       return true
     }
+    appendDiagnosticEvent("ios.reminder.responseClaimed", payload: payload, context: ["responseKey": responseKey])
 
     switch payload.actionId {
     case Constants.doneActionId:
       guard let habitSnapshot = readHabit(payload.habitId) else {
         releaseResponseClaim(responseKey)
+        appendDiagnosticEvent("ios.reminder.responseReleased", payload: payload, context: ["responseKey": responseKey])
+        appendDiagnosticEvent("ios.reminder.doneHabitMissing", payload: payload, context: ["responseKey": responseKey])
         return false
       }
       guard applyDone(payload) else {
         releaseResponseClaim(responseKey)
+        appendDiagnosticEvent("ios.reminder.responseReleased", payload: payload, context: ["responseKey": responseKey])
+        appendDiagnosticEvent("ios.reminder.doneMutationResult", payload: payload, context: ["didMutate": false])
         return false
       }
+      appendDiagnosticEvent("ios.reminder.doneMutationResult", payload: payload, context: ["didMutate": true])
       removeScheduleLedgerEntries(for: payload.reminderSeriesId)
-      cancelReminderSeries(payload.reminderSeriesId) {
+      cancelReminderSeries(payload.reminderSeriesId, payload: payload) {
         self.scheduleNextIntervalSeriesIfNeeded(habitSnapshot: habitSnapshot, payload: payload, nowMs: nowMs)
       }
       appendNativeAppliedRecord(payload: payload, handledAtMs: nowMs, snoozedUntilMs: nil)
@@ -166,8 +183,11 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
       let snoozedUntilMs = nowMs + Constants.defaultSnoozeMs
       guard applySnooze(payload, snoozedUntilMs: snoozedUntilMs) else {
         releaseResponseClaim(responseKey)
+        appendDiagnosticEvent("ios.reminder.responseReleased", payload: payload, context: ["responseKey": responseKey])
+        appendDiagnosticEvent("ios.reminder.snoozeMutationResult", payload: payload, context: ["didMutate": false])
         return false
       }
+      appendDiagnosticEvent("ios.reminder.snoozeMutationResult", payload: payload, context: ["didMutate": true, "snoozedUntilMs": snoozedUntilMs])
       let jobs = buildReminderSeriesJobs(
         habitId: payload.habitId,
         habitTitle: payload.habitTitle,
@@ -177,7 +197,7 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
         maxAttempts: payload.maxAttempts,
         repeatIntervalMs: payload.repeatIntervalMs
       )
-      cancelReminderSeries(payload.reminderSeriesId) {
+      cancelReminderSeries(payload.reminderSeriesId, payload: payload) {
         self.scheduleReminderSeries(payload.reminderSeriesId, jobs: jobs)
       }
       appendNativeAppliedRecord(payload: payload, handledAtMs: nowMs, snoozedUntilMs: snoozedUntilMs)
@@ -300,15 +320,18 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     return mutateHabitStorage(mutate)
   }
 
-  private func cancelReminderSeries(_ reminderSeriesId: String, completion: @escaping () -> Void) {
+  private func cancelReminderSeries(_ reminderSeriesId: String, payload: ReminderPayload, completion: @escaping () -> Void) {
     let center = UNUserNotificationCenter.current()
     let group = DispatchGroup()
+    var scheduledCount = 0
+    var dismissedCount = 0
 
     group.enter()
     center.getPendingNotificationRequests { requests in
       let identifiers = requests
         .filter { self.notificationMatchesSeries($0.identifier, userInfo: $0.content.userInfo, reminderSeriesId: reminderSeriesId) }
         .map(\.identifier)
+      scheduledCount = identifiers.count
       center.removePendingNotificationRequests(withIdentifiers: identifiers)
       group.leave()
     }
@@ -324,11 +347,19 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
           )
         }
         .map { $0.request.identifier }
+      dismissedCount = identifiers.count
       center.removeDeliveredNotifications(withIdentifiers: identifiers)
       group.leave()
     }
 
-    group.notify(queue: .main, execute: completion)
+    group.notify(queue: .main) {
+      self.appendDiagnosticEvent(
+        "ios.reminder.seriesCancelDismissResult",
+        payload: payload,
+        context: ["scheduledCount": scheduledCount, "dismissedCount": dismissedCount]
+      )
+      completion()
+    }
   }
 
   private func notificationMatchesSeries(_ identifier: String, userInfo: [AnyHashable: Any], reminderSeriesId: String) -> Bool {
@@ -458,6 +489,7 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     if !jobs.isEmpty {
       replaceScheduleLedgerEntries(for: reminderSeriesId, jobs: jobs)
     }
+    appendDiagnosticEvent("ios.reminder.seriesScheduled", context: ["reminderSeriesId": reminderSeriesId, "count": jobs.count])
   }
 
   private func notificationContent(_ job: ReminderJob) -> UNMutableNotificationContent {
@@ -497,6 +529,70 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
 
   private func localizedString(_ key: String) -> String {
     NSLocalizedString(key, tableName: "YAHTNativeReminderActions", bundle: .main, value: key, comment: "")
+  }
+
+  private func appendDiagnosticEvent(_ event: String, payload: ReminderPayload? = nil, context: [String: Any] = [:]) {
+    var diagnosticContext = context
+    if let payload {
+      diagnosticContext["actionId"] = payload.actionId
+      diagnosticContext["notificationId"] = payload.notificationId
+      diagnosticContext["habitId"] = payload.habitId
+      diagnosticContext["reminderDate"] = payload.reminderDate
+      diagnosticContext["reminderSeriesId"] = payload.reminderSeriesId
+      diagnosticContext["scheduledFor"] = payload.scheduledFor
+      diagnosticContext["maxAttempts"] = payload.maxAttempts
+      if let repeatIntervalMs = payload.repeatIntervalMs {
+        diagnosticContext["repeatIntervalMs"] = repeatIntervalMs
+      }
+    }
+
+    let nowMs = currentTimeMs()
+    var records = diagnosticEventRecords()
+    records.append([
+      "timestamp": nowMs,
+      "level": "info",
+      "event": event,
+      "source": "ios-native",
+      "context": diagnosticContext,
+    ])
+    saveJson(
+      boundedDiagnosticRecords(records, nowMs: nowMs),
+      storageId: Constants.runtimeStorageId,
+      key: Constants.diagnosticEventsKey
+    )
+  }
+
+  private func diagnosticEventRecords() -> [[String: Any]] {
+    guard let rawValue = storageString(storageId: Constants.runtimeStorageId, key: Constants.diagnosticEventsKey),
+      let records = jsonObject(rawValue) as? [[String: Any]]
+    else {
+      return []
+    }
+
+    return records
+  }
+
+  private func boundedDiagnosticRecords(_ records: [[String: Any]], nowMs: Int64) -> [[String: Any]] {
+    let cutoffMs = nowMs - Constants.diagnosticRetentionMs
+    var nextRecords = records.filter { entry in
+      guard let timestamp = int64Value(entry["timestamp"]) else {
+        return false
+      }
+      return timestamp >= cutoffMs
+    }
+
+    if nextRecords.count > Constants.diagnosticMaxRecords {
+      nextRecords = Array(nextRecords.suffix(Constants.diagnosticMaxRecords))
+    }
+
+    while let json = jsonString(nextRecords),
+      json.utf8.count > Constants.diagnosticMaxSerializedBytes,
+      !nextRecords.isEmpty
+    {
+      nextRecords.removeFirst()
+    }
+
+    return nextRecords
   }
 
   private func claimResponse(_ responseKey: String, nowMs: Int64) -> Bool {
@@ -627,7 +723,12 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     }
 
     records.append(record)
-    saveJson(records, storageId: Constants.runtimeStorageId, key: Constants.nativeAppliedKey)
+    let didSave = saveJson(records, storageId: Constants.runtimeStorageId, key: Constants.nativeAppliedKey)
+    var diagnosticContext: [String: Any] = ["didMutate": didSave]
+    if let snoozedUntilMs {
+      diagnosticContext["snoozedUntilMs"] = snoozedUntilMs
+    }
+    appendDiagnosticEvent("ios.reminder.nativeAppliedRecordWrite", payload: payload, context: diagnosticContext)
   }
 
   private func nativeAppliedRecords() -> [[String: Any]] {

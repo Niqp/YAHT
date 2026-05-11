@@ -10,6 +10,7 @@ import {
 } from "@/utils/reminderNotificationResponse";
 import { reconcileReminderNotifications, type ReminderReconcileReason } from "@/utils/reminderScheduler";
 import { syncNativeReminderActionState } from "@/utils/nativeReminderActions";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 
 export const useReminderManager = () => {
   const appStateRef = useRef(AppState.currentState);
@@ -49,6 +50,7 @@ export const useReminderManager = () => {
         useHabitStore.getState().setSelectedDate(result.selectedDate);
       }
       router.replace(getTodayReminderRoute());
+      logEvent("reminder.manager.navigated", { selectedDate: result.selectedDate });
     },
     [enqueueReminderTask]
   );
@@ -86,6 +88,7 @@ export const useReminderManager = () => {
         if (error instanceof Error) {
           console.error(`Error handling app state change: ${error.message}`, error);
         }
+        logError("reminder.manager.appStateFailed", { operation: "handleAppStateChange", error });
       }
     };
 

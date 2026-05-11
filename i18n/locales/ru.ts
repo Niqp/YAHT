@@ -121,8 +121,8 @@ export const ru = {
     resetAllDataDescription: "Удалить привычки, таймеры и сохраненный прогресс с этого устройства.",
     about: "О приложении",
     version: "Версия",
-    reminderDebugLogs: "Журнал напоминаний",
-    reminderDebugLogsDescription: "Показать журнал действий уведомлений на этом устройстве.",
+    exportDiagnosticLogs: "Экспорт журнала диагностики",
+    exportDiagnosticLogsDescription: "Сохранить безопасный журнал диагностики в файл.",
     sourceCode: "Исходный код",
     sourceCodeDescription: "Открыть публичный репозиторий GitHub.",
     unableToOpenLinkTitle: "Не удалось открыть ссылку",
@@ -311,6 +311,12 @@ export const ru = {
     importFailedBody: "Не удалось импортировать данные. Попробуйте снова.",
     importInvalidBody: "Выбранный файл содержит недопустимые данные.",
     sharingUnavailableSavedBody: "Отправка недоступна на этом устройстве, но файл сохранен: {uri}",
+  },
+  diagnostics: {
+    exportSuccessTitle: "Журнал диагностики сохранен",
+    exportSuccessBody: "Сохранен файл {fileName}.",
+    exportFailedTitle: "Не удалось экспортировать",
+    exportFailedBody: "Не удалось сохранить журнал диагностики: {message}",
   },
   errors: {
     addHabit: "Не удалось добавить привычку",

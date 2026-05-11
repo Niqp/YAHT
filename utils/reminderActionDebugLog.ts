@@ -11,7 +11,6 @@ export type ReminderActionDebugRecord = {
   actionId?: string;
   notificationId?: string;
   habitId?: string;
-  habitTitle?: string;
   reminderDate?: string;
   reminderSeriesId?: string;
   scheduledFor?: number;
@@ -46,7 +45,17 @@ const parseReminderActionDebugRecords = (rawValue: string | undefined, limit = M
   }
 
   const parsedValue = JSON.parse(rawValue);
-  return Array.isArray(parsedValue) ? parsedValue.filter(isReminderActionDebugRecord).slice(-limit) : [];
+  return Array.isArray(parsedValue)
+    ? parsedValue
+        .filter(isReminderActionDebugRecord)
+        .map((record) => {
+          const { habitTitle: _habitTitle, ...sanitizedRecord } = record as ReminderActionDebugRecord & {
+            habitTitle?: string;
+          };
+          return sanitizedRecord;
+        })
+        .slice(-limit)
+    : [];
 };
 
 const getStoredReminderActionDebugRecords = (limit = MAX_DEBUG_RECORDS): ReminderActionDebugRecord[] => {

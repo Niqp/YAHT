@@ -123,6 +123,10 @@ Habit reminder intent is stored on each `Habit.reminder`; native notification id
 7. Native background quick actions are installed by `plugins/with-native-reminder-actions.js`, which wraps the iOS plugin and copies Android Kotlin sources into the generated Android project. iOS uses a `UNUserNotificationCenterDelegate`; Android uses a higher-priority Expo notification event `BroadcastReceiver`. Both directly mutate the MMKV-backed Zustand habit store in `yaht-persistence`, cancel pending/delivered notifications in the tapped reminder series, and perform targeted runtime-ledger updates in `yaht-runtime` for response de-dupe, snoozed follow-up series, interval next-series scheduling, debug records, and native-applied action replay.
 8. `utils/reminderResponseLedger.ts` is a 48-hour de-dupe ledger for notification response keys stored in `yaht-runtime`. Use it before mutating habit state from notification responses so Headless JS, iOS native handlers, and UI listeners cannot apply the same action twice.
 
+### Diagnostic Logging
+
+YAHT uses a privacy-safe diagnostics layer under `utils/diagnostics/` for support logs. Runtime diagnostic records are stored in the `yaht-runtime` MMKV instance under `diagnostic-events`, capped to seven days plus a hard record/size limit. Use `logEvent`, `logWarn`, and `logError` with explicit allowlisted fields only; never pass habit titles, icons, raw import/export JSON, notification body text, file contents, stack traces, or arbitrary objects. Native Android/iOS reminder-action templates append the same event shape with `source` set to `android-native` or `ios-native`. The hidden settings diagnostics row exports a JSON report to a user-selected directory through `exportDiagnosticReport`; do not log diagnostic export started/succeeded/button-press events.
+
 ### Localization
 
 YAHT localizes app-owned UI and notification copy through i18next with ICU message formatting:

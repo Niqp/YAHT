@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 import { useHabitStore } from "@/store/habitStore";
 import type { HabitMap } from "@/types/habit";
 import { isHabitDueOnDate } from "@/utils/date";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import {
   isReminderNotificationData,
   isReminderQueueStopNotificationData,
@@ -172,14 +173,17 @@ export const reconcileReminderNotifications = async ({
   timeZone?: string;
   utcOffsetMinutes?: number;
 } = {}) => {
+  logEvent("reminder.reconcile.started", { reason: _reason, habitCount: Object.keys(habits).length });
   try {
     if (Platform.OS === "web") {
       saveReminderScheduleLedger(createEmptyReminderScheduleLedger(nowMs));
+      logEvent("reminder.reconcile.completed", { reason: _reason, platform: "web", scheduledCount: 0 });
       return;
     }
 
     const canScheduleReminders = await prepareReminderNotifications({ openAlarmSettings: false });
     if (!canScheduleReminders) {
+      logEvent("reminder.reconcile.completed", { reason: _reason, canSchedule: false, scheduledCount: 0 });
       return;
     }
 
@@ -296,9 +300,17 @@ export const reconcileReminderNotifications = async ({
       desiredStopNotificationId: desiredStopEntry?.notificationId,
       habits,
     });
+    logEvent("reminder.reconcile.completed", {
+      reason: _reason,
+      habitCount: Object.keys(habits).length,
+      scheduledCount: nextLedgerEntries.length,
+      hasOverflow: !!nextStopLedgerEntry,
+      count: idsToCancel.size,
+    });
   } catch (error) {
     if (error instanceof Error) {
       console.error(`Error reconciling reminder notifications: ${error.message}`, error);
     }
+    logError("reminder.reconcile.failed", { operation: "reconcileReminderNotifications", reason: _reason, error });
   }
 };

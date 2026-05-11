@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { HabitState } from "../habitStore";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import { translate } from "@/i18n";
 
 export type CompletionData = {
@@ -67,8 +68,16 @@ export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionS
           error: null,
         };
       });
+      logEvent("habit.completion.updated", {
+        habitId: id,
+        date,
+        completionType: habit.completion.type,
+        isCompleted: newCompleted,
+        value: newValue,
+      });
     } catch (error) {
       console.error("Error completing habit:", error);
+      logError("habit.completion.failed", { operation: "updateCompletion", habitId: id, date, error });
       set({ error: translate("errors.completeHabit") });
     }
   },
@@ -77,5 +86,6 @@ export const createCompletionSlice: StateCreator<HabitState, [], [], CompletionS
     for (const update of updates) {
       await get().updateCompletion(update);
     }
+    logEvent("habit.completion.bulkUpdated", { count: updates.length });
   },
 });

@@ -20,6 +20,7 @@ import {
   removeReminderScheduleLedgerEntriesForSeries,
   replaceReminderScheduleLedgerEntriesForSeries,
 } from "@/utils/reminderScheduleLedger";
+import { logEvent, logWarn } from "@/utils/diagnostics/diagnosticLogger";
 import { appendReminderActionDebugRecord } from "@/utils/reminderActionDebugLog";
 import { claimReminderResponse } from "@/utils/reminderResponseLedger";
 import { reconcileReminderNotifications } from "@/utils/reminderScheduler";
@@ -251,6 +252,12 @@ export const handleReminderNotificationResponse = async (
     notificationId: response.notification.request.identifier,
     detail: `mode=${completionMode}; navigation=${allowNavigation}`,
   });
+  logEvent("reminder.response.received", {
+    actionId: response.actionIdentifier,
+    notificationId: response.notification.request.identifier,
+    completionMode,
+    allowNavigation,
+  });
 
   const reminderData = getReminderNotificationData(response);
   const stopData = getReminderQueueStopNotificationData(response);
@@ -260,6 +267,11 @@ export const handleReminderNotificationResponse = async (
       actionId: response.actionIdentifier,
       notificationId: response.notification.request.identifier,
       detail: "no reminder data",
+    });
+    logWarn("reminder.response.ignored", {
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      reason: "no-reminder-data",
     });
     return emptyResult;
   }
@@ -280,6 +292,14 @@ export const handleReminderNotificationResponse = async (
       reminderSeriesId: reminderData.reminderSeriesId,
       detail: "unknown action",
     });
+    logWarn("reminder.response.ignored", {
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      habitId: reminderData.habitId,
+      reminderDate: reminderData.reminderDate,
+      reminderSeriesId: reminderData.reminderSeriesId,
+      reason: "unknown-action",
+    });
     return emptyResult;
   }
 
@@ -291,6 +311,11 @@ export const handleReminderNotificationResponse = async (
       notificationId: response.notification.request.identifier,
       detail: responseKey,
     });
+    logWarn("reminder.response.duplicate", {
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      responseKey,
+    });
     clearLastNotificationResponse();
     return emptyResult;
   }
@@ -298,6 +323,12 @@ export const handleReminderNotificationResponse = async (
   if (stopData) {
     await reconcileReminderNotifications({ reason: "notification-response" });
     clearLastNotificationResponse();
+    logEvent("reminder.response.stopHandled", {
+      actionId: response.actionIdentifier,
+      notificationId: response.notification.request.identifier,
+      scheduledFor: stopData.scheduledFor,
+      timestamp: stopData.overflowTimestamp,
+    });
     return {
       handled: true,
       shouldNavigateToToday: allowNavigation,
@@ -316,11 +347,20 @@ export const handleReminderNotificationResponse = async (
     actionId: response.actionIdentifier,
     notificationId: response.notification.request.identifier,
     habitId: reminderData.habitId,
-    habitTitle: reminderData.habitTitle,
     reminderDate: reminderData.reminderDate,
     reminderSeriesId: reminderData.reminderSeriesId,
     scheduledFor: reminderData.scheduledFor,
     detail: `targeted=${usesTargetedCompletion}; habitFound=${!!habitBeforeAction}; completed=${!!habitBeforeAction?.completionHistory[reminderData.reminderDate]?.isCompleted}`,
+  });
+  logEvent("reminder.response.handling", {
+    actionId: response.actionIdentifier,
+    notificationId: response.notification.request.identifier,
+    habitId: reminderData.habitId,
+    reminderDate: reminderData.reminderDate,
+    reminderSeriesId: reminderData.reminderSeriesId,
+    scheduledFor: reminderData.scheduledFor,
+    targeted: usesTargetedCompletion,
+    completed: !!habitBeforeAction?.completionHistory[reminderData.reminderDate]?.isCompleted,
   });
   await cancelReminderNotificationSeries(reminderData.reminderSeriesId);
   if (usesTargetedCompletion) {
@@ -404,11 +444,22 @@ export const handleReminderNotificationResponse = async (
     actionId: response.actionIdentifier,
     notificationId: response.notification.request.identifier,
     habitId: reminderData.habitId,
-    habitTitle: reminderData.habitTitle,
     reminderDate: reminderData.reminderDate,
     reminderSeriesId: reminderData.reminderSeriesId,
     scheduledFor: reminderData.scheduledFor,
     detail: `handled=${result.handled}; navigate=${result.shouldNavigateToToday}; completed=${!!useHabitStore.getState().habits[reminderData.habitId]?.completionHistory[reminderData.reminderDate]?.isCompleted}`,
+  });
+  logEvent("reminder.response.handled", {
+    actionId: response.actionIdentifier,
+    notificationId: response.notification.request.identifier,
+    habitId: reminderData.habitId,
+    reminderDate: reminderData.reminderDate,
+    reminderSeriesId: reminderData.reminderSeriesId,
+    scheduledFor: reminderData.scheduledFor,
+    handled: result.handled,
+    navigate: result.shouldNavigateToToday,
+    completed: !!useHabitStore.getState().habits[reminderData.habitId]?.completionHistory[reminderData.reminderDate]
+      ?.isCompleted,
   });
   return result;
 };

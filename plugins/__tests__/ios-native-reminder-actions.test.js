@@ -38,18 +38,33 @@ describe("iOS native reminder actions plugin", () => {
     expect(swiftSource).toContain("buildReminderSeriesJobs(");
     expect(swiftSource).toContain("scheduleReminderSeries(payload.reminderSeriesId, jobs: jobs)");
     expect(swiftSource).toContain("replaceScheduleLedgerEntries(for: reminderSeriesId, jobs: jobs)");
+    expect(swiftSource).toContain('static let diagnosticEventsKey = "diagnostic-events"');
+    expect(swiftSource).toContain("static let diagnosticRetentionMs");
+    expect(swiftSource).toContain("static let diagnosticMaxSerializedBytes");
+    expect(swiftSource).toContain("appendDiagnosticEvent(");
+    expect(swiftSource).toContain('"responseKey": responseKey');
+    expect(swiftSource).toContain('"didMutate": true');
+    expect(swiftSource).toContain('"dismissedCount": dismissedCount');
     expect(swiftSource).toContain('localizedString("notification_follow_up_title")');
     expect(swiftSource).toContain('localizedString("notification_follow_up_body")');
+  });
+
+  it("does not persist habit titles in iOS diagnostic event records", () => {
+    const swiftSource = readProjectFile("plugins/ios-native-reminder-actions/YAHTNativeReminderActions.swift");
+    const appendDiagnosticStart = swiftSource.indexOf("private func appendDiagnosticEvent(");
+    const responseLedgerStart = swiftSource.indexOf("private func claimResponse(");
+    const appendDiagnosticSource = swiftSource.slice(appendDiagnosticStart, responseLedgerStart);
+
+    expect(appendDiagnosticStart).toBeGreaterThanOrEqual(0);
+    expect(appendDiagnosticSource).not.toContain("habitTitle");
   });
 
   it("waits for async iOS cancellation before scheduling replacement reminder series", () => {
     const swiftSource = readProjectFile("plugins/ios-native-reminder-actions/YAHTNativeReminderActions.swift");
 
-    expect(swiftSource).toContain("cancelReminderSeries(payload.reminderSeriesId) {");
-    expect(swiftSource).toContain(
-      "private func cancelReminderSeries(_ reminderSeriesId: String, completion: @escaping () -> Void)"
-    );
-    expect(swiftSource).toContain("group.notify(queue: .main, execute: completion)");
+    expect(swiftSource).toContain("cancelReminderSeries(payload.reminderSeriesId, payload: payload) {");
+    expect(swiftSource).toContain("private func cancelReminderSeries(_ reminderSeriesId: String, payload: ReminderPayload");
+    expect(swiftSource).toContain("group.notify(queue: .main) {");
     expect(swiftSource).not.toContain("let scheduledJobs = jobs");
   });
 

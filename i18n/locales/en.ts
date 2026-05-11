@@ -115,8 +115,8 @@ export const en = {
     resetAllDataDescription: "Delete habits, timers and saved progress from this device.",
     about: "About",
     version: "Version",
-    reminderDebugLogs: "Reminder debug logs",
-    reminderDebugLogsDescription: "View notification action logs stored on this device.",
+    exportDiagnosticLogs: "Export diagnostic logs",
+    exportDiagnosticLogsDescription: "Save privacy-safe troubleshooting logs to a file.",
     sourceCode: "Source code",
     sourceCodeDescription: "Open the public GitHub repository.",
     unableToOpenLinkTitle: "Unable to Open Link",
@@ -304,6 +304,12 @@ export const en = {
     importFailedBody: "Failed to import data. Please try again.",
     importInvalidBody: "The selected file contains invalid data.",
     sharingUnavailableSavedBody: "Sharing is not available on this device, but the file was saved to {uri}",
+  },
+  diagnostics: {
+    exportSuccessTitle: "Diagnostic Logs Saved",
+    exportSuccessBody: "Saved {fileName}.",
+    exportFailedTitle: "Export Failed",
+    exportFailedBody: "Failed to save diagnostic logs: {message}",
   },
   errors: {
     addHabit: "Failed to add habit",

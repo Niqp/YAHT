@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { canScheduleExactAlarms, openSettings } from "react-native-permissions";
 import { translate } from "@/i18n";
+import { logError, logEvent, logWarn } from "@/utils/diagnostics/diagnosticLogger";
 import { YAHT_RUNTIME_STORAGE_ID } from "@/utils/storageIds";
 
 const TIMER_CHANNEL_ID = "timers";
@@ -87,13 +88,16 @@ const ensureNotificationPermission = async (): Promise<boolean> => {
   try {
     const existingPermissions = await Notifications.getPermissionsAsync();
     if (existingPermissions.granted) {
+      logEvent("notifications.permission.ready", { status: "granted" });
       return true;
     }
 
     const requestedPermissions = await Notifications.requestPermissionsAsync();
+    logEvent("notifications.permission.requested", { status: requestedPermissions.granted ? "granted" : "denied" });
     return requestedPermissions.granted;
   } catch (error) {
     console.error("Error requesting notification permissions:", error);
+    logError("notifications.permission.failed", { operation: "ensureNotificationPermission", error });
     return false;
   }
 };
@@ -109,8 +113,10 @@ const ensureChannel = async (
 
   try {
     await Notifications.setNotificationChannelAsync(channelId, channelConfig);
+    logEvent("notifications.channel.ready", { operation: "ensureChannel", category: logContext });
   } catch (error) {
     console.error(`Error creating ${logContext} notification channel:`, error);
+    logError("notifications.channel.failed", { operation: "ensureChannel", category: logContext, error });
   }
 };
 
@@ -137,8 +143,10 @@ const ensureReminderCategory = async () => {
         options: { opensAppToForeground: true },
       },
     ]);
+    logEvent("reminder.category.ready", { operation: "ensureReminderCategory" });
   } catch (error) {
     console.error("Error creating reminder notification category:", error);
+    logError("reminder.category.failed", { operation: "ensureReminderCategory", error });
   }
 };
 
@@ -150,6 +158,7 @@ const prepareNotificationsBase = async (
 ): Promise<boolean> => {
   const hasPermission = await ensureNotificationPermission();
   if (!hasPermission) {
+    logWarn("notifications.prepare.denied", { category: logContext });
     return false;
   }
 
@@ -166,6 +175,7 @@ const prepareNotificationsBase = async (
   try {
     const exactAlarmsEnabled = await canScheduleExactAlarms();
     if (exactAlarmsEnabled) {
+      logEvent("notifications.exactAlarm.ready", { category: logContext });
       return true;
     }
 
@@ -174,8 +184,10 @@ const prepareNotificationsBase = async (
     }
   } catch (error) {
     console.error(`Error checking exact alarm access for ${logContext}:`, error);
+    logError("notifications.exactAlarm.failed", { operation: "canScheduleExactAlarms", category: logContext, error });
   }
 
+  logWarn("notifications.prepare.failed", { category: logContext });
   return false;
 };
 
@@ -190,8 +202,10 @@ const cancelNotificationIdentifiers = async (identifiers: string[]) => {
   cancelResults.forEach((result) => {
     if (result.status === "rejected") {
       console.error("Failed to cancel scheduled reminder notification:", result.reason);
+      logError("notifications.cancel.failed", { operation: "cancelScheduledNotificationAsync", error: result.reason });
     }
   });
+  logEvent("notifications.cancelled", { count: identifiers.length });
 };
 
 const dismissNotificationIdentifiers = async (identifiers: string[]) => {
@@ -205,8 +219,10 @@ const dismissNotificationIdentifiers = async (identifiers: string[]) => {
   dismissResults.forEach((result) => {
     if (result.status === "rejected") {
       console.error("Failed to dismiss delivered reminder notification:", result.reason);
+      logError("notifications.dismiss.failed", { operation: "dismissNotificationAsync", error: result.reason });
     }
   });
+  logEvent("notifications.dismissed", { count: identifiers.length });
 };
 
 export const getReminderNotificationSeriesId = (habitId: string, reminderDate: string) =>
@@ -274,10 +290,12 @@ export const clearReminderNotifications = async () => {
 
       await dismissNotificationIdentifiers(deliveredReminderIdentifiers);
     }
+    logEvent("reminder.notifications.cleared", { count: reminderIdentifiers.length });
   } catch (error) {
     if (error instanceof Error) {
       console.error(`Error clearing reminder notifications: ${error.message}`, error);
     }
+    logError("reminder.notifications.clearFailed", { operation: "clearReminderNotifications", error });
   }
 };
 
@@ -304,10 +322,12 @@ export const cancelReminderNotificationSeries = async (reminderSeriesId: string)
 
       await dismissNotificationIdentifiers(deliveredIdentifiers);
     }
+    logEvent("reminder.series.cancelled", { reminderSeriesId, count: scheduledIdentifiers.length });
   } catch (error) {
     if (error instanceof Error) {
       console.error(`Error cancelling reminder notification series: ${error.message}`, error);
     }
+    logError("reminder.series.cancelFailed", { operation: "cancelReminderNotificationSeries", reminderSeriesId, error });
   }
 };
 
@@ -330,6 +350,7 @@ export const scheduleTimerNotification = async (timerId: string, habitTitle: str
   try {
     const canSchedule = await prepareTimerNotifications({ openAlarmSettings: false });
     if (!canSchedule) {
+      logWarn("timer.notification.notScheduled", { timerId, reason: "prepare-failed" });
       return undefined;
     }
 
@@ -343,6 +364,7 @@ export const scheduleTimerNotification = async (timerId: string, habitTitle: str
     };
 
     if (remainingMs <= 0) {
+      logEvent("timer.notification.scheduled", { timerId, durationMs: remainingMs });
       return Notifications.scheduleNotificationAsync({
         identifier: notificationId,
         content,
@@ -350,6 +372,7 @@ export const scheduleTimerNotification = async (timerId: string, habitTitle: str
       });
     }
 
+    logEvent("timer.notification.scheduled", { timerId, durationMs: remainingMs });
     return Notifications.scheduleNotificationAsync({
       identifier: notificationId,
       content,
@@ -361,6 +384,7 @@ export const scheduleTimerNotification = async (timerId: string, habitTitle: str
     });
   } catch (error) {
     console.error("Error scheduling timer notification:", error);
+    logError("timer.notification.scheduleFailed", { operation: "scheduleTimerNotification", timerId, error });
     return undefined;
   }
 };
@@ -372,8 +396,10 @@ export const cancelTimerNotification = async (timerId: string) => {
       Notifications.cancelScheduledNotificationAsync(notificationId),
       Notifications.dismissNotificationAsync(notificationId),
     ]);
+    logEvent("timer.notification.cancelled", { timerId });
   } catch (error) {
     console.error("Error cancelling timer notification:", error);
+    logError("timer.notification.cancelFailed", { operation: "cancelTimerNotification", timerId, error });
   }
 };
 
@@ -394,8 +420,10 @@ export const cancelAllTimerNotifications = async () => {
 
       await dismissNotificationIdentifiers(deliveredTimerIdentifiers);
     }
+    logEvent("timer.notifications.cancelled", { count: scheduledTimerIdentifiers.length });
   } catch (error) {
     console.error("Error cancelling all timer notifications:", error);
+    logError("timer.notifications.cancelFailed", { operation: "cancelAllTimerNotifications", error });
   }
 };
 
@@ -427,6 +455,7 @@ export const scheduleReminderNotification = async ({
   try {
     const canSchedule = await prepareReminderNotifications({ openAlarmSettings: false });
     if (!canSchedule) {
+      logWarn("reminder.notification.notScheduled", { habitId, reminderDate, reason: "prepare-failed" });
       return undefined;
     }
 
@@ -442,6 +471,12 @@ export const scheduleReminderNotification = async ({
     });
   } catch (error) {
     console.error("Error scheduling reminder notification:", error);
+    logError("reminder.notification.scheduleFailed", {
+      operation: "scheduleReminderNotification",
+      habitId,
+      reminderDate,
+      error,
+    });
     return undefined;
   }
 };
@@ -483,13 +518,30 @@ export const schedulePreparedReminderNotification = async ({
       data: reminderData as unknown as Record<string, unknown>,
     };
 
-    return Notifications.scheduleNotificationAsync({
+    const scheduledId = await Notifications.scheduleNotificationAsync({
       identifier: notificationId,
       content,
       trigger: getReminderTrigger(timestamp, REMINDER_CHANNEL_ID),
     });
+    logEvent("reminder.notification.scheduled", {
+      habitId,
+      reminderDate,
+      reminderSeriesId,
+      notificationId,
+      attemptNumber,
+      maxAttempts,
+      scheduledFor: timestamp,
+    });
+    return scheduledId;
   } catch (error) {
     console.error("Error scheduling prepared reminder notification:", error);
+    logError("reminder.notification.prepareScheduleFailed", {
+      operation: "schedulePreparedReminderNotification",
+      habitId,
+      reminderDate,
+      reminderSeriesId,
+      error,
+    });
     return undefined;
   }
 };
@@ -508,7 +560,7 @@ export const scheduleReminderQueueStopNotification = async ({
       overflowTimestamp,
     };
 
-    return Notifications.scheduleNotificationAsync({
+    const scheduledId = await Notifications.scheduleNotificationAsync({
       identifier: "reminder-stop",
       content: {
         title: translate("notifications.stopTitle"),
@@ -520,8 +572,11 @@ export const scheduleReminderQueueStopNotification = async ({
       },
       trigger: getReminderTrigger(timestamp, REMINDER_CHANNEL_ID),
     });
+    logEvent("reminder.queueStop.scheduled", { scheduledFor: timestamp, timestamp, overflowTimestamp });
+    return scheduledId;
   } catch (error) {
     console.error("Error scheduling reminder queue stop notification:", error);
+    logError("reminder.queueStop.scheduleFailed", { operation: "scheduleReminderQueueStopNotification", error });
     return undefined;
   }
 };

@@ -2,6 +2,7 @@ import { getCurrentTimeContext, type TimeChangeEvent } from "@niqp/react-native-
 
 import { useHabitStore } from "@/store/habitStore";
 import { getCurrentDateStamp } from "@/utils/date";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import { waitForHabitStoreHydration } from "@/utils/habitStoreHydration";
 import { reconcileReminderNotifications } from "@/utils/reminderScheduler";
 
@@ -29,18 +30,26 @@ const getEffectiveTimeZone = async (event: TimeChangeEvent) => {
 };
 
 export const handleTimeChangeEvent = async (event: TimeChangeEvent): Promise<void> => {
+  logEvent("timeChange.received", {
+    action: event.action,
+    timeZone: event.timeZone,
+    utcOffsetMinutes: event.utcOffsetMinutes,
+  });
   try {
     const isHydrated = await waitForHabitStoreHydration();
+    logEvent("timeChange.hydrationChecked", { hydrated: isHydrated });
     if (!isHydrated) {
       return;
     }
 
     const { reconcileActiveTimers, selectedDate, setSelectedDate } = useHabitStore.getState();
     await reconcileActiveTimers();
+    logEvent("timeChange.timersReconciled", { action: event.action });
 
     const today = getCurrentDateStamp();
     if (today > selectedDate) {
       setSelectedDate(today);
+      logEvent("timeChange.selectedDateAdjusted", { selectedDate: today });
     }
 
     const timeZone = await getEffectiveTimeZone(event);
@@ -49,9 +58,15 @@ export const handleTimeChangeEvent = async (event: TimeChangeEvent): Promise<voi
       timeZone,
       utcOffsetMinutes: event.utcOffsetMinutes,
     });
+    logEvent("timeChange.completed", {
+      action: event.action,
+      timeZone,
+      utcOffsetMinutes: event.utcOffsetMinutes,
+    });
   } catch (error) {
     if (error instanceof Error) {
       console.error(`Error handling Android time change event: ${error.message}`, error);
     }
+    logError("timeChange.failed", { operation: "handleTimeChangeEvent", action: event.action, error });
   }
 };

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { useHabitStore } from "@/store/habitStore";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import { cancelAllTimerNotifications, scheduleTimerNotification } from "@/utils/notifications";
 import { getTimerRemainingMs } from "@/utils/timer";
 
@@ -28,6 +29,7 @@ export const useTimerManager = () => {
       await reconcileActiveTimers();
     } catch (error) {
       if (error instanceof Error) console.error(`Error reconciling active timers: ${error.message}`, error);
+      logError("timer.reconcile.failed", { operation: "reconcileActiveTimers", error });
     }
   }, [reconcileActiveTimers]);
 
@@ -38,8 +40,10 @@ export const useTimerManager = () => {
   const clearTimerNotifications = useCallback(async () => {
     try {
       await cancelAllTimerNotifications();
+      logEvent("timer.notifications.cleared", { operation: "cancelAllTimerNotifications" });
     } catch (error) {
       if (error instanceof Error) console.error(`Error clearing timer notifications: ${error.message}`, error);
+      logError("timer.notifications.clearFailed", { operation: "cancelAllTimerNotifications", error });
     }
   }, []);
 
@@ -63,9 +67,14 @@ export const useTimerManager = () => {
       }
 
       await Promise.all(schedulingTasks);
+      logEvent("timer.notifications.scheduled", { count: schedulingTasks.length });
     } catch (error) {
       if (error instanceof Error)
         console.error(`Error scheduling background timer notifications: ${error.message}`, error);
+      logError("timer.notifications.scheduleFailed", {
+        operation: "scheduleBackgroundTimerNotifications",
+        error,
+      });
     }
   }, [activeTimers, habits]);
 
@@ -119,9 +128,11 @@ export const useTimerManager = () => {
           void scheduleBackgroundTimerNotifications();
         }
 
+        logEvent("timer.appStateHandled", { appState: nextAppState });
         appStateRef.current = nextAppState;
       } catch (error) {
         if (error instanceof Error) console.error(`Error handling app state change: ${error.message}`, error);
+        logError("timer.appStateFailed", { operation: "handleAppStateChange", error });
       }
     };
 

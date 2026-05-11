@@ -36,6 +36,25 @@ describe("native reminder actions plugin", () => {
     expect(serviceSource).toContain('private const val HABIT_STORAGE_ID = "yaht-persistence"');
     expect(serviceSource).toContain('private const val RUNTIME_STORAGE_ID = "yaht-runtime"');
     expect(serviceSource).toContain('private const val HABIT_STORAGE_KEY = "habits-storage"');
+    expect(serviceSource).toContain('private const val DIAGNOSTIC_EVENTS_KEY = "diagnostic-events"');
+    expect(serviceSource).toContain("appendDiagnosticEvent(context,");
+    expect(serviceSource).toContain("DIAGNOSTIC_RETENTION_MS");
+    expect(serviceSource).toContain("DIAGNOSTIC_MAX_SERIALIZED_BYTES");
+    expect(serviceSource).toContain('"responseKey"');
+    expect(serviceSource).toContain('"didMutate"');
+    expect(serviceSource).toContain('"dismissedCount"');
+  });
+
+  it("does not persist habit titles in Android debug diagnostic records", () => {
+    const serviceSource = readProjectFile(
+      "plugins/android-native-reminder-actions/YAHTNativeReminderActionsService.kt"
+    );
+    const appendDebugRecordStart = serviceSource.indexOf("private fun appendDebugRecord(");
+    const appendBoundedRecordStart = serviceSource.indexOf("private fun appendBoundedRecord(");
+    const appendDebugRecordSource = serviceSource.slice(appendDebugRecordStart, appendBoundedRecordStart);
+
+    expect(appendDebugRecordStart).toBeGreaterThanOrEqual(0);
+    expect(appendDebugRecordSource).not.toContain('"habitTitle"');
   });
 
   it("provides Android native notification copy resources", () => {

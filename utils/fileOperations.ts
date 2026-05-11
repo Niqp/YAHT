@@ -4,6 +4,7 @@ import * as Sharing from "expo-sharing";
 import { Alert } from "react-native";
 import { useHabitStore } from "../store/habitStore";
 import { getCurrentDateStamp } from "./date";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import { translate } from "@/i18n";
 
 /**
@@ -14,6 +15,7 @@ export const exportData = async (): Promise<void> => {
   try {
     // Get all habits from the store
     const { habits } = useHabitStore.getState();
+    logEvent("data.export.started", { habitCount: Object.keys(habits).length });
 
     // Convert habits to JSON string with proper formatting
     const habitsJson = JSON.stringify(habits, null, 2);
@@ -43,8 +45,10 @@ export const exportData = async (): Promise<void> => {
         translate("fileOperations.sharingUnavailableSavedBody", { uri: backupFile.uri })
       );
     }
+    logEvent("data.export.completed", { habitCount: Object.keys(habits).length });
   } catch (error) {
     console.error("Error exporting data:", error);
+    logError("data.export.failed", { operation: "exportData", error });
     Alert.alert(translate("fileOperations.exportFailedTitle"), translate("fileOperations.exportFailedBody"));
   }
 };
@@ -68,11 +72,13 @@ export const importData = async (): Promise<void> => {
       if (typeof importedHabits !== "object" || importedHabits === null) {
         throw new Error("Invalid habits data: not an object");
       }
+      const importedCount = Object.keys(importedHabits).length;
+      logEvent("data.import.parsed", { count: importedCount });
 
       // Confirm import with the user
       Alert.alert(
         translate("fileOperations.importConfirmTitle"),
-        translate("fileOperations.importFoundBody", { count: Object.keys(importedHabits).length }),
+        translate("fileOperations.importFoundBody", { count: importedCount }),
         [
           {
             text: translate("common.cancel"),
@@ -83,6 +89,7 @@ export const importData = async (): Promise<void> => {
             onPress: async () => {
               try {
                 const importedCount = await importHabits(importedHabits);
+                logEvent("data.import.completed", { count: importedCount });
                 Alert.alert(
                   translate("fileOperations.importCompleteTitle"),
                   translate("fileOperations.importCompleteBody", { count: importedCount })
@@ -91,6 +98,7 @@ export const importData = async (): Promise<void> => {
                 if (error instanceof Error) {
                   console.error("Error importing habits:", error.message);
                 }
+                logError("data.import.failed", { operation: "importHabits", error });
                 Alert.alert(
                   translate("fileOperations.importFailedTitle"),
                   translate("fileOperations.importFailedBody")
@@ -102,10 +110,12 @@ export const importData = async (): Promise<void> => {
       );
     } catch (error) {
       console.error("Error parsing JSON:", error);
+      logError("data.import.parseFailed", { operation: "importData", error });
       Alert.alert(translate("fileOperations.importFailedTitle"), translate("fileOperations.importInvalidBody"));
     }
   } catch (error) {
     console.error("Error importing data:", error);
+    logError("data.import.failed", { operation: "importData", error });
     Alert.alert(translate("fileOperations.importFailedTitle"), translate("fileOperations.importFailedBody"));
   }
 };

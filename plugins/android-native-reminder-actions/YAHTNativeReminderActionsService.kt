@@ -90,11 +90,23 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     synchronized(NATIVE_RESPONSE_LOCK) {
       if (!claimResponse(context, responseKey, nowMs)) {
         Log.d(LOG_TAG, "Response already claimed: $responseKey")
-        appendDebugRecord(context, "response-already-claimed", payload, detail = responseKey)
+        appendDebugRecord(
+          context,
+          "response-already-claimed",
+          payload,
+          detail = responseKey,
+          diagnosticContext = JSONObject().put("responseKey", responseKey)
+        )
         return true
       }
       Log.d(LOG_TAG, "Response claimed: $responseKey")
-      appendDebugRecord(context, "response-claimed", payload, detail = responseKey)
+      appendDebugRecord(
+        context,
+        "response-claimed",
+        payload,
+        detail = responseKey,
+        diagnosticContext = JSONObject().put("responseKey", responseKey)
+      )
 
       val handled = try {
         when (payload.actionId) {
@@ -108,7 +120,13 @@ class YAHTNativeReminderActionsService : NotificationsService() {
 
             val didApplyDone = applyDone(context, payload)
             Log.d(LOG_TAG, "Done action mutation result for ${payload.habitId}: $didApplyDone")
-            appendDebugRecord(context, "done-mutation-result", payload, detail = didApplyDone.toString())
+            appendDebugRecord(
+              context,
+              "done-mutation-result",
+              payload,
+              detail = didApplyDone.toString(),
+              diagnosticContext = JSONObject().put("didMutate", didApplyDone)
+            )
             if (!didApplyDone) {
               return falseAfterReleasingClaim(context, responseKey)
             }
@@ -124,7 +142,13 @@ class YAHTNativeReminderActionsService : NotificationsService() {
             val snoozedUntilMs = nowMs + DEFAULT_SNOOZE_MS
             val didApplySnooze = applySnooze(context, payload, snoozedUntilMs)
             Log.d(LOG_TAG, "Snooze action mutation result for ${payload.habitId}: $didApplySnooze")
-            appendDebugRecord(context, "snooze-mutation-result", payload, detail = didApplySnooze.toString())
+            appendDebugRecord(
+              context,
+              "snooze-mutation-result",
+              payload,
+              detail = didApplySnooze.toString(),
+              diagnosticContext = JSONObject().put("didMutate", didApplySnooze)
+            )
             if (!didApplySnooze) {
               return falseAfterReleasingClaim(context, responseKey)
             }
@@ -154,17 +178,35 @@ class YAHTNativeReminderActionsService : NotificationsService() {
 
       if (!handled) {
         Log.d(LOG_TAG, "Native handler did not complete; releasing response claim: $responseKey")
-        appendDebugRecord(context, "native-not-handled", payload, detail = responseKey)
+        appendDebugRecord(
+          context,
+          "native-not-handled",
+          payload,
+          detail = responseKey,
+          diagnosticContext = JSONObject().put("responseKey", responseKey).put("handled", false)
+        )
         releaseResponseClaim(context, responseKey)
       }
       Log.d(LOG_TAG, "Native reminder response handled=$handled action=${payload.actionId} notification=${payload.notificationId}")
-      appendDebugRecord(context, "native-handler-result", payload, detail = handled.toString())
+      appendDebugRecord(
+        context,
+        "native-handler-result",
+        payload,
+        detail = handled.toString(),
+        diagnosticContext = JSONObject().put("handled", handled)
+      )
       return handled
     }
   }
 
   private fun falseAfterReleasingClaim(context: Context, responseKey: String): Boolean {
     releaseResponseClaim(context, responseKey)
+    appendDebugRecord(
+      context,
+      "response-released",
+      detail = responseKey,
+      diagnosticContext = JSONObject().put("responseKey", responseKey)
+    )
     return false
   }
 
@@ -287,22 +329,22 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     event: String,
     payload: ReminderPayload? = null,
     actionId: String? = null,
-    detail: String? = null
+    detail: String? = null,
+    diagnosticContext: JSONObject = JSONObject()
   ) {
     val record = JSONObject()
       .put("handledAtMs", currentTimeMs())
       .put("event", event)
 
-    payload?.let {
-      record
-        .put("actionId", it.actionId)
-        .put("notificationId", it.notificationId)
-        .put("habitId", it.habitId)
-        .put("habitTitle", it.habitTitle)
-        .put("reminderDate", it.reminderDate)
-        .put("reminderSeriesId", it.reminderSeriesId)
-        .put("scheduledFor", it.scheduledFor)
-    }
+        payload?.let {
+          record
+            .put("actionId", it.actionId)
+            .put("notificationId", it.notificationId)
+            .put("habitId", it.habitId)
+            .put("reminderDate", it.reminderDate)
+            .put("reminderSeriesId", it.reminderSeriesId)
+            .put("scheduledFor", it.scheduledFor)
+        }
 
     actionId?.let { record.put("actionId", it) }
     detail?.let { record.put("detail", it) }
@@ -319,8 +361,59 @@ class YAHTNativeReminderActionsService : NotificationsService() {
       val debugFile = File(context.filesDir, DEBUG_FILE_NAME)
       val entries = JSONArray(if (debugFile.exists()) debugFile.readText() else "[]")
       debugFile.writeText(appendBoundedRecord(entries, record).toString())
+        } catch (error: Exception) {
+          Log.d(LOG_TAG, "Failed to append file debug record.", error)
+        }
+        appendDiagnosticEvent(context, "android.reminder.$event", record, diagnosticContext)
+      }
+
+  private fun appendDiagnosticEvent(context: Context, event: String, debugRecord: JSONObject, extraContext: JSONObject) {
+    val diagnosticContext = JSONObject()
+      .put("actionId", debugRecord.optString("actionId").takeIf { it.isNotBlank() })
+      .put("notificationId", debugRecord.optString("notificationId").takeIf { it.isNotBlank() })
+      .put("habitId", debugRecord.optString("habitId").takeIf { it.isNotBlank() })
+      .put("reminderDate", debugRecord.optString("reminderDate").takeIf { it.isNotBlank() })
+      .put("reminderSeriesId", debugRecord.optString("reminderSeriesId").takeIf { it.isNotBlank() })
+
+    if (debugRecord.has("scheduledFor")) {
+      diagnosticContext.put("scheduledFor", debugRecord.optLong("scheduledFor"))
+    }
+
+    copyDiagnosticContext(extraContext, diagnosticContext)
+
+    val nowMs = currentTimeMs()
+    val diagnosticRecord = JSONObject()
+      .put("timestamp", nowMs)
+      .put("level", "info")
+      .put("event", event)
+      .put("source", "android-native")
+      .put("context", diagnosticContext)
+
+    try {
+      val storage = mmkv(context, RUNTIME_STORAGE_ID)
+      val entries = JSONArray(storage.decodeString(DIAGNOSTIC_EVENTS_KEY) ?: "[]")
+      storage.encode(DIAGNOSTIC_EVENTS_KEY, appendBoundedDiagnosticRecord(entries, diagnosticRecord, nowMs).toString())
     } catch (error: Exception) {
-      Log.d(LOG_TAG, "Failed to append file debug record.", error)
+      Log.d(LOG_TAG, "Failed to append diagnostic event.", error)
+    }
+  }
+
+  private fun copyDiagnosticContext(source: JSONObject, target: JSONObject) {
+    val allowedKeys = listOf(
+      "responseKey",
+      "didMutate",
+      "handled",
+      "scheduledCount",
+      "ledgerCount",
+      "totalCount",
+      "count",
+      "dismissedCount",
+      "snoozedUntilMs"
+    )
+    allowedKeys.forEach { key ->
+      if (source.has(key)) {
+        target.put(key, source.get(key))
+      }
     }
   }
 
@@ -365,6 +458,39 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     }
 
     nextEntries.put(record)
+    return nextEntries
+  }
+
+  private fun appendBoundedDiagnosticRecord(entries: JSONArray, record: JSONObject, nowMs: Long): JSONArray {
+    val retainedEntries = JSONArray()
+    val cutoffMs = nowMs - DIAGNOSTIC_RETENTION_MS
+
+    for (index in 0 until entries.length()) {
+      entries.optJSONObject(index)
+        ?.takeIf { it.optLong("timestamp", 0L) >= cutoffMs }
+        ?.let { retainedEntries.put(it) }
+    }
+
+    retainedEntries.put(record)
+    return trimDiagnosticRecords(retainedEntries)
+  }
+
+  private fun trimDiagnosticRecords(entries: JSONArray): JSONArray {
+    var nextEntries = entries
+    while (nextEntries.length() > DIAGNOSTIC_MAX_RECORDS) {
+      nextEntries = dropFirstDiagnosticRecord(nextEntries)
+    }
+    while (nextEntries.toString().length > DIAGNOSTIC_MAX_SERIALIZED_BYTES && nextEntries.length() > 0) {
+      nextEntries = dropFirstDiagnosticRecord(nextEntries)
+    }
+    return nextEntries
+  }
+
+  private fun dropFirstDiagnosticRecord(entries: JSONArray): JSONArray {
+    val nextEntries = JSONArray()
+    for (index in 1 until entries.length()) {
+      entries.optJSONObject(index)?.let { nextEntries.put(it) }
+    }
     return nextEntries
   }
 
@@ -554,13 +680,23 @@ class YAHTNativeReminderActionsService : NotificationsService() {
       context,
       "cancel-series-candidates",
       payload,
-      detail = "scheduled=${scheduledIds.size}; ledger=${ledgerIds.size}; total=${idsToCancel.size}; ids=${idsToCancel.joinToString(",")}"
+      detail = "scheduled=${scheduledIds.size}; ledger=${ledgerIds.size}; total=${idsToCancel.size}; ids=${idsToCancel.joinToString(",")}",
+      diagnosticContext = JSONObject()
+        .put("scheduledCount", scheduledIds.size)
+        .put("ledgerCount", ledgerIds.size)
+        .put("totalCount", idsToCancel.size)
     )
 
     if (idsToCancel.isNotEmpty()) {
       try {
         schedulingDelegate.removeScheduledNotifications(idsToCancel)
-        appendDebugRecord(context, "cancel-series-removed", payload, detail = idsToCancel.size.toString())
+        appendDebugRecord(
+          context,
+          "cancel-series-removed",
+          payload,
+          detail = idsToCancel.size.toString(),
+          diagnosticContext = JSONObject().put("count", idsToCancel.size)
+        )
       } catch (error: Exception) {
         Log.d(LOG_TAG, "Failed to remove scheduled reminder series notifications.", error)
         appendDebugRecord(context, "cancel-series-remove-failed", payload, detail = error.message)
@@ -580,7 +716,13 @@ class YAHTNativeReminderActionsService : NotificationsService() {
             NotificationManagerCompat.from(context).cancel(it.tag, it.id)
             dismissedCount += 1
           }
-        appendDebugRecord(context, "cancel-series-active-dismissed", payload, detail = dismissedCount.toString())
+        appendDebugRecord(
+          context,
+          "cancel-series-active-dismissed",
+          payload,
+          detail = dismissedCount.toString(),
+          diagnosticContext = JSONObject().put("dismissedCount", dismissedCount)
+        )
       } catch (error: Exception) {
         Log.d(LOG_TAG, "Failed to inspect active reminder series notifications.", error)
         appendDebugRecord(context, "cancel-series-active-failed", payload, detail = error.message)
@@ -801,8 +943,12 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     private const val SCHEDULE_LEDGER_KEY = "reminder-schedule-ledger"
     private const val ANDROID_NATIVE_REMINDER_ACTION_STORAGE_KEY = "android-native-reminder-actions"
     private const val ANDROID_NATIVE_REMINDER_ACTION_FILE_NAME = "yaht-android-native-reminder-actions.json"
-    private const val DEBUG_LEDGER_KEY = "reminder-action-debug-ledger"
-    private const val DEBUG_FILE_NAME = "yaht-reminder-action-debug.json"
-    private const val DEBUG_LEDGER_MAX_RECORDS = 40
+      private const val DEBUG_LEDGER_KEY = "reminder-action-debug-ledger"
+      private const val DEBUG_FILE_NAME = "yaht-reminder-action-debug.json"
+      private const val DEBUG_LEDGER_MAX_RECORDS = 40
+      private const val DIAGNOSTIC_EVENTS_KEY = "diagnostic-events"
+      private const val DIAGNOSTIC_MAX_RECORDS = 1000
+      private const val DIAGNOSTIC_MAX_SERIALIZED_BYTES = 1024 * 1024
+      private const val DIAGNOSTIC_RETENTION_MS = 7L * 24L * 60L * 60L * 1000L
+    }
   }
-}

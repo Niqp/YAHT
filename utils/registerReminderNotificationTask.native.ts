@@ -6,6 +6,7 @@ import {
   isReminderQuickActionResponse,
 } from "@/utils/reminderNotificationResponse";
 import { waitForHabitStoreHydration } from "@/utils/habitStoreHydration";
+import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import { appendReminderActionDebugRecord } from "@/utils/reminderActionDebugLog";
 
 let hasRegisteredTask = false;
@@ -26,7 +27,9 @@ export const registerReminderNotificationTask = (): void => {
     hasRegisteredTask = true;
     Notifications.registerTaskAsync(REMINDER_NOTIFICATION_TASK).catch((error) => {
       console.error("Error registering reminder notification task:", error);
+      logError("reminder.task.registerFailed", { operation: "registerTaskAsync", error });
     });
+    logEvent("reminder.task.registered", { operation: "registerReminderNotificationTask" });
   }
 
   if (!hasRegisteredEarlyListener) {
@@ -44,6 +47,11 @@ export const registerReminderNotificationTask = (): void => {
           notificationId: response.notification.request.identifier,
           detail: `hydrated=${isHydrated}`,
         });
+        logEvent("reminder.earlyListener.hydrationChecked", {
+          actionId: response.actionIdentifier,
+          notificationId: response.notification.request.identifier,
+          hydrated: isHydrated,
+        });
         if (!isHydrated) {
           return;
         }
@@ -57,6 +65,11 @@ export const registerReminderNotificationTask = (): void => {
           actionId: response.actionIdentifier,
           notificationId: response.notification.request.identifier,
           detail: `handled=${result.handled}`,
+        });
+        logEvent("reminder.earlyListener.completed", {
+          actionId: response.actionIdentifier,
+          notificationId: response.notification.request.identifier,
+          handled: result.handled,
         });
       });
     });
