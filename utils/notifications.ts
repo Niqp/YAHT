@@ -327,7 +327,11 @@ export const cancelReminderNotificationSeries = async (reminderSeriesId: string)
     if (error instanceof Error) {
       console.error(`Error cancelling reminder notification series: ${error.message}`, error);
     }
-    logError("reminder.series.cancelFailed", { operation: "cancelReminderNotificationSeries", reminderSeriesId, error });
+    logError("reminder.series.cancelFailed", {
+      operation: "cancelReminderNotificationSeries",
+      reminderSeriesId,
+      error,
+    });
   }
 };
 
@@ -506,11 +510,8 @@ export const schedulePreparedReminderNotification = async ({
     };
 
     const content: Notifications.NotificationContentInput = {
-      title: attemptNumber > 0 ? translate("notifications.followUpTitle") : translate("notifications.reminderTitle"),
-      body:
-        attemptNumber > 0
-          ? translate("notifications.followUpBody", { habitTitle })
-          : translate("notifications.reminderBody", { habitTitle }),
+      title: habitTitle,
+      body: attemptNumber > 0 ? translate("notifications.followUpBody") : translate("notifications.reminderBody"),
       sound: "default",
       color: "#023c69",
       priority: Notifications.AndroidNotificationPriority.HIGH,

@@ -423,7 +423,11 @@ export const handleReminderNotificationResponse = async (
   }
 
   if (needsFullReconcile) {
-    await reconcileReminderNotifications({ reason: "notification-response" });
+    await reconcileReminderNotifications(
+      isReminderQuickActionResponse(response)
+        ? { reason: "notification-response", dismissPresented: false }
+        : { reason: "notification-response" }
+    );
   }
   clearLastNotificationResponse();
 
@@ -458,8 +462,9 @@ export const handleReminderNotificationResponse = async (
     scheduledFor: reminderData.scheduledFor,
     handled: result.handled,
     navigate: result.shouldNavigateToToday,
-    completed: !!useHabitStore.getState().habits[reminderData.habitId]?.completionHistory[reminderData.reminderDate]
-      ?.isCompleted,
+    completed:
+      !!useHabitStore.getState().habits[reminderData.habitId]?.completionHistory[reminderData.reminderDate]
+        ?.isCompleted,
   });
   return result;
 };

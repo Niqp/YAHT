@@ -259,8 +259,8 @@ describe("scheduleReminderNotification", () => {
     expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
       identifier: `reminder-${getReminderNotificationSeriesId("h1", "2026-03-21")}-123000`,
       content: {
-        title: "Friendly Reminder",
-        body: "It's time for: Stretch",
+        title: "Stretch",
+        body: "Time to check in.",
         sound: "default",
         color: "#023c69",
         priority: Notifications.AndroidNotificationPriority.HIGH,
@@ -300,8 +300,8 @@ describe("scheduleReminderNotification", () => {
     expect(mockScheduleNotificationAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         content: expect.objectContaining({
-          title: "Still waiting",
-          body: "Stretch still needs attention.",
+          title: "Stretch",
+          body: "Still due. Mark it done when you're finished.",
         }),
       })
     );

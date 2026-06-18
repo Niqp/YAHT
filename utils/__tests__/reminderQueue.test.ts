@@ -169,6 +169,27 @@ describe("buildReminderQueue", () => {
     );
   });
 
+  it("continues interval reminders on the original cadence when a due date is missed", () => {
+    const queue = buildReminderQueue({
+      habits: {
+        h1: makeHabit({
+          repetition: { type: RepetitionType.INTERVAL, days: 3 },
+          completionHistory: {
+            "2026-03-20": { isCompleted: true },
+          },
+        }),
+      },
+      nowMs: dayjs("2026-03-24T08:00:00").valueOf(),
+    });
+
+    expect(queue.normalJobs[0]).toEqual(
+      expect.objectContaining({
+        reminderDate: "2026-03-26",
+        timestamp: dayjs("2026-03-26T09:00:00").valueOf(),
+      })
+    );
+  });
+
   it("does not create nags for invalid repeat intervals", () => {
     const queue = buildReminderQueue({
       habits: {

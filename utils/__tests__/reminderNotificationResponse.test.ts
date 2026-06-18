@@ -190,7 +190,10 @@ describe("handleReminderNotificationResponse", () => {
     expect(mockUpdateCompletion).toHaveBeenCalledTimes(1);
     expect(mockUpdateCompletion).toHaveBeenCalledWith({ id: "h1", date: "2026-03-21" });
     expect(reconcileReminderNotifications).toHaveBeenCalledTimes(1);
-    expect(reconcileReminderNotifications).toHaveBeenCalledWith({ reason: "notification-response" });
+    expect(reconcileReminderNotifications).toHaveBeenCalledWith({
+      reason: "notification-response",
+      dismissPresented: false,
+    });
   });
 
   it("completes repetition and timed habits to their goal", async () => {
@@ -245,7 +248,10 @@ describe("handleReminderNotificationResponse", () => {
         }),
       })
     );
-    expect(reconcileReminderNotifications).toHaveBeenCalledTimes(1);
+    expect(reconcileReminderNotifications).toHaveBeenCalledWith({
+      reason: "notification-response",
+      dismissPresented: false,
+    });
   });
 
   it("uses targeted background completion for snooze without full reconciliation", async () => {
@@ -420,6 +426,9 @@ describe("handleReminderNotificationResponse", () => {
 
     expect(result.handled).toBe(true);
     expect(mockUpdateCompletion).not.toHaveBeenCalled();
-    expect(reconcileReminderNotifications).toHaveBeenCalledWith({ reason: "notification-response" });
+    expect(reconcileReminderNotifications).toHaveBeenCalledWith({
+      reason: "notification-response",
+      dismissPresented: false,
+    });
   });
 });

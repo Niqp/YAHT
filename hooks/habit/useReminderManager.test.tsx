@@ -247,7 +247,10 @@ describe("useReminderManager", () => {
       })
     );
     expect(mockUpdateCompletion).not.toHaveBeenCalled();
-    expect(reconcileReminderNotifications).toHaveBeenCalledWith({ reason: "notification-response" });
+    expect(reconcileReminderNotifications).toHaveBeenCalledWith({
+      reason: "notification-response",
+      dismissPresented: false,
+    });
     expect(mockClearLastNotificationResponse).toHaveBeenCalledTimes(1);
   });
 

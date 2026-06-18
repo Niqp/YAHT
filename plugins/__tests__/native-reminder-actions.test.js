@@ -64,4 +64,13 @@ describe("native reminder actions plugin", () => {
     expect(englishStrings).toContain("yaht_notification_reminder_title");
     expect(russianStrings).toContain("yaht_notification_reminder_title");
   });
+  it("dismisses Android reminder actions only through targeted series cancellation", () => {
+    const serviceSource = readProjectFile(
+      "plugins/android-native-reminder-actions/YAHTNativeReminderActionsService.kt"
+    );
+
+    expect(serviceSource).toContain("cancelReminderSeries(context, payload.reminderSeriesId, payload)");
+    expect(serviceSource).not.toContain("dismissNotification(context, payload.notificationId)");
+    expect(serviceSource).not.toContain("private fun dismissNotification(");
+  });
 });

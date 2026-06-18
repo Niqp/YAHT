@@ -94,8 +94,7 @@ export const isHabitDueOnDate = (habit: Habit, date: string): boolean => {
         }
 
         const monthsSinceCreation =
-          (selectedDate.year() - createdAtDate.year()) * 12 +
-          (selectedDate.month() - createdAtDate.month());
+          (selectedDate.year() - createdAtDate.year()) * 12 + (selectedDate.month() - createdAtDate.month());
 
         if (monthsSinceCreation < 0) return false;
         if (monthsSinceCreation % habit.repetition.months !== 0) return false;
@@ -172,10 +171,9 @@ export const isPrimaryDueDate = (habit: Habit, date: string): boolean => {
           .at(-1);
 
         const anchorDate = lastCompletedDate ? getMidnightDayjs(lastCompletedDate) : createdAtDate;
-        const nextDueDate = anchorDate.add(habit.repetition.days, "day");
+        const daysSinceAnchor = selectedDate.diff(anchorDate, "day");
 
-        // Key difference: isSame instead of isSameOrAfter
-        return selectedDate.isSame(nextDueDate);
+        return daysSinceAnchor > 0 && daysSinceAnchor % habit.repetition.days === 0;
       }
 
       case "monthly": {
@@ -184,8 +182,7 @@ export const isPrimaryDueDate = (habit: Habit, date: string): boolean => {
         }
 
         const monthsSinceCreation =
-          (selectedDate.year() - createdAtDate.year()) * 12 +
-          (selectedDate.month() - createdAtDate.month());
+          (selectedDate.year() - createdAtDate.year()) * 12 + (selectedDate.month() - createdAtDate.month());
 
         if (monthsSinceCreation < 0) return false;
         if (monthsSinceCreation % habit.repetition.months !== 0) return false;

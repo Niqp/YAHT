@@ -1,7 +1,7 @@
 "notification_action_done" = "Done";
 "notification_action_snooze" = "Snooze";
 "notification_action_open" = "Open";
-"notification_reminder_title" = "Friendly Reminder";
-"notification_reminder_body" = "It's time for: %@";
-"notification_follow_up_title" = "Still waiting";
-"notification_follow_up_body" = "%@ still needs attention.";
+"notification_reminder_title" = "Reminder";
+"notification_reminder_body" = "Time to check in.";
+"notification_follow_up_title" = "Still due";
+"notification_follow_up_body" = "Still due. Mark it done when you're finished.";

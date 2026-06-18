@@ -81,8 +81,6 @@ class YAHTNativeReminderActionsService : NotificationsService() {
       "Parsed reminder payload action=${payload.actionId} notification=${payload.notificationId} habit=${payload.habitId} date=${payload.reminderDate} series=${payload.reminderSeriesId}"
     )
     appendDebugRecord(context, "payload-parsed", payload)
-    dismissNotification(context, payload.notificationId)
-    appendDebugRecord(context, "notification-dismissed", payload)
 
     val nowMs = currentTimeMs()
     val responseKey = "${payload.notificationId}:${payload.actionId}"
@@ -629,19 +627,13 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     job.repeatIntervalMs?.let { body.put("repeatIntervalMs", it) }
 
     return NotificationContent.Builder()
-      .setTitle(
-        if (job.attemptNumber > 0) {
-          localizedString(context, "yaht_notification_follow_up_title", "Still waiting")
-        } else {
-          localizedString(context, "yaht_notification_reminder_title", "Friendly Reminder")
-        }
-      )
+      .setTitle(job.habitTitle)
       .setText(
         localizedString(
           context,
           if (job.attemptNumber > 0) "yaht_notification_follow_up_body" else "yaht_notification_reminder_body",
-          if (job.attemptNumber > 0) "{habitTitle} still needs attention." else "It's time for: {habitTitle}"
-        ).replace("{habitTitle}", job.habitTitle)
+          if (job.attemptNumber > 0) "Still due. Mark it done when you're finished." else "Time to check in."
+        )
       )
       .setBody(body)
       .setPriority(NotificationPriority.HIGH)
@@ -728,10 +720,6 @@ class YAHTNativeReminderActionsService : NotificationsService() {
         appendDebugRecord(context, "cancel-series-active-failed", payload, detail = error.message)
       }
     }
-  }
-
-  private fun dismissNotification(context: Context, identifier: String) {
-    NotificationManagerCompat.from(context).cancel(identifier, ANDROID_NOTIFICATION_ID)
   }
 
   private fun notificationMatchesSeries(identifier: String, body: JSONObject?, reminderSeriesId: String): Boolean =
@@ -926,7 +914,6 @@ class YAHTNativeReminderActionsService : NotificationsService() {
     private val NATIVE_RESPONSE_LOCK = Any()
     private val MMKV_INIT_LOCK = Any()
     @Volatile private var isMmkvInitialized = false
-    private const val ANDROID_NOTIFICATION_ID = 0
     private const val CATEGORY_ID = "habitReminderActions"
     private const val DONE_ACTION_ID = "habitReminderDone"
     private const val SNOOZE_ACTION_ID = "habitReminderSnooze"

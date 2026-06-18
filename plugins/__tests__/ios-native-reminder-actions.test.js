@@ -45,7 +45,7 @@ describe("iOS native reminder actions plugin", () => {
     expect(swiftSource).toContain('"responseKey": responseKey');
     expect(swiftSource).toContain('"didMutate": true');
     expect(swiftSource).toContain('"dismissedCount": dismissedCount');
-    expect(swiftSource).toContain('localizedString("notification_follow_up_title")');
+    expect(swiftSource).toContain("content.title = job.habitTitle");
     expect(swiftSource).toContain('localizedString("notification_follow_up_body")');
   });
 
@@ -63,7 +63,9 @@ describe("iOS native reminder actions plugin", () => {
     const swiftSource = readProjectFile("plugins/ios-native-reminder-actions/YAHTNativeReminderActions.swift");
 
     expect(swiftSource).toContain("cancelReminderSeries(payload.reminderSeriesId, payload: payload) {");
-    expect(swiftSource).toContain("private func cancelReminderSeries(_ reminderSeriesId: String, payload: ReminderPayload");
+    expect(swiftSource).toContain(
+      "private func cancelReminderSeries(_ reminderSeriesId: String, payload: ReminderPayload"
+    );
     expect(swiftSource).toContain("group.notify(queue: .main) {");
     expect(swiftSource).not.toContain("let scheduledJobs = jobs");
   });
@@ -76,11 +78,15 @@ describe("iOS native reminder actions plugin", () => {
       "plugins/ios-native-reminder-actions/ru.lproj/YAHTNativeReminderActions.strings"
     );
 
-    expect(englishStrings).toContain('"notification_reminder_title" = "Friendly Reminder";');
-    expect(englishStrings).toContain('"notification_follow_up_title" = "Still waiting";');
-    expect(englishStrings).toContain('"notification_follow_up_body" = "%@ still needs attention.";');
+    expect(englishStrings).toContain('"notification_reminder_title" = "Reminder";');
+    expect(englishStrings).toContain('"notification_follow_up_title" = "Still due";');
+    expect(englishStrings).toContain(
+      '"notification_follow_up_body" = "Still due. Mark it done when you\'re finished.";'
+    );
     expect(russianStrings).toContain('"notification_reminder_title" = "Напоминание";');
-    expect(russianStrings).toContain('"notification_follow_up_title" = "Все еще ждет";');
-    expect(russianStrings).toContain('"notification_follow_up_body" = "«%@» все еще требует внимания.";');
+    expect(russianStrings).toContain('"notification_follow_up_title" = "Все еще актуально";');
+    expect(russianStrings).toContain(
+      '"notification_follow_up_body" = "Все еще актуально. Отметьте выполнение, когда закончите.";'
+    );
   });
 });

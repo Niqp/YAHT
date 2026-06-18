@@ -234,6 +234,33 @@ describe("isPrimaryDueDate", () => {
     expect(isPrimaryDueDate(habit, "2026-01-06")).toBe(false); // overdue
   });
 
+  it("keeps interval primary due dates on their original cadence after a miss", () => {
+    const habit = makeHabit({
+      repetition: { type: RepetitionType.INTERVAL, days: 3 },
+      createdAt: "2026-01-01",
+      completionHistory: buildHistory([["2026-01-01", { isCompleted: true }]]),
+    });
+
+    expect(isPrimaryDueDate(habit, "2026-01-04")).toBe(true);
+    expect(isPrimaryDueDate(habit, "2026-01-05")).toBe(false);
+    expect(isPrimaryDueDate(habit, "2026-01-07")).toBe(true);
+    expect(isPrimaryDueDate(habit, "2026-01-10")).toBe(true);
+  });
+
+  it("recalculates interval primary due dates from the checked missed date", () => {
+    const habit = makeHabit({
+      repetition: { type: RepetitionType.INTERVAL, days: 3 },
+      createdAt: "2026-01-01",
+      completionHistory: buildHistory([
+        ["2026-01-01", { isCompleted: true }],
+        ["2026-01-05", { isCompleted: true }],
+      ]),
+    });
+
+    expect(isPrimaryDueDate(habit, "2026-01-07")).toBe(false);
+    expect(isPrimaryDueDate(habit, "2026-01-08")).toBe(true);
+  });
+
   it("returns true on creation day for interval", () => {
     const habit = makeHabit({
       repetition: { type: RepetitionType.INTERVAL, days: 5 },

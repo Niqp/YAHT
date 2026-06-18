@@ -508,12 +508,11 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     }
 
     let content = UNMutableNotificationContent()
+    content.title = job.habitTitle
     if job.attemptNumber > 0 {
-      content.title = localizedString("notification_follow_up_title")
-      content.body = String(format: localizedString("notification_follow_up_body"), job.habitTitle)
+      content.body = localizedString("notification_follow_up_body")
     } else {
-      content.title = localizedString("notification_reminder_title")
-      content.body = String(format: localizedString("notification_reminder_body"), job.habitTitle)
+      content.body = localizedString("notification_reminder_body")
     }
     content.sound = .default
     content.categoryIdentifier = Constants.categoryId

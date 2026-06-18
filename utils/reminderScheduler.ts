@@ -166,12 +166,14 @@ export const reconcileReminderNotifications = async ({
   nowMs = Date.now(),
   timeZone,
   utcOffsetMinutes,
+  dismissPresented = true,
 }: {
   reason?: ReminderReconcileReason;
   habits?: HabitMap;
   nowMs?: number;
   timeZone?: string;
   utcOffsetMinutes?: number;
+  dismissPresented?: boolean;
 } = {}) => {
   logEvent("reminder.reconcile.started", { reason: _reason, habitCount: Object.keys(habits).length });
   try {
@@ -296,10 +298,12 @@ export const reconcileReminderNotifications = async ({
       stopNotification: nextStopLedgerEntry,
     });
 
-    await dismissInvalidPresentedReminderNotifications({
-      desiredStopNotificationId: desiredStopEntry?.notificationId,
-      habits,
-    });
+    if (dismissPresented) {
+      await dismissInvalidPresentedReminderNotifications({
+        desiredStopNotificationId: desiredStopEntry?.notificationId,
+        habits,
+      });
+    }
     logEvent("reminder.reconcile.completed", {
       reason: _reason,
       habitCount: Object.keys(habits).length,
