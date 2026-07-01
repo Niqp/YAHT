@@ -8,11 +8,7 @@ import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
 import { CompletionType } from "@/types/habit";
-import {
-  WHEEL_PICKER_CARD_HEIGHT,
-  WHEEL_PICKER_HEIGHT,
-  WHEEL_PICKER_PANEL_HEIGHT,
-} from "@/components/ui/form/WheelPicker.shared";
+import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "@/components/ui/form/WheelPicker.shared";
 
 interface CompletionTypeSectionProps {
   completionType: CompletionType;
@@ -22,6 +18,7 @@ interface CompletionTypeSectionProps {
   isEditMode: boolean;
   errorMessage?: string | null;
   presentation?: "card" | "sheet";
+  showHeading?: boolean;
 }
 
 const REPETITION_PRESETS = [
@@ -39,6 +36,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   isEditMode,
   errorMessage,
   presentation = "card",
+  showHeading = true,
 }) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -87,9 +85,9 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
               onChange={setCompletionGoal}
               style={styles.picker}
               virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
+              initialNumToRender={5}
+              maxToRenderPerBatch={8}
+              windowSize={7}
               animateMount={presentation === "sheet"}
             />
           </View>
@@ -125,9 +123,7 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
       />
 
       <View style={[styles.optionsWrapper, { borderTopColor: colors.borderSubtle }]}>
-        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.bgInset, borderColor: colors.inputBorder }]}>
-          {activePanel}
-        </View>
+        <View style={styles.panelFrame}>{activePanel}</View>
 
         {errorMessage ? (
           <AppText variant="small" color={colors.danger} style={styles.errorText}>
@@ -150,13 +146,17 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
 
   if (presentation === "sheet") {
     return (
-      <View>
-        <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
-          {t("addHabit.sections.habitType")}
-        </AppText>
-        <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
-          {t("form.completionGoalDescription")}
-        </AppText>
+      <View style={styles.sheetContainer}>
+        {showHeading ? (
+          <>
+            <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
+              {t("addHabit.sections.habitType")}
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
+              {t("form.completionGoalDescription")}
+            </AppText>
+          </>
+        ) : null}
         {content}
       </View>
     );
@@ -172,7 +172,11 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
 export default memo(CompletionTypeSection);
 
 const styles = StyleSheet.create({
+  sheetContainer: {
+    flex: 1,
+  },
   optionsWrapper: {
+    flex: 1,
     borderTopWidth: 1,
     marginTop: Spacing.base,
     paddingTop: Spacing.base,
@@ -186,17 +190,13 @@ const styles = StyleSheet.create({
   sheetDescription: {
     marginBottom: Spacing.base,
   },
-  fixedPanelFrame: {
+  panelFrame: {
+    flex: 1,
     width: "100%",
-    borderWidth: 1,
-    borderRadius: BorderRadius.md,
-    minHeight: WHEEL_PICKER_PANEL_HEIGHT,
-    height: WHEEL_PICKER_PANEL_HEIGHT,
     overflow: "hidden",
   },
   panel: {
     flex: 1,
-    paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
   },

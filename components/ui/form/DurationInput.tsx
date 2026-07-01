@@ -97,10 +97,6 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
               value={hours}
               onChange={handleHoursChange}
               style={styles.picker}
-              virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
               animateMount={animateMount}
             />
           </View>
@@ -116,10 +112,6 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
               value={minutes}
               onChange={handleMinutesChange}
               style={styles.picker}
-              virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
               animateMount={animateMount}
             />
           </View>

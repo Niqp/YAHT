@@ -11,11 +11,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { AppSegmentedControl, AppText } from "@/components/ui";
 import { FormSection, PresetPills, WheelPicker } from "@/components/ui/form";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
-import {
-  WHEEL_PICKER_CARD_HEIGHT,
-  WHEEL_PICKER_HEIGHT,
-  WHEEL_PICKER_PANEL_HEIGHT,
-} from "@/components/ui/form/WheelPicker.shared";
+import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "@/components/ui/form/WheelPicker.shared";
 
 interface RepetitionPatternSectionProps {
   repetitionType: RepetitionType;
@@ -29,17 +25,8 @@ interface RepetitionPatternSectionProps {
   weekStartDay: number;
   errorMessage?: string | null;
   presentation?: "card" | "sheet";
+  showHeading?: boolean;
 }
-
-const chunkIntoRows = <T,>(items: ReadonlyArray<T>, size: number) => {
-  const rows: T[][] = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    rows.push(items.slice(index, index + size));
-  }
-
-  return rows;
-};
 
 const WEEK_START_REFERENCE_DATE = "2026-02-15";
 
@@ -62,6 +49,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
   weekStartDay,
   errorMessage,
   presentation = "card",
+  showHeading = true,
 }) => {
   const { colors } = useTheme();
   const { i18n, t } = useTranslation();
@@ -109,7 +97,19 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     [locale, orderedWeekdays]
   );
   const segmentedIndex = useMemo(() => SEGMENT_VALUES.indexOf(repetitionType), [repetitionType]);
-  const weekdayRows = useMemo(() => chunkIntoRows(weekdayOptions, 3), [weekdayOptions]);
+  const selectedDayCount = useMemo(
+    () => new Set(selectedDays.filter((day) => day >= 0 && day <= 6)).size,
+    [selectedDays]
+  );
+  const quickWeekdayDays = useMemo(
+    () => weekdayOptions.filter((option) => option.value !== 0 && option.value !== 6).map((option) => option.value),
+    [weekdayOptions]
+  );
+  const quickWeekendDays = useMemo(
+    () => weekdayOptions.filter((option) => option.value === 0 || option.value === 6).map((option) => option.value),
+    [weekdayOptions]
+  );
+  const quickEveryDayDays = useMemo(() => weekdayOptions.map((option) => option.value), [weekdayOptions]);
 
   const handleDayToggle = useCallback(
     (day: number) => {
@@ -146,36 +146,69 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
               {t("form.pickWeekdays")}
             </AppText>
           </View>
-          <View style={[styles.weekdaySurface, { backgroundColor: colors.bgInset }]}>
-            <View style={styles.weekdayGrid}>
-              {weekdayRows.map((row, rowIndex) => (
-                <View key={`weekday-row-${rowIndex}`} style={styles.weekdayRow}>
-                  {row.map((option) => {
-                    const isActive = selectedDays.includes(option.value);
+          <View style={styles.weekdaySelector}>
+            <View style={styles.weekdayRail}>
+              {weekdayOptions.map((option) => {
+                const isActive = selectedDays.includes(option.value);
 
-                    return (
-                      <Pressable
-                        key={String(option.value)}
-                        onPress={() => handleDayToggle(option.value)}
-                        android_ripple={{ color: colors.ripple, borderless: false }}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: isActive }}
-                        style={({ pressed }) => [
-                          styles.weekdayPill,
-                          {
-                            backgroundColor: isActive ? colors.chipSelectedBg : colors.chipBg,
-                            borderColor: isActive ? colors.chipSelectedBorder : colors.chipBorder,
-                          },
-                          pressed ? styles.weekdayPillPressed : null,
-                        ]}
-                      >
-                        <AppText variant="bodyMedium" color={isActive ? colors.chipSelectedText : colors.chipText}>
-                          {option.label}
-                        </AppText>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+                return (
+                  <Pressable
+                    key={String(option.value)}
+                    onPress={() => handleDayToggle(option.value)}
+                    android_ripple={{ color: colors.ripple, borderless: false }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                    style={({ pressed }) => [
+                      styles.weekdayPill,
+                      {
+                        backgroundColor: isActive ? colors.chipSelectedBg : colors.chipBg,
+                        borderColor: isActive ? colors.chipSelectedBorder : colors.chipBorder,
+                      },
+                      !isActive ? styles.weekdayPillInactive : null,
+                      pressed ? styles.weekdayPillPressed : null,
+                    ]}
+                  >
+                    <AppText
+                      variant="small"
+                      color={isActive ? colors.chipSelectedText : colors.chipText}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.82}
+                      style={styles.weekdayPillText}
+                    >
+                      {option.label}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <AppText variant="small" color={selectedDayCount > 0 ? colors.textTertiary : colors.danger}>
+              {selectedDayCount > 0 ? t("form.selectedDays", { count: selectedDayCount }) : t("form.pickAtLeastOneDay")}
+            </AppText>
+            <View style={styles.weekdayPresetRow}>
+              {[
+                { label: t("form.quickWeekdays"), days: quickWeekdayDays },
+                { label: t("form.quickWeekend"), days: quickWeekendDays },
+                { label: t("form.quickEveryDay"), days: quickEveryDayDays },
+              ].map((preset) => (
+                <Pressable
+                  key={preset.label}
+                  onPress={() => setSelectedDays(preset.days)}
+                  android_ripple={{ color: colors.ripple, borderless: false }}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.weekdayPresetButton,
+                    {
+                      backgroundColor: colors.chipBg,
+                      borderColor: colors.chipBorder,
+                    },
+                    pressed ? styles.weekdayPillPressed : null,
+                  ]}
+                >
+                  <AppText variant="small" color={colors.chipText} numberOfLines={1} adjustsFontSizeToFit>
+                    {preset.label}
+                  </AppText>
+                </Pressable>
               ))}
             </View>
           </View>
@@ -197,9 +230,9 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
               onChange={setCustomDays}
               style={styles.picker}
               virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
+              initialNumToRender={5}
+              maxToRenderPerBatch={8}
+              windowSize={7}
               animateMount={presentation === "sheet"}
             />
           </View>
@@ -221,10 +254,6 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
               value={customMonths}
               onChange={setCustomMonths}
               style={styles.picker}
-              virtualized
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              windowSize={5}
               animateMount={presentation === "sheet"}
             />
           </View>
@@ -250,9 +279,7 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
       />
 
       <View style={[styles.optionsWrapper, { borderTopColor: colors.borderSubtle }]}>
-        <View style={[styles.fixedPanelFrame, { backgroundColor: colors.bgInset, borderColor: colors.inputBorder }]}>
-          {activePanel}
-        </View>
+        <View style={styles.panelFrame}>{activePanel}</View>
 
         {errorMessage ? (
           <AppText variant="small" color={colors.danger} style={styles.feedbackText}>
@@ -265,13 +292,17 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 
   if (presentation === "sheet") {
     return (
-      <View>
-        <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
-          {t("form.repeatability")}
-        </AppText>
-        <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
-          {t("form.scheduleDescription")}
-        </AppText>
+      <View style={styles.sheetContainer}>
+        {showHeading ? (
+          <>
+            <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
+              {t("form.repeatability")}
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
+              {t("form.scheduleDescription")}
+            </AppText>
+          </>
+        ) : null}
         {content}
       </View>
     );
@@ -287,7 +318,11 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
 export default memo(RepetitionPatternSection);
 
 const styles = StyleSheet.create({
+  sheetContainer: {
+    flex: 1,
+  },
   optionsWrapper: {
+    flex: 1,
     borderTopWidth: 1,
     marginTop: Spacing.base,
     paddingTop: Spacing.base,
@@ -324,17 +359,13 @@ const styles = StyleSheet.create({
     maxWidth: 228,
     lineHeight: 20,
   },
-  fixedPanelFrame: {
+  panelFrame: {
+    flex: 1,
     width: "100%",
-    borderWidth: 1,
-    borderRadius: BorderRadius.md,
-    minHeight: WHEEL_PICKER_PANEL_HEIGHT,
-    height: WHEEL_PICKER_PANEL_HEIGHT,
     overflow: "hidden",
   },
   panel: {
     flex: 1,
-    paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
   },
@@ -345,35 +376,51 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.md,
   },
-  weekdaySurface: {
+  weekdaySelector: {
     width: "100%",
-    maxWidth: 320,
-    alignSelf: "center",
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
+    gap: Spacing.md,
+    marginTop: Spacing.xs,
   },
-  weekdayGrid: {
-    gap: Spacing.sm,
-    alignItems: "center",
-  },
-  weekdayRow: {
+  weekdayRail: {
     width: "100%",
     flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   weekdayPill: {
-    width: 86,
+    flex: 1,
+    minWidth: 0,
     minHeight: 52,
+    borderWidth: 1,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.xs,
+  },
+  weekdayPillText: {
+    width: "100%",
+    textAlign: "center",
+  },
+  weekdayPillInactive: {
+    opacity: 0.48,
+  },
+  weekdayPillPressed: {
+    opacity: 0.82,
+  },
+  weekdayPresetRow: {
+    width: "100%",
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  weekdayPresetButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 34,
     borderWidth: 1,
     borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: Spacing.sm,
-  },
-  weekdayPillPressed: {
-    opacity: 0.82,
+    paddingVertical: Spacing.xs,
   },
   picker: {
     height: WHEEL_PICKER_HEIGHT,

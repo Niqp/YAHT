@@ -1,45 +1,23 @@
-import {
-  BasicInfoSection,
-  CompletionTypeSection,
-  RepetitionPatternSection,
-  ReminderSection,
-  DiscardChangesSheet,
-  SheetTriggerCard,
-} from "@/components/habitForm";
-import { AppBottomSheet, AppText, ScaleButton } from "@/components/ui";
+import { BasicInfoSection, DiscardChangesSheet, SheetTriggerCard } from "@/components/habitForm";
+import { AppText, ScaleButton } from "@/components/ui";
 import { getElevation } from "@/constants/Elevation";
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
+import { DEFAULT_REPETITION_GOAL, useAddHabitDraftStore } from "@/store/addHabitDraftStore";
 import { useHabitStore } from "@/store/habitStore";
 import { CompletionType, Habit, RepetitionConfig, RepetitionType } from "@/types/habit";
 import { getCurrentDateStamp } from "@/utils/date";
-import { prepareReminderNotifications } from "@/utils/notifications";
-import type BottomSheet from "@gorhom/bottom-sheet";
-import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { usePreventRemove } from "@react-navigation/native";
 import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { CalendarDays, CheckSquare, Bell } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TFunction } from "i18next";
 
-const DEFAULT_ICON = "🌟";
-const DEFAULT_REPETITION_GOAL = 1;
-const DEFAULT_TIMED_GOAL_MS = 1 * 60 * 1000;
 const WEEKDAY_SHORT_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
-type AddSheetKey = "completion" | "repetition" | "reminder";
 const TODAY_ROUTE = "/(tabs)/today";
 
 const formatDurationLabel = (durationMs: number, t: TFunction) => {
@@ -237,10 +215,9 @@ const buildCompletionConfig = (completionType: CompletionType, completionGoal: n
 };
 
 export default function AddEditHabitScreen() {
-  const { colors, weekStartDay } = useTheme();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
   const params = useLocalSearchParams();
   const habitIdParam = params.habitId;
   const habitId = Array.isArray(habitIdParam) ? habitIdParam[0] : habitIdParam;
@@ -252,26 +229,33 @@ export default function AddEditHabitScreen() {
   const habit = useHabitStore((state) => (habitId ? state.habits[habitId] : undefined));
   const isEditMode = Boolean(habitId);
 
-  const [title, setTitle] = useState("");
-  const [icon, setIcon] = useState(DEFAULT_ICON);
-  const [repetitionType, setRepetitionType] = useState<RepetitionType>(RepetitionType.DAILY);
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [customDays, setCustomDays] = useState<number>(1);
-  const [customMonths, setCustomMonths] = useState<number>(1);
-  const [completionType, setCompletionType] = useState<CompletionType>(CompletionType.SIMPLE);
-  const [repetitionGoal, setRepetitionGoal] = useState<number>(DEFAULT_REPETITION_GOAL);
-  const [timedGoalMs, setTimedGoalMs] = useState<number>(DEFAULT_TIMED_GOAL_MS);
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [reminderHour, setReminderHour] = useState(9);
-  const [reminderMinute, setReminderMinute] = useState(0);
-  const [reminderRepeat, setReminderRepeat] = useState(false);
-  const [reminderRepeatIntervalMs, setReminderRepeatIntervalMs] = useState(15 * 60000);
-  const [isDirty, setIsDirty] = useState(false);
+  const title = useAddHabitDraftStore((state) => state.title);
+  const icon = useAddHabitDraftStore((state) => state.icon);
+  const repetitionType = useAddHabitDraftStore((state) => state.repetitionType);
+  const selectedDays = useAddHabitDraftStore((state) => state.selectedDays);
+  const customDays = useAddHabitDraftStore((state) => state.customDays);
+  const customMonths = useAddHabitDraftStore((state) => state.customMonths);
+  const completionType = useAddHabitDraftStore((state) => state.completionType);
+  const repetitionGoal = useAddHabitDraftStore((state) => state.repetitionGoal);
+  const timedGoalMs = useAddHabitDraftStore((state) => state.timedGoalMs);
+  const reminderEnabled = useAddHabitDraftStore((state) => state.reminderEnabled);
+  const reminderHour = useAddHabitDraftStore((state) => state.reminderHour);
+  const reminderMinute = useAddHabitDraftStore((state) => state.reminderMinute);
+  const reminderRepeat = useAddHabitDraftStore((state) => state.reminderRepeat);
+  const reminderRepeatIntervalMs = useAddHabitDraftStore((state) => state.reminderRepeatIntervalMs);
+  const isDirty = useAddHabitDraftStore((state) => state.isDirty);
+  const titleError = useAddHabitDraftStore((state) => state.titleError);
+  const scheduleError = useAddHabitDraftStore((state) => state.scheduleError);
+  const completionError = useAddHabitDraftStore((state) => state.completionError);
+  const setTitle = useAddHabitDraftStore((state) => state.setTitle);
+  const setIcon = useAddHabitDraftStore((state) => state.setIcon);
+  const resetForCreate = useAddHabitDraftStore((state) => state.resetForCreate);
+  const loadHabit = useAddHabitDraftStore((state) => state.loadHabit);
+  const setTitleError = useAddHabitDraftStore((state) => state.setTitleError);
+  const setScheduleError = useAddHabitDraftStore((state) => state.setScheduleError);
+  const setCompletionError = useAddHabitDraftStore((state) => state.setCompletionError);
+  const markDraftClean = useAddHabitDraftStore((state) => state.markClean);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [titleError, setTitleError] = useState<string | null>(null);
-  const [scheduleError, setScheduleError] = useState<string | null>(null);
-  const [completionError, setCompletionError] = useState<string | null>(null);
-  const [activeSheet, setActiveSheet] = useState<AddSheetKey | null>(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const hasInitializedFormRef = useRef(false);
@@ -280,7 +264,6 @@ export default function AddEditHabitScreen() {
   const pendingNavigationActionRef = useRef<unknown>(null);
   const isDiscardAlertOpenRef = useRef(false);
   const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
-  const settingsSheetRef = useRef<BottomSheet>(null);
 
   const navigation = useNavigation();
   const hasUnsavedChanges = isDirty;
@@ -354,11 +337,6 @@ export default function AddEditHabitScreen() {
 
   const attemptClose = useCallback(
     ({ action }: { action?: unknown } = {}) => {
-      if (activeSheet !== null) {
-        setActiveSheet(null);
-        return;
-      }
-
       if (!hasUnsavedChanges) {
         if (action) {
           navigation.dispatch(action as never);
@@ -372,10 +350,10 @@ export default function AddEditHabitScreen() {
       pendingNavigationActionRef.current = action ?? null;
       showDiscardConfirmation();
     },
-    [activeSheet, hasUnsavedChanges, navigateBack, navigation, showDiscardConfirmation]
+    [hasUnsavedChanges, navigateBack, navigation, showDiscardConfirmation]
   );
 
-  usePreventRemove(activeSheet !== null || hasUnsavedChanges, ({ data }) => {
+  usePreventRemove(hasUnsavedChanges, ({ data }) => {
     if (allowProgrammaticRemoveRef.current) {
       allowProgrammaticRemoveRef.current = false;
       navigation.dispatch(data.action as never);
@@ -385,34 +363,14 @@ export default function AddEditHabitScreen() {
     attemptClose({ action: data.action });
   });
 
-  const availableHeight = windowHeight - insets.top - insets.bottom;
-  const maxSheetContentSize = Math.max(availableHeight - Spacing.xxl, 320);
-
   useEffect(() => {
     hasInitializedFormRef.current = false;
     hasHandledMissingHabitRef.current = false;
 
     if (!habitId) {
-      setTitle("");
-      setIcon(DEFAULT_ICON);
-      setRepetitionType(RepetitionType.DAILY);
-      setSelectedDays([]);
-      setCustomDays(1);
-      setCustomMonths(1);
-      setCompletionType(CompletionType.SIMPLE);
-      setRepetitionGoal(DEFAULT_REPETITION_GOAL);
-      setTimedGoalMs(DEFAULT_TIMED_GOAL_MS);
-      setReminderEnabled(false);
-      setReminderHour(9);
-      setReminderMinute(0);
-      setReminderRepeat(false);
-      setReminderRepeatIntervalMs(15 * 60000);
-      setIsDirty(false);
-      setTitleError(null);
-      setScheduleError(null);
-      setCompletionError(null);
+      resetForCreate();
     }
-  }, [habitId]);
+  }, [habitId, resetForCreate]);
 
   useEffect(() => {
     if (!habitId || !isHydrated || hasInitializedFormRef.current) {
@@ -432,39 +390,10 @@ export default function AddEditHabitScreen() {
       return;
     }
 
-    const nextSelectedDays = habit.repetition.type === RepetitionType.WEEKDAYS ? habit.repetition.days : [];
-    const nextCustomDays = habit.repetition.type === RepetitionType.INTERVAL ? habit.repetition.days : 1;
-    const nextCustomMonths = habit.repetition.type === RepetitionType.MONTHLY ? habit.repetition.months : 1;
-    const nextRepetitionGoal =
-      habit.completion.type === CompletionType.REPETITIONS && typeof habit.completion.goal === "number"
-        ? habit.completion.goal
-        : DEFAULT_REPETITION_GOAL;
-    const nextTimedGoalMs =
-      habit.completion.type === CompletionType.TIMED && typeof habit.completion.goal === "number"
-        ? habit.completion.goal
-        : DEFAULT_TIMED_GOAL_MS;
-
-    setTitle(habit.title);
-    setIcon(habit.icon);
-    setRepetitionType(habit.repetition.type);
-    setSelectedDays(nextSelectedDays);
-    setCustomDays(nextCustomDays);
-    setCustomMonths(nextCustomMonths);
-    setCompletionType(habit.completion.type);
-    setRepetitionGoal(nextRepetitionGoal);
-    setTimedGoalMs(nextTimedGoalMs);
-    setReminderEnabled(habit.reminder?.enabled ?? false);
-    setReminderHour(habit.reminder?.hour ?? 9);
-    setReminderMinute(habit.reminder?.minute ?? 0);
-    setReminderRepeat(habit.reminder?.repeatIfNotCompleted ?? false);
-    setReminderRepeatIntervalMs(habit.reminder?.repeatIntervalMs ?? 15 * 60000);
-    setIsDirty(false);
-    setTitleError(null);
-    setScheduleError(null);
-    setCompletionError(null);
+    loadHabit(habit);
 
     hasInitializedFormRef.current = true;
-  }, [habit, habitId, isHydrated, navigateBack, t]);
+  }, [habit, habitId, isHydrated, loadHabit, navigateBack, t]);
 
   // Workaround for RN #52596: KeyboardAvoidingView leaves residual bottom padding on Android
   // after keyboard dismissal. Disabling it on hide forces an immediate offset reset to zero.
@@ -478,125 +407,19 @@ export default function AddEditHabitScreen() {
     };
   }, []);
 
-  const handleTitleChange = useCallback((nextTitle: string) => {
-    setTitle(nextTitle);
-    if (nextTitle.trim()) {
-      setTitleError(null);
-    }
-    setIsDirty(true);
-  }, []);
+  const getPanelParams = useCallback(() => (habitId ? { habitId } : undefined), [habitId]);
 
-  const handleIconChange = useCallback((nextIcon: string) => {
-    setIcon(nextIcon);
-    setIsDirty(true);
-  }, []);
+  const openCompletionRoute = useCallback(() => {
+    router.push({ pathname: "/add/completion", params: getPanelParams() });
+  }, [getPanelParams]);
 
-  const handleRepetitionTypeChange = useCallback((nextType: RepetitionType) => {
-    setRepetitionType(nextType);
-    setScheduleError(null);
-    setIsDirty(true);
-  }, []);
+  const openRepetitionRoute = useCallback(() => {
+    router.push({ pathname: "/add/repetition", params: getPanelParams() });
+  }, [getPanelParams]);
 
-  const handleSelectedDaysChange = useCallback((nextDays: number[]) => {
-    setSelectedDays(nextDays);
-    if (nextDays.length > 0) {
-      setScheduleError(null);
-    }
-    setIsDirty(true);
-  }, []);
-
-  const handleCustomDaysChange = useCallback((nextDays: number) => {
-    setCustomDays(nextDays);
-    if (nextDays >= 1) {
-      setScheduleError(null);
-    }
-    setIsDirty(true);
-  }, []);
-
-  const handleCustomMonthsChange = useCallback((nextMonths: number) => {
-    setCustomMonths(nextMonths);
-    if (nextMonths >= 1) {
-      setScheduleError(null);
-    }
-    setIsDirty(true);
-  }, []);
-
-  const handleCompletionTypeChange = useCallback((nextType: CompletionType) => {
-    setCompletionType(nextType);
-    setCompletionError(null);
-    setIsDirty(true);
-  }, []);
-
-  const handleCompletionGoalChange = useCallback(
-    (nextGoal: number) => {
-      if (completionType === CompletionType.TIMED) {
-        setTimedGoalMs(nextGoal);
-      }
-
-      if (completionType === CompletionType.REPETITIONS) {
-        setRepetitionGoal(nextGoal);
-      }
-
-      setIsDirty(true);
-      setCompletionError(null);
-    },
-    [completionType]
-  );
-
-  const openCompletionSheet = useCallback(() => {
-    setActiveSheet("completion");
-  }, []);
-
-  const closeSettingsSheet = useCallback(() => {
-    settingsSheetRef.current?.close();
-  }, []);
-
-  const openRepetitionSheet = useCallback(() => {
-    setActiveSheet("repetition");
-  }, []);
-
-  const openReminderSheet = useCallback(() => {
-    setActiveSheet("reminder");
-  }, []);
-
-  const handleReminderEnabledChange = useCallback((value: boolean) => {
-    if (!value) {
-      setReminderEnabled(false);
-      setIsDirty(true);
-      return;
-    }
-
-    void (async () => {
-      const canEnableReminder = await prepareReminderNotifications();
-      if (!canEnableReminder) {
-        setReminderEnabled(false);
-        return;
-      }
-
-      setReminderEnabled(true);
-      setIsDirty(true);
-    })();
-  }, []);
-
-  const handleReminderHourChange = useCallback((value: number) => {
-    setReminderHour(value);
-    setIsDirty(true);
-  }, []);
-
-  const handleReminderMinuteChange = useCallback((value: number) => {
-    setReminderMinute(value);
-    setIsDirty(true);
-  }, []);
-
-  const handleReminderRepeatChange = useCallback((value: boolean) => {
-    setReminderRepeat(value);
-    setIsDirty(true);
-  }, []);
-
-  const handleReminderRepeatIntervalChange = useCallback((value: number) => {
-    setReminderRepeatIntervalMs(value);
-    setIsDirty(true);
-  }, []);
+  const openReminderRoute = useCallback(() => {
+    router.push({ pathname: "/add/reminder", params: getPanelParams() });
+  }, [getPanelParams]);
 
   const resolvedCompletionGoal =
     completionType === CompletionType.TIMED
@@ -617,6 +440,7 @@ export default function AddEditHabitScreen() {
     t
   );
   const reminderHelperText = getReminderHelperText(reminderEnabled, t);
+  const addScreenTitle = isEditMode ? t("addHabit.sections.editHabitTitle") : t("addHabit.sections.newHabitTitle");
 
   const handleCancel = useCallback(() => {
     attemptClose();
@@ -649,7 +473,13 @@ export default function AddEditHabitScreen() {
 
       setCompletionError(null);
 
-      const { repetition, errorMessage } = buildRepetitionConfig(repetitionType, selectedDays, customDays, customMonths, t);
+      const { repetition, errorMessage } = buildRepetitionConfig(
+        repetitionType,
+        selectedDays,
+        customDays,
+        customMonths,
+        t
+      );
       if (!repetition) {
         setScheduleError(errorMessage || t("addHabit.validation.repetitionRequired"));
         return;
@@ -702,7 +532,7 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      setIsDirty(false);
+      markDraftClean();
       exitWithoutPrompt();
     } finally {
       setIsSubmitting(false);
@@ -725,12 +555,12 @@ export default function AddEditHabitScreen() {
         return;
       }
 
-      setIsDirty(false);
+      markDraftClean();
       exitWithoutPrompt();
     } finally {
       setIsSubmitting(false);
     }
-  }, [deleteHabit, exitWithoutPrompt, habitId, isSubmitting]);
+  }, [deleteHabit, exitWithoutPrompt, habitId, isSubmitting, markDraftClean]);
 
   const handleDelete = useCallback(() => {
     if (!isEditMode || !habitId) {
@@ -758,7 +588,7 @@ export default function AddEditHabitScreen() {
         styles.container,
         {
           backgroundColor: colors.bgApp,
-          paddingTop: insets.top,
+          paddingTop: 0,
           paddingLeft: insets.left,
           paddingRight: insets.right,
         },
@@ -766,14 +596,17 @@ export default function AddEditHabitScreen() {
     >
       <Stack.Screen
         options={{
-          title: isEditMode ? t("addHabit.sections.editHabitTitle") : t("addHabit.sections.newHabitTitle"),
+          title: addScreenTitle,
+          headerBackVisible: false,
+          headerTitle: addScreenTitle,
           headerStyle: {
             backgroundColor: colors.bgApp,
           },
           headerTitleStyle: {
             color: colors.textPrimary,
           },
-          headerTintColor: colors.textPrimary,
+          headerTintColor: colors.accent,
+          headerShadowVisible: true,
         }}
       />
 
@@ -784,13 +617,7 @@ export default function AddEditHabitScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <BasicInfoSection
-            title={title}
-            setTitle={handleTitleChange}
-            icon={icon}
-            setIcon={handleIconChange}
-            errorMessage={titleError}
-          />
+          <BasicInfoSection title={title} setTitle={setTitle} icon={icon} setIcon={setIcon} errorMessage={titleError} />
 
           <View style={styles.panelSection}>
             <AppText variant="label" color={colors.textSecondary} style={styles.panelSectionLabel}>
@@ -805,7 +632,7 @@ export default function AddEditHabitScreen() {
               value={completionSummary}
               helperText={completionHelperText}
               icon={<CheckSquare size={18} color={colors.accent} />}
-              onPress={openCompletionSheet}
+              onPress={openCompletionRoute}
               errorMessage={completionError}
             />
 
@@ -814,7 +641,7 @@ export default function AddEditHabitScreen() {
               value={repetitionSummary}
               helperText={repetitionHelperText}
               icon={<CalendarDays size={18} color={colors.accent} />}
-              onPress={openRepetitionSheet}
+              onPress={openRepetitionRoute}
               errorMessage={scheduleError}
             />
 
@@ -823,7 +650,7 @@ export default function AddEditHabitScreen() {
               value={reminderSummary}
               helperText={reminderHelperText}
               icon={<Bell size={18} color={colors.accent} />}
-              onPress={openReminderSheet}
+              onPress={openReminderRoute}
             />
           </View>
 
@@ -875,69 +702,6 @@ export default function AddEditHabitScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
-
-      {activeSheet ? (
-        <AppBottomSheet
-          ref={settingsSheetRef}
-          index={0}
-          enableDynamicSizing
-          enableContentPanningGesture={false}
-          overDragResistanceFactor={8}
-          topInset={insets.top}
-          bottomInset={insets.bottom}
-          maxDynamicContentSize={maxSheetContentSize}
-          onClose={() => setActiveSheet(null)}
-        >
-          <BottomSheetView style={[styles.sheetScrollContent, { paddingBottom: insets.bottom + Spacing.lg }]}>
-            {activeSheet === "completion" ? (
-              <CompletionTypeSection
-                completionType={completionType}
-                setCompletionType={handleCompletionTypeChange}
-                completionGoal={resolvedCompletionGoal}
-                setCompletionGoal={handleCompletionGoalChange}
-                isEditMode={isEditMode}
-                errorMessage={completionError}
-                presentation="sheet"
-              />
-            ) : activeSheet === "repetition" ? (
-              <RepetitionPatternSection
-                repetitionType={repetitionType}
-                setRepetitionType={handleRepetitionTypeChange}
-                selectedDays={selectedDays}
-                setSelectedDays={handleSelectedDaysChange}
-                customDays={customDays}
-                setCustomDays={handleCustomDaysChange}
-                customMonths={customMonths}
-                setCustomMonths={handleCustomMonthsChange}
-                weekStartDay={weekStartDay}
-                errorMessage={scheduleError}
-                presentation="sheet"
-              />
-            ) : (
-              <ReminderSection
-                enabled={reminderEnabled}
-                setEnabled={handleReminderEnabledChange}
-                hour={reminderHour}
-                setHour={handleReminderHourChange}
-                minute={reminderMinute}
-                setMinute={handleReminderMinuteChange}
-                repeatIfNotCompleted={reminderRepeat}
-                setRepeatIfNotCompleted={handleReminderRepeatChange}
-                repeatIntervalMs={reminderRepeatIntervalMs}
-                setRepeatIntervalMs={handleReminderRepeatIntervalChange}
-                presentation="sheet"
-              />
-            )}
-
-            <ScaleButton
-              label={t("common.done")}
-              variant="secondary"
-              onPress={closeSettingsSheet}
-              style={styles.sheetDoneButton}
-            />
-          </BottomSheetView>
-        </AppBottomSheet>
-      ) : null}
 
       <DiscardChangesSheet
         isOpen={Platform.OS !== "ios" && isDiscardSheetOpen}
@@ -1001,28 +765,5 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     width: "100%",
-  },
-  sheetScrollContent: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.sm,
-  },
-  sheetDoneButton: {
-    marginTop: Spacing.lg,
-  },
-  pickerWarmupHost: {
-    position: "absolute",
-    left: -9999,
-    top: -9999,
-    width: 360,
-    height: 180,
-    opacity: 0,
-  },
-  pickerWarmupRow: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  pickerWarmupWheel: {
-    width: 80,
-    height: 120,
   },
 });

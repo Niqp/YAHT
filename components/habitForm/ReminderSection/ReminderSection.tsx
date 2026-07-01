@@ -19,6 +19,7 @@ interface ReminderSectionProps {
   repeatIntervalMs: number;
   setRepeatIntervalMs: (intervalMs: number) => void;
   presentation?: "card" | "sheet";
+  showHeading?: boolean;
 }
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
@@ -50,6 +51,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
   repeatIntervalMs,
   setRepeatIntervalMs,
   presentation = "card",
+  showHeading = true,
 }) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -102,10 +104,6 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
                 value={hour}
                 onChange={setHour}
                 style={styles.picker}
-                virtualized
-                initialNumToRender={3}
-                maxToRenderPerBatch={3}
-                windowSize={5}
                 animateMount={presentation === "sheet"}
               />
             </View>
@@ -125,10 +123,6 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
                 value={minute}
                 onChange={setMinute}
                 style={styles.picker}
-                virtualized
-                initialNumToRender={3}
-                maxToRenderPerBatch={3}
-                windowSize={5}
                 animateMount={presentation === "sheet"}
               />
             </View>
@@ -168,12 +162,16 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
   if (presentation === "sheet") {
     return (
       <View>
-        <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
-          {t("form.reminders")}
-        </AppText>
-        <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
-          {t("form.remindersDescription")}
-        </AppText>
+        {showHeading ? (
+          <>
+            <AppText variant="title" color={colors.textPrimary} style={styles.sheetTitle}>
+              {t("form.reminders")}
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary} style={styles.sheetDescription}>
+              {t("form.remindersDescription")}
+            </AppText>
+          </>
+        ) : null}
         {content}
       </View>
     );

@@ -1,13 +1,15 @@
 import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import { Alert, Keyboard, Platform } from "react-native";
+import { Alert, Keyboard, Platform, ScrollView } from "react-native";
 
 let mockPreventRemoveEnabled = false;
 let mockPreventRemoveCallback: ((event: { data: { action: unknown } }) => void) | undefined;
+let mockStackScreenOptions: Array<{ headerShown?: boolean }> = [];
 
 const mockRouterBack = jest.fn();
 const mockRouterCanGoBack = jest.fn(() => true);
 const mockRouterReplace = jest.fn();
+const mockRouterPush = jest.fn();
 const mockNavigationDispatch = jest.fn();
 const preventedGoBackAction = { type: "GO_BACK" };
 
@@ -22,7 +24,20 @@ const mockStoreState = {
 
 jest.mock("expo-router", () => ({
   Stack: {
-    Screen: () => null,
+    Screen: ({
+      options,
+    }: {
+      options?: { headerShown?: boolean; headerLeft?: () => React.ReactNode; headerRight?: () => React.ReactNode };
+    }) => {
+      mockStackScreenOptions.push(options ?? {});
+
+      return (
+        <>
+          {options?.headerLeft?.()}
+          {options?.headerRight?.()}
+        </>
+      );
+    },
   },
   router: {
     back: () => {
@@ -36,6 +51,7 @@ jest.mock("expo-router", () => ({
     },
     canGoBack: () => mockRouterCanGoBack(),
     replace: (path: string) => mockRouterReplace(path),
+    push: (path: unknown) => mockRouterPush(path),
   },
   useLocalSearchParams: () => ({}),
   useNavigation: () => ({
@@ -135,9 +151,76 @@ jest.mock("@/components/habitForm", () => {
         {errorMessage ? <Text>{errorMessage}</Text> : null}
       </View>
     ),
-    CompletionTypeSection: () => <Text>Completion Sheet</Text>,
-    RepetitionPatternSection: () => <Text>Repetition Sheet</Text>,
-    ReminderSection: () => <Text>Reminder Sheet</Text>,
+    CompletionTypeSection: ({
+      setCompletionType,
+      setCompletionGoal,
+    }: {
+      setCompletionType: (value: unknown) => void;
+      setCompletionGoal: (value: number) => void;
+    }) => {
+      const { CompletionType } = require("@/types/habit");
+
+      return (
+        <View>
+          <Text>Completion Sheet</Text>
+          <Pressable
+            onPress={() => {
+              setCompletionType(CompletionType.REPETITIONS);
+            }}
+          >
+            <Text>Use repetitions</Text>
+          </Pressable>
+          <Pressable onPress={() => setCompletionGoal(3)}>
+            <Text>Set repetition goal</Text>
+          </Pressable>
+        </View>
+      );
+    },
+    RepetitionPatternSection: ({
+      setRepetitionType,
+      setSelectedDays,
+    }: {
+      setRepetitionType: (value: unknown) => void;
+      setSelectedDays: (value: number[]) => void;
+    }) => {
+      const { RepetitionType } = require("@/types/habit");
+
+      return (
+        <View>
+          <Text>Repetition Sheet</Text>
+          <Pressable
+            onPress={() => {
+              setRepetitionType(RepetitionType.WEEKDAYS);
+              setSelectedDays([1, 3, 5]);
+            }}
+          >
+            <Text>Use weekdays</Text>
+          </Pressable>
+        </View>
+      );
+    },
+    ReminderSection: ({
+      setEnabled,
+      setHour,
+      setMinute,
+    }: {
+      setEnabled: (value: boolean) => void;
+      setHour: (value: number) => void;
+      setMinute: (value: number) => void;
+    }) => (
+      <View>
+        <Text>Reminder Sheet</Text>
+        <Pressable
+          onPress={() => {
+            setEnabled(true);
+            setHour(18);
+            setMinute(45);
+          }}
+        >
+          <Text>Use evening reminder</Text>
+        </Pressable>
+      </View>
+    ),
     DiscardChangesSheet: ({
       isOpen,
       onClose,
@@ -170,6 +253,7 @@ jest.mock("lucide-react-native", () => ({
   CalendarDays: () => null,
   CheckSquare: () => null,
   Bell: () => null,
+  ChevronLeft: () => null,
 }));
 
 jest.mock("react-native-safe-area-context", () => ({
@@ -182,6 +266,11 @@ jest.mock("react-native-safe-area-context", () => ({
 }));
 
 import AddEditHabitScreen from "@/app/add";
+import CompletionRoute from "@/app/add/completion";
+import ReminderRoute from "@/app/add/reminder";
+import RepetitionRoute from "@/app/add/repetition";
+import { useAddHabitDraftStore } from "@/store/addHabitDraftStore";
+import { CompletionType, RepetitionType } from "@/types/habit";
 
 const originalPlatform = Platform.OS;
 
@@ -202,9 +291,11 @@ describe("AddEditHabitScreen exit flow", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockStackScreenOptions = [];
     mockPreventRemoveEnabled = false;
     mockPreventRemoveCallback = undefined;
     mockStoreState.error = null;
+    useAddHabitDraftStore.getState().resetForCreate();
     setPlatform("ios");
     alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     jest.spyOn(Keyboard, "addListener").mockImplementation(() => ({ remove: jest.fn() }) as never);
@@ -309,22 +400,84 @@ describe("AddEditHabitScreen exit flow", () => {
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
-  it("closes an inner setup sheet before allowing route dismissal", () => {
+  it("opens setup panels as native add-flow routes", () => {
     render(<AddEditHabitScreen />);
 
     fireEvent.press(screen.getByText("Habit type"));
-    expect(screen.getByText("Completion Sheet")).toBeOnTheScreen();
-    expect(mockPreventRemoveEnabled).toBe(true);
+    fireEvent.press(screen.getByText("Repeatability"));
+    fireEvent.press(screen.getByText("Reminders"));
 
-    act(() => {
-      mockPreventRemoveCallback?.({
-        data: { action: { type: "GO_BACK" } },
-      });
+    expect(mockRouterPush).toHaveBeenNthCalledWith(1, { pathname: "/add/completion", params: undefined });
+    expect(mockRouterPush).toHaveBeenNthCalledWith(2, { pathname: "/add/repetition", params: undefined });
+    expect(mockRouterPush).toHaveBeenNthCalledWith(3, { pathname: "/add/reminder", params: undefined });
+    expect(screen.queryByTestId("mock-app-bottom-sheet")).toBeNull();
+    expect(screen.getByText("Create Habit")).toBeOnTheScreen();
+  });
+
+  it("does not own native header visibility from the add index screen", () => {
+    render(<AddEditHabitScreen />);
+
+    fireEvent.press(screen.getByText("Habit type"));
+
+    expect(mockStackScreenOptions.some((options) => Object.hasOwn(options, "headerShown"))).toBe(false);
+  });
+
+  it("keeps completion route edits local until Save is pressed", () => {
+    render(<CompletionRoute />);
+
+    fireEvent.press(screen.getByText("Use repetitions"));
+    fireEvent.press(screen.getByText("Set repetition goal"));
+
+    expect(useAddHabitDraftStore.getState().completionType).toBe(CompletionType.SIMPLE);
+    expect(useAddHabitDraftStore.getState().repetitionGoal).toBe(1);
+
+    fireEvent.press(screen.getByText("Save"));
+
+    expect(useAddHabitDraftStore.getState().completionType).toBe(CompletionType.REPETITIONS);
+    expect(useAddHabitDraftStore.getState().repetitionGoal).toBe(3);
+    expect(mockRouterBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps repetition route edits local until Save is pressed", () => {
+    render(<RepetitionRoute />);
+
+    fireEvent.press(screen.getByText("Use weekdays"));
+
+    expect(useAddHabitDraftStore.getState().repetitionType).toBe(RepetitionType.DAILY);
+    expect(useAddHabitDraftStore.getState().selectedDays).toEqual([]);
+
+    fireEvent.press(screen.getByText("Save"));
+
+    expect(useAddHabitDraftStore.getState().repetitionType).toBe(RepetitionType.WEEKDAYS);
+    expect(useAddHabitDraftStore.getState().selectedDays).toEqual([1, 3, 5]);
+    expect(mockRouterBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps reminder route edits local until Save is pressed", async () => {
+    render(<ReminderRoute />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByText("Use evening reminder"));
     });
 
-    expect(screen.queryByText("Completion Sheet")).toBeNull();
-    expect(alertSpy).not.toHaveBeenCalled();
-    expect(mockNavigationDispatch).not.toHaveBeenCalled();
-    expect(mockRouterBack).not.toHaveBeenCalled();
+    expect(useAddHabitDraftStore.getState().reminderEnabled).toBe(false);
+    expect(useAddHabitDraftStore.getState().reminderHour).toBe(9);
+    expect(useAddHabitDraftStore.getState().reminderMinute).toBe(0);
+
+    fireEvent.press(screen.getByText("Save"));
+
+    expect(useAddHabitDraftStore.getState().reminderEnabled).toBe(true);
+    expect(useAddHabitDraftStore.getState().reminderHour).toBe(18);
+    expect(useAddHabitDraftStore.getState().reminderMinute).toBe(45);
+    expect(mockRouterBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not wrap virtualized wheel detail routes in plain ScrollViews", () => {
+    const completion = render(<CompletionRoute />);
+    expect(completion.UNSAFE_queryAllByType(ScrollView)).toHaveLength(0);
+    completion.unmount();
+
+    const repetition = render(<RepetitionRoute />);
+    expect(repetition.UNSAFE_queryAllByType(ScrollView)).toHaveLength(0);
   });
 });

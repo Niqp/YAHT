@@ -61,7 +61,14 @@ function PresetPills<T extends string | number>(props: PresetPillsProps<T>) {
               pressed ? styles.pillPressed : null,
             ]}
           >
-            <AppText variant="small" color={isActive ? colors.chipSelectedText : colors.chipText}>
+            <AppText
+              variant="small"
+              color={isActive ? colors.chipSelectedText : colors.chipText}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.82}
+              style={styles.pillText}
+            >
               {option.label}
             </AppText>
           </Pressable>
@@ -75,20 +82,24 @@ export default memo(PresetPills) as typeof PresetPills;
 
 const styles = StyleSheet.create({
   row: {
+    width: "100%",
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
     gap: Spacing.sm,
   },
   pill: {
-    minWidth: 56,
+    flex: 1,
+    minWidth: 0,
     minHeight: 34,
     borderWidth: 1,
     borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     alignItems: "center",
     justifyContent: "center",
+  },
+  pillText: {
+    width: "100%",
+    textAlign: "center",
   },
   pillPressed: {
     opacity: 0.82,
