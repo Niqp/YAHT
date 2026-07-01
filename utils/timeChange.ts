@@ -1,5 +1,3 @@
-import { getCurrentTimeContext, type TimeChangeEvent } from "@niqp/react-native-android-time-change";
-
 import { useHabitStore } from "@/store/habitStore";
 import { getCurrentDateStamp } from "@/utils/date";
 import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
@@ -7,6 +5,13 @@ import { waitForHabitStoreHydration } from "@/utils/habitStoreHydration";
 import { reconcileReminderNotifications } from "@/utils/reminderScheduler";
 
 export const TIME_CHANGE_HEADLESS_TASK = "YAHTTimeChangeTask";
+
+export type TimeChangeEvent = {
+  action: string;
+  timestamp?: number;
+  timeZone?: string;
+  utcOffsetMinutes?: number;
+};
 
 let lastKnownNativeTimeZone: string | undefined;
 
@@ -20,13 +25,7 @@ const getEffectiveTimeZone = async (event: TimeChangeEvent) => {
     return lastKnownNativeTimeZone;
   }
 
-  try {
-    const currentContext = await getCurrentTimeContext();
-    lastKnownNativeTimeZone = currentContext.timeZone;
-    return currentContext.timeZone;
-  } catch {
-    return undefined;
-  }
+  return undefined;
 };
 
 export const handleTimeChangeEvent = async (event: TimeChangeEvent): Promise<void> => {

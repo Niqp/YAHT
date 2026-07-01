@@ -3,9 +3,6 @@ const path = require("path");
 
 const config = getDefaultConfig(__dirname);
 const defaultResolveRequest = config.resolver.resolveRequest;
-const androidTimeChangePath = path.resolve(__dirname, "../react-native-android-time-change");
-
-config.watchFolders = [...(config.watchFolders ?? []), androidTimeChangePath];
 
 config.resolver.nodeModulesPaths = [path.resolve(__dirname, "node_modules")];
 
