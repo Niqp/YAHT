@@ -83,7 +83,13 @@ export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (s
     const combinedTime = storedTime + elapsedTime;
 
     await get().updateCompletion({ id: habitId, date, value: combinedTime });
-    logEvent("timer.stopped", { habitId, date, timerId: timerToRemove.id, elapsedMs: elapsedTime, value: combinedTime });
+    logEvent("timer.stopped", {
+      habitId,
+      date,
+      timerId: timerToRemove.id,
+      elapsedMs: elapsedTime,
+      value: combinedTime,
+    });
 
     set((currentState) => {
       const nextActiveTimers = { ...currentState.activeTimers };

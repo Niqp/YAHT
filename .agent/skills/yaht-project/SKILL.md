@@ -52,6 +52,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | `constants/`  | Design system tokens: `Colors.ts` (full light/dark palette), `Typography.ts` (9-level type scale), `Spacing.ts` (4pt grid + border radii), `Elevation.ts` (platform shadow presets), `Animation.ts` (spring/timing configs).                                                                                                                                                                                     |
 | `plugins/`    | Expo config plugins and native-source templates, including `with-ios-native-reminder-actions.js` for the generated iOS notification action handler.                                                                                                                                                                                                                                                              |
 | `assets/`     | Images, fonts, splash screen.                                                                                                                                                                                                                                                                                                                                                                                    |
+| `docs/`       | Project documentation, including UI/UX guidance and store submission notes under `docs/store/`.                                                                                                                                                                                                                                                                                                                  |
 
 ---
 
@@ -266,7 +267,7 @@ All visual constants live in `constants/`. Import from there — never hardcode 
 | `npm run prod`                | Release build for Android              |
 | `npm run lint`                | Run ESLint                             |
 | `npm test`                    | Run Jest test suite                    |
-| `npm run tsc`                 | Run TypeScript type checking           |
+| `npm run typecheck`           | Run TypeScript type checking           |
 | `npm run format`              | Format all source files with Prettier  |
 | `npm run format:check`        | Check formatting (non-destructive, CI) |
 

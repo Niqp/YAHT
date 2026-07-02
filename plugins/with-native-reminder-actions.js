@@ -16,15 +16,7 @@ const withAndroidNativeReminderActionFiles = (config) =>
     "android",
     async (config) => {
       const projectRoot = config.modRequest.projectRoot;
-      const targetRoot = path.join(
-        projectRoot,
-        "android",
-        "app",
-        "src",
-        "main",
-        "java",
-        ...ANDROID_PACKAGE.split(".")
-      );
+      const targetRoot = path.join(projectRoot, "android", "app", "src", "main", "java", ...ANDROID_PACKAGE.split("."));
 
       await fs.promises.mkdir(targetRoot, { recursive: true });
       await fs.promises.copyFile(
@@ -87,7 +79,9 @@ const withAndroidNativeReminderActionGradle = (config) =>
 
     const dependencyAnchor = 'implementation("com.facebook.react:react-android")';
     if (!config.modResults.contents.includes(dependencyAnchor)) {
-      throw new Error("Cannot install YAHT Android native reminder actions because the React dependency was not found.");
+      throw new Error(
+        "Cannot install YAHT Android native reminder actions because the React dependency was not found."
+      );
     }
 
     config.modResults.contents = config.modResults.contents.replace(

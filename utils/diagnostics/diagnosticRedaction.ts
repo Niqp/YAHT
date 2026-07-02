@@ -102,11 +102,7 @@ const UNSAFE_KEYS = new Set([
 const isSafeArray = (value: unknown): value is DiagnosticPrimitive[] =>
   Array.isArray(value) &&
   value.every(
-    (item) =>
-      item === null ||
-      typeof item === "string" ||
-      typeof item === "number" ||
-      typeof item === "boolean"
+    (item) => item === null || typeof item === "string" || typeof item === "number" || typeof item === "boolean"
   );
 
 const sanitizeError = (error: Error) => ({

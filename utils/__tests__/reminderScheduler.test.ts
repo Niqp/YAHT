@@ -113,6 +113,49 @@ describe("reconcileReminderNotifications", () => {
     );
   });
 
+  it("cleans stale scheduled reminders without preparing permissions when no reminders are desired", async () => {
+    mockGetAllScheduledNotificationsAsync.mockResolvedValue([
+      { identifier: "reminder-stale", content: { data: {} } },
+      { identifier: "timer-h1", content: { data: {} } },
+    ]);
+    mockGetReminderScheduleLedger.mockReturnValue({
+      version: 1,
+      generatedAtMs: 1,
+      normalNotifications: [
+        {
+          notificationId: "reminder-ledger-only",
+          habitId: "h1",
+          habitTitle: "Stretch",
+          timestamp: dayjs("2026-03-21T09:00:00").valueOf(),
+          reminderDate: "2026-03-21",
+          reminderSeriesId: "series-h1-2026-03-21",
+          attemptNumber: 0,
+          maxAttempts: 1,
+          signature: "stale-signature",
+          scheduledAtMs: 1,
+        },
+      ],
+    });
+
+    await reconcileReminderNotifications({
+      habits: { h1: makeHabit({ reminder: { enabled: false, hour: 9, minute: 0, repeatIfNotCompleted: false } }) },
+      nowMs: dayjs("2026-03-21T08:00:00").valueOf(),
+    });
+
+    expect(mockPrepareReminderNotifications).not.toHaveBeenCalled();
+    expect(mockCancelScheduledNotificationAsync).toHaveBeenCalledWith("reminder-stale");
+    expect(mockCancelScheduledNotificationAsync).toHaveBeenCalledWith("reminder-ledger-only");
+    expect(mockCancelScheduledNotificationAsync).not.toHaveBeenCalledWith("timer-h1");
+    expect(mockSchedulePreparedReminderNotification).not.toHaveBeenCalled();
+    expect(mockScheduleReminderQueueStopNotification).not.toHaveBeenCalled();
+    expect(mockSaveReminderScheduleLedger).toHaveBeenCalledWith({
+      version: 1,
+      generatedAtMs: dayjs("2026-03-21T08:00:00").valueOf(),
+      normalNotifications: [],
+      stopNotification: undefined,
+    });
+  });
+
   it("cancels stale scheduled reminders and reschedules changed desired reminders", async () => {
     const firstTimestamp = dayjs("2026-03-21T09:00:00").valueOf();
     const firstId = `reminder-series-h1-2026-03-21-${firstTimestamp}`;

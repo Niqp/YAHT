@@ -1,0 +1,57 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "version": "1.0.0",
+    "copyright": "2026 Niqp",
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "gambling": false,
+      "unrestrictedWebAccess": false,
+      "kidsAgeBand": null,
+      "ageRatingOverride": "NONE",
+      "koreaAgeRatingOverride": "NONE"
+    },
+    "categories": ["PRODUCTIVITY", "HEALTH_AND_FITNESS"],
+    "info": {
+      "en-US": {
+        "title": "YAHT Habit Tracker",
+        "subtitle": "Daily goals and reminders",
+        "description": "YAHT is a local-first habit tracker for daily, repetition, and timed habits. Build routines, schedule reminders, track streaks and statistics, and keep your data on your device with JSON import and export.",
+        "keywords": ["habit", "tracker", "routine", "reminders", "streaks", "goals", "timer", "productivity"],
+        "releaseNotes": "Initial App Store release.",
+        "promoText": "Track daily, repetition, and timed habits with local-first storage.",
+        "marketingUrl": "https://github.com/Niqp/YAHT",
+        "supportUrl": "https://github.com/Niqp/YAHT/issues",
+        "privacyPolicyUrl": "https://github.com/Niqp/YAHT/blob/master/PRIVACY.md",
+        "privacyChoicesUrl": "https://github.com/Niqp/YAHT/blob/master/PRIVACY.md#data-deletion"
+      },
+      "ru": {
+        "title": "YAHT Habit Tracker",
+        "subtitle": "Цели и напоминания",
+        "description": "YAHT - локальный трекер привычек для ежедневных, повторяемых и таймерных привычек. Создавайте рутины, настраивайте напоминания, отслеживайте серии и статистику, а также сохраняйте данные на устройстве с импортом и экспортом JSON.",
+        "keywords": ["habit", "tracker", "routine", "reminders", "streaks", "goals", "timer", "productivity"],
+        "releaseNotes": "Первый релиз в App Store.",
+        "promoText": "Локальный трекер ежедневных, повторяемых и таймерных привычек.",
+        "marketingUrl": "https://github.com/Niqp/YAHT",
+        "supportUrl": "https://github.com/Niqp/YAHT/issues",
+        "privacyPolicyUrl": "https://github.com/Niqp/YAHT/blob/master/PRIVACY.md",
+        "privacyChoicesUrl": "https://github.com/Niqp/YAHT/blob/master/PRIVACY.md#data-deletion"
+      }
+    },
+    "release": {
+      "automaticRelease": false,
+      "phasedRelease": false
+    }
+  }
+}

@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "YAHT - Yet Another Habit Tracker",
+    "name": "YAHT Habit Tracker",
     "slug": "yaht",
     "version": "1.0.0",
+    "description": "A local-first habit tracker for daily, repetition, and timed habits with reminders, statistics, and data import/export.",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -11,6 +12,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "tech.niqp.yaht",
+      "buildNumber": "1",
       "infoPlist": {
         "UIBackgroundModes": ["fetch", "processing", "remote-notification"],
         "ITSAppUsesNonExemptEncryption": false
@@ -18,7 +20,18 @@
     },
     "android": {
       "package": "com.niqp.yaht",
-      "permissions": ["android.permission.SCHEDULE_EXACT_ALARM", "android.permission.VIBRATE"]
+      "versionCode": 1,
+      "permissions": ["android.permission.SCHEDULE_EXACT_ALARM", "android.permission.VIBRATE"],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "monochromeImage": "./assets/images/icon-mono.png",
+        "backgroundColor": "#023c69"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -37,9 +50,22 @@
           "enableBackgroundRemoteNotifications": true
         }
       ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "dark": {
+            "backgroundColor": "#000000",
+            "image": "./assets/images/splash-icon.png"
+          }
+        }
+      ],
       "expo-router",
       "./plugins/with-native-reminder-actions",
-      "react-native-permissions"
+      "react-native-permissions",
+      "expo-localization"
     ],
     "scheme": "yaht-app",
     "experiments": {

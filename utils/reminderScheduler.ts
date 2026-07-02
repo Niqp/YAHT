@@ -183,12 +183,6 @@ export const reconcileReminderNotifications = async ({
       return;
     }
 
-    const canScheduleReminders = await prepareReminderNotifications({ openAlarmSettings: false });
-    if (!canScheduleReminders) {
-      logEvent("reminder.reconcile.completed", { reason: _reason, canSchedule: false, scheduledCount: 0 });
-      return;
-    }
-
     const queue = buildReminderQueue({ habits, nowMs, timeZone, utcOffsetMinutes });
     const desiredEntries: DesiredReminderEntry[] = queue.normalJobs.map((job) => ({
       ...job,
@@ -245,6 +239,7 @@ export const reconcileReminderNotifications = async ({
 
     const scheduledAtMs = Date.now();
     const nextLedgerEntries: ReminderScheduleLedgerEntry[] = [];
+    const reminderEntriesToSchedule: DesiredReminderEntry[] = [];
 
     for (const desiredEntry of desiredEntries) {
       const ledgerEntry = ledgerEntriesById.get(desiredEntry.notificationId);
@@ -258,16 +253,11 @@ export const reconcileReminderNotifications = async ({
         continue;
       }
 
-      const scheduledId = await schedulePreparedReminderNotification(desiredEntry);
-      if (scheduledId) {
-        nextLedgerEntries.push({
-          ...desiredEntry,
-          scheduledAtMs,
-        });
-      }
+      reminderEntriesToSchedule.push(desiredEntry);
     }
 
     let nextStopLedgerEntry: StopReminderScheduleLedgerEntry | undefined;
+    let stopEntryToSchedule: DesiredStopEntry | undefined;
     if (desiredStopEntry) {
       const isStopAlreadyScheduled =
         scheduledReminderIds.has(desiredStopEntry.notificationId) &&
@@ -277,14 +267,47 @@ export const reconcileReminderNotifications = async ({
       if (isStopAlreadyScheduled && ledger.stopNotification) {
         nextStopLedgerEntry = ledger.stopNotification;
       } else {
+        stopEntryToSchedule = desiredStopEntry;
+      }
+    }
+
+    const needsScheduling = reminderEntriesToSchedule.length > 0 || !!stopEntryToSchedule;
+    if (needsScheduling) {
+      const canScheduleReminders = await prepareReminderNotifications({ openAlarmSettings: false });
+      if (!canScheduleReminders) {
+        saveReminderScheduleLedger({
+          version: REMINDER_SCHEDULE_LEDGER_VERSION,
+          generatedAtMs: nowMs,
+          normalNotifications: nextLedgerEntries,
+          stopNotification: nextStopLedgerEntry,
+        });
+        logEvent("reminder.reconcile.completed", {
+          reason: _reason,
+          canSchedule: false,
+          scheduledCount: nextLedgerEntries.length,
+        });
+        return;
+      }
+
+      for (const desiredEntry of reminderEntriesToSchedule) {
+        const scheduledId = await schedulePreparedReminderNotification(desiredEntry);
+        if (scheduledId) {
+          nextLedgerEntries.push({
+            ...desiredEntry,
+            scheduledAtMs,
+          });
+        }
+      }
+
+      if (stopEntryToSchedule) {
         const scheduledId = await scheduleReminderQueueStopNotification({
-          timestamp: desiredStopEntry.timestamp,
-          overflowTimestamp: desiredStopEntry.overflowTimestamp,
+          timestamp: stopEntryToSchedule.timestamp,
+          overflowTimestamp: stopEntryToSchedule.overflowTimestamp,
         });
 
         if (scheduledId) {
           nextStopLedgerEntry = {
-            ...desiredStopEntry,
+            ...stopEntryToSchedule,
             scheduledAtMs,
           };
         }

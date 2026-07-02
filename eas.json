@@ -21,5 +21,25 @@
       }
     },
     "production": {}
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "track": "production",
+        "releaseStatus": "draft"
+      },
+      "ios": {
+        "sku": "yaht-ios",
+        "language": "en-US",
+        "appName": "YAHT Habit Tracker",
+        "metadataPath": "./store.config.json"
+      }
+    },
+    "internal": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "completed"
+      }
+    }
   }
 }

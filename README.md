@@ -49,7 +49,19 @@ A modern, feature-rich habit tracking app built with React Native and Expo.
 - `npm run web` - Run in web browser
 - `npm run cleanPrebuild` - Clean the prebuild files
 - `npm run cleanRun` - Clean and run on Android
-- `npm run prod` - Build a production release for Android
+- `npm run build:android:debug` - Prebuild and assemble a debug Android APK
+- `npm run build:android:prod` - Prebuild and assemble a release Android APK
+- `npm run prod` - Run the Android release variant on a device
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run lint` - Run ESLint
+- `npm test` - Run Jest
+- `npm run format:check` - Check Prettier formatting
+
+## Release Preparation
+
+- `PRIVACY.md` contains the app privacy policy for store listings.
+- `store.config.json` contains Apple App Store metadata for EAS Metadata.
+- `docs/store/apple-app-store.md` and `docs/store/google-play.md` contain platform-specific submission notes, privacy declarations, and screenshot checklists.
 
 ## Development
 
