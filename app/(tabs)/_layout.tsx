@@ -3,7 +3,6 @@ import { Tabs } from "expo-router";
 import { Home, BarChart2, Settings } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { Platform, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Spacing } from "@/constants/Spacing";
 import { Typography } from "@/constants/Typography";
@@ -28,16 +27,6 @@ const TAB_SCREENS = [
 export default function TabsLayout() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
-
-  const baseSceneStyle = useMemo(
-    () => ({
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-    }),
-    [insets.left, insets.right, insets.top]
-  );
 
   const tabBarPlatformStyle = useMemo(
     () =>
@@ -84,7 +73,6 @@ export default function TabsLayout() {
             title: t(`tabs.${tab.name}`),
             tabBarIcon: ({ color, size }) => tab.renderIcon(color, size),
             sceneStyle: {
-              ...baseSceneStyle,
               backgroundColor: tab.name === "today" ? colors.gradientHeaderStart : colors.bgApp,
             },
           }}

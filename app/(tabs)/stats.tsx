@@ -14,10 +14,12 @@ import { router } from "expo-router";
 import { BarChart2, CheckCircle } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function StatsScreen() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [isHabitSheetOpen, setIsHabitSheetOpen] = useState(false);
   const habitSheetRef = useRef<BottomSheet>(null);
   const habitSheetSnapPoints = useMemo(() => ["68%"], []);
@@ -42,8 +44,16 @@ export default function StatsScreen() {
 
   if (!isHydrated) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.bgApp }]}>
-        <ActivityIndicator size="large" color={colors.accent} />
+      <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
+        <View
+          style={[
+            styles.safeAreaContent,
+            styles.loadingContainer,
+            { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right },
+          ]}
+        >
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
       </View>
     );
   }
@@ -51,7 +61,13 @@ export default function StatsScreen() {
   if (habitArray.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
-        <View style={styles.emptyContainer}>
+        <View
+          style={[
+            styles.safeAreaContent,
+            styles.emptyContainer,
+            { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right },
+          ]}
+        >
           <View
             style={[styles.emptyIconContainer, { backgroundColor: colors.bgInset, borderColor: colors.borderDefault }]}
           >
@@ -77,45 +93,52 @@ export default function StatsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-        stickyHeaderIndices={selectedHabit ? [3] : undefined}
+      <View
+        style={[
+          styles.safeAreaContent,
+          { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right },
+        ]}
       >
-        <View style={styles.header}>
-          <AppText variant="heading">{t("stats.screenTitle")}</AppText>
-          <AppText variant="body" color={colors.textSecondary}>
-            {t("stats.activeHabits", { count: overallStats.activeHabits })}
-          </AppText>
-        </View>
-
-        <View style={styles.section}>
-          <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
-            {t("stats.overview")}
-          </AppText>
-          <OverallStats stats={overallStats} />
-        </View>
-
-        {selectedHabit ? (
-          <View style={styles.habitIntro}>
-            <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
-              {t("stats.habit")}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+          stickyHeaderIndices={selectedHabit ? [3] : undefined}
+        >
+          <View style={styles.header}>
+            <AppText variant="heading">{t("stats.screenTitle")}</AppText>
+            <AppText variant="body" color={colors.textSecondary}>
+              {t("stats.activeHabits", { count: overallStats.activeHabits })}
             </AppText>
           </View>
-        ) : null}
 
-        {selectedHabit ? (
-          <View style={[styles.stickySelector, { backgroundColor: colors.bgApp }]}>
-            <HabitSelector selectedHabit={selectedHabit} onPress={handleOpenHabitSheet} />
+          <View style={styles.section}>
+            <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
+              {t("stats.overview")}
+            </AppText>
+            <OverallStats stats={overallStats} />
           </View>
-        ) : null}
 
-        {selectedHabit ? (
-          <View style={styles.detailSection}>
-            <HabitDetailView habit={selectedHabit} chartData={chartData} habitStats={habitStats} />
-          </View>
-        ) : null}
-      </ScrollView>
+          {selectedHabit ? (
+            <View style={styles.habitIntro}>
+              <AppText variant="label" color={colors.textSecondary} style={styles.sectionLabel}>
+                {t("stats.habit")}
+              </AppText>
+            </View>
+          ) : null}
+
+          {selectedHabit ? (
+            <View style={[styles.stickySelector, { backgroundColor: colors.bgApp }]}>
+              <HabitSelector selectedHabit={selectedHabit} onPress={handleOpenHabitSheet} />
+            </View>
+          ) : null}
+
+          {selectedHabit ? (
+            <View style={styles.detailSection}>
+              <HabitDetailView habit={selectedHabit} chartData={chartData} habitStats={habitStats} />
+            </View>
+          ) : null}
+        </ScrollView>
+      </View>
 
       <AppBottomSheet
         ref={habitSheetRef}
@@ -162,6 +185,9 @@ export default function StatsScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeAreaContent: {
     flex: 1,
   },
   content: {

@@ -3,6 +3,7 @@ import { render } from "@testing-library/react-native";
 import { Platform, StyleSheet } from "react-native";
 
 let mockScreenOptions: unknown;
+const mockSafeAreaInsets = { bottom: 0, left: 0, right: 0, top: 0 };
 
 jest.mock("expo-router", () => {
   const mockReact = jest.requireActual<typeof import("react")>("react");
@@ -23,7 +24,7 @@ jest.mock("lucide-react-native", () => ({
 }));
 
 jest.mock("react-native-safe-area-context", () => ({
-  useSafeAreaInsets: () => ({ bottom: 0, left: 0, right: 0, top: 0 }),
+  useSafeAreaInsets: () => mockSafeAreaInsets,
 }));
 
 jest.mock("@/hooks/useTheme", () => ({
@@ -47,6 +48,7 @@ jest.mock("@/i18n", () => ({
 }));
 
 import TabsLayout from "@/app/(tabs)/_layout";
+import { Tabs } from "expo-router";
 
 describe("TabsLayout tab bar style", () => {
   const originalOS = Platform.OS;
@@ -54,6 +56,8 @@ describe("TabsLayout tab bar style", () => {
   afterEach(() => {
     (Platform as { OS: typeof Platform.OS }).OS = originalOS;
     mockScreenOptions = undefined;
+    Object.assign(mockSafeAreaInsets, { bottom: 0, left: 0, right: 0, top: 0 });
+    (Tabs.Screen as jest.Mock).mockClear();
   });
 
   it("uses a native iOS top separator instead of a negative shadow", () => {
@@ -73,5 +77,18 @@ describe("TabsLayout tab bar style", () => {
     expect((mockScreenOptions as { tabBarStyle: Record<string, unknown> }).tabBarStyle).not.toHaveProperty(
       "shadowColor"
     );
+  });
+
+  it("keeps tab scene styles free of safe-area padding so sheet backdrops cover the full window", () => {
+    Object.assign(mockSafeAreaInsets, { left: 4, right: 6, top: 48 });
+
+    render(<TabsLayout />);
+
+    const sceneStyles = (Tabs.Screen as jest.Mock).mock.calls.map(([props]) => props.options.sceneStyle);
+    expect(sceneStyles).toEqual([
+      { backgroundColor: "#f8f8f8" },
+      { backgroundColor: "#ffffff" },
+      { backgroundColor: "#ffffff" },
+    ]);
   });
 });

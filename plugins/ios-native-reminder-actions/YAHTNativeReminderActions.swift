@@ -128,6 +128,15 @@ final class YAHTNativeReminderActions: NSObject, UNUserNotificationCenterDelegat
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
+    if notification.request.content.categoryIdentifier == Constants.categoryId {
+      if #available(iOS 14.0, *) {
+        completionHandler([.banner, .list, .sound])
+      } else {
+        completionHandler([.alert, .sound])
+      }
+      return
+    }
+
     if let downstreamDelegate,
       downstreamDelegate.responds(
         to: #selector(

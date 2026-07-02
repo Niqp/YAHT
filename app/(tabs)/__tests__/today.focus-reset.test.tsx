@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 const mockSetSelectedDate = jest.fn();
 
@@ -34,12 +35,17 @@ jest.mock("@/hooks/useTheme", () => ({
     colors: {
       bgApp: "#000",
       accent: "#fff",
+      gradientHeaderStart: "#21160d",
     },
   }),
 }));
 
 jest.mock("expo-router", () => ({
   router: { push: jest.fn() },
+}));
+
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ bottom: 0, left: 0, right: 0, top: 0 }),
 }));
 
 jest.mock("@/utils/date", () => {
@@ -64,5 +70,23 @@ describe("TodayScreen date header", () => {
 
     expect(screen.getByTestId("date-slider")).toBeTruthy();
     expect(mockSetSelectedDate).not.toHaveBeenCalled();
+  });
+
+  it("uses the Today header color behind the top safe area", () => {
+    const { toJSON } = render(<TodayScreen />);
+    const root = toJSON();
+    const rootStyle = StyleSheet.flatten(root?.props.style) as { backgroundColor?: string };
+
+    expect(rootStyle.backgroundColor).toBe("#21160d");
+  });
+
+  it("keeps the content area on the app background below the date header", () => {
+    const { toJSON } = render(<TodayScreen />);
+    const root = toJSON();
+    const safeAreaContent = root?.children?.[0];
+    const body = safeAreaContent?.children?.[1];
+    const bodyStyle = StyleSheet.flatten(body?.props.style) as { backgroundColor?: string };
+
+    expect(bodyStyle.backgroundColor).toBe("#000");
   });
 });

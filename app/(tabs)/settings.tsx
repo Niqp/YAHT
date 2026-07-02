@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import Constants from "expo-constants";
 import { Bug, ChevronRight, Code2, Download, Trash2, Upload } from "lucide-react-native";
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppSegmentedControl, AppText } from "@/components/ui";
 import type { ColorThemeName } from "@/constants/Colors";
@@ -19,6 +20,7 @@ const DEBUG_ACCESS_TAP_COUNT = 7;
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const {
     colors,
     colorTheme,
@@ -125,7 +127,17 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgApp }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.bgApp,
+          paddingTop: insets.top,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
+      ]}
+    >
       <ScrollView
         key={themeRenderKey}
         showsVerticalScrollIndicator={false}
