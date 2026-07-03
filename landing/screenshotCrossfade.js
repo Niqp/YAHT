@@ -34,6 +34,9 @@
     let requestId = 0;
 
     activeImage.classList.add("screenshot-layer", "is-active");
+    requestFrame(() => {
+      parent.classList.add("is-crossfade-ready");
+    });
 
     const removeImage = (image) => {
       if (!image) {

@@ -15,9 +15,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const THEME_KEY = "yaht-landing-theme";
   const SCHEME_KEY = "yaht-landing-scheme";
 
+  const getStoredPreference = (key, fallback) => {
+    try {
+      return localStorage.getItem(key) || fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   // Retrieve active choices or fall back to Sepia Dark as default
-  let currentTheme = localStorage.getItem(THEME_KEY) || "sepia";
-  let currentScheme = localStorage.getItem(SCHEME_KEY) || "dark";
+  let currentTheme = window.YAHT_LANDING_BOOT?.theme || getStoredPreference(THEME_KEY, "sepia");
+  let currentScheme = window.YAHT_LANDING_BOOT?.scheme || getStoredPreference(SCHEME_KEY, "dark");
   let currentGalleryImage = "today";
 
   const SCREENSHOT_DIR = "assets/images/screenshots";
@@ -125,7 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Set classes on root node
-  function applyThemeAndScheme(theme, scheme) {
+  function applyThemeAndScheme(theme, scheme, options = {}) {
+    const { fadeScreenshots = true } = options;
+
     // Set Theme class (e.g. theme-sepia scheme-dark)
     htmlElement.className = `theme-${theme} scheme-${scheme}`;
 
@@ -133,20 +143,26 @@ document.addEventListener("DOMContentLoaded", () => {
     themeBtns.forEach((btn) => {
       if (btn.getAttribute("data-theme") === theme) {
         btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
       } else {
         btn.classList.remove("active");
+        btn.setAttribute("aria-pressed", "false");
       }
     });
 
     // Store selected preferences
-    localStorage.setItem(THEME_KEY, theme);
-    localStorage.setItem(SCHEME_KEY, scheme);
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+      localStorage.setItem(SCHEME_KEY, scheme);
+    } catch {
+      // Preference persistence is optional; visual state should still update.
+    }
 
-    syncScreenshots(true);
+    syncScreenshots(fadeScreenshots);
   }
 
   // Initialize switcher state
-  applyThemeAndScheme(currentTheme, currentScheme);
+  applyThemeAndScheme(currentTheme, currentScheme, { fadeScreenshots: false });
 
   // Event listener for theme buttons
   themeBtns.forEach((btn) => {
@@ -173,8 +189,12 @@ document.addEventListener("DOMContentLoaded", () => {
       currentGalleryImage = imgKey;
 
       // 1. Update active tab class
-      tabBtns.forEach((t) => t.classList.remove("active"));
+      tabBtns.forEach((t) => {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+      });
       btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
 
       // 2. Crossfade to the selected screenshot after the image has loaded
       if (galleryImage && getScreenshotPath(imgKey)) {
@@ -189,12 +209,15 @@ document.addEventListener("DOMContentLoaded", () => {
         // Animate old text exiting to the left
         currentActiveCard.classList.remove("active");
         currentActiveCard.classList.add("slide-exit");
+        currentActiveCard.hidden = false;
 
         setTimeout(() => {
           currentActiveCard.classList.remove("slide-exit");
+          currentActiveCard.hidden = true;
 
           // Animate new text entering from the right
           if (targetCard) {
+            targetCard.hidden = false;
             targetCard.classList.add("active", "slide-enter");
             setTimeout(() => {
               targetCard.classList.remove("slide-enter");
@@ -202,6 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }, 300);
       } else if (!currentActiveCard && targetCard) {
+        targetCard.hidden = false;
         targetCard.classList.add("active");
       }
     });

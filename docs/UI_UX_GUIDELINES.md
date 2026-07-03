@@ -45,14 +45,14 @@ Rules:
 
 Source of truth for all tokens: `constants/Colors.ts`. The table below documents the primary anchor tokens used to define each theme.
 
-| Theme + mode  | `background`          | `surface`             | `cardBackground`      | `primary`             | `accent`              | `text`                | `textSecondary`       | `border`              | `tabBackground`       |
-| ------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
-| `sepia.light` | `#FAF7F2`             | `#c7a97dff`           | `#FFFFFF`             | `#8B6F47`             | `#C4813D`             | `#2C2418`             | `#6B5D4F`             | `#E2D9CC`             | `#FFFFFF`             |
-| `sepia.dark`  | `#0f0d0bff`           | `#1f1c16ff`           | `#2C2620`             | `#C4A882`             | `#D4944A`             | `#EDE5D8`             | `#A89C8C`             | `#3D3428`             | `#231F1A`             |
-| `clear.light` | `#F6F8FB`             | `#EAF0F7`             | `#FFFFFF`             | `#3F74B5`             | `#5D90D2`             | `#18212C`             | `#4F6278`             | `#D5DFEB`             | `#FFFFFF`             |
-| `clear.dark`  | `#0F1620`             | `#162130`             | `#1D2A3A`             | `#7FB1E8`             | `#95C2F5`             | `#E7EEF8`             | `#B2C0D2`             | `#2D415A`             | `#162130`             |
-| `oled.light`  | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` |
-| `oled.dark`   | `#000000`             | `#050B14`             | `#0B1320`             | `#7FB1E8`             | `#95C2F5`             | `#EDF3FB`             | `#B4C2D5`             | `#1A2B40`             | `#000000`             |
+| Theme + mode  | `background`          | `surface`             | `cardBackground`      | `primary`             | `accent`              | `text`                | `textSecondary`       | `border`                 | `tabBackground`       |
+| ------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | ------------------------ | --------------------- |
+| `sepia.light` | `#FBF7F1`             | `#F6EADC`             | `#FFFDF9`             | `#8D6140`             | `#B98D62`             | `#2F1F1A`             | `#715F54`             | `rgba(47,31,26,0.095)`   | `#FFFDF9`             |
+| `sepia.dark`  | `#16110D`             | `#231A12`             | `#241B14`             | `#D0AD73`             | `#BC925A`             | `#F5E8D6`             | `#D1C0A9`             | `rgba(245,232,214,0.13)` | `#17120C`             |
+| `clear.light` | `#F6F8FB`             | `#EAF0F7`             | `#FFFFFF`             | `#3F74B5`             | `#5D90D2`             | `#18212C`             | `#4F6278`             | `#D5DFEB`                | `#FFFFFF`             |
+| `clear.dark`  | `#0F1620`             | `#162130`             | `#1D2A3A`             | `#7FB1E8`             | `#95C2F5`             | `#E7EEF8`             | `#B2C0D2`             | `#2D415A`                | `#162130`             |
+| `oled.light`  | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light` | Same as `clear.light`    | Same as `clear.light` |
+| `oled.dark`   | `#000000`             | `#050B14`             | `#0B1320`             | `#7FB1E8`             | `#95C2F5`             | `#EDF3FB`             | `#B4C2D5`             | `#1A2B40`                | `#000000`             |
 
 ### 2.3 Color Rules
 

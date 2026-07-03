@@ -47,42 +47,42 @@ html.theme-clear.scheme-dark {
 
 /* 2. SEPIA THEME */
 html.theme-sepia.scheme-light {
-  --bg-app: #faf7f2;
-  --bg-chrome: #f3ede4;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #fbf6ef;
-  --bg-inset: #f5f0e8;
-  --text-primary: #2c2418;
-  --text-secondary: #6b5d4f;
-  --text-tertiary: #9c8e7e;
-  --accent: #8b6f47;
-  --accent-muted: #a8916e;
-  --accent-soft-bg: rgba(139, 111, 71, 0.12);
-  --border-default: rgba(44, 36, 24, 0.1);
-  --border-strong: rgba(44, 36, 24, 0.22);
-  --gradient-header-start: #e0b67c;
-  --gradient-header-mid: #f0d8b0;
-  --gradient-header-end: #faf7f2;
-  --shadow: rgba(44, 36, 24, 0.05);
+  --bg-app: #fbf7f1;
+  --bg-chrome: #f6eadc;
+  --bg-surface: #fffdf9;
+  --bg-surface-elevated: #fff9f2;
+  --bg-inset: #f6eadc;
+  --text-primary: #2f1f1a;
+  --text-secondary: #715f54;
+  --text-tertiary: #9b8779;
+  --accent: #8d6140;
+  --accent-muted: #b98d62;
+  --accent-soft-bg: rgba(185, 141, 98, 0.12);
+  --border-default: rgba(47, 31, 26, 0.095);
+  --border-strong: rgba(47, 31, 26, 0.2);
+  --gradient-header-start: #e8d0b5;
+  --gradient-header-mid: #f5e8d9;
+  --gradient-header-end: #fbf7f1;
+  --shadow: rgba(47, 31, 26, 0.045);
 }
 
 html.theme-sepia.scheme-dark {
-  --bg-app: #130f0a;
-  --bg-chrome: #2d2114;
-  --bg-surface: #2a2117;
-  --bg-surface-elevated: #352819;
-  --bg-inset: #423322;
-  --text-primary: #f4e8d6;
-  --text-secondary: #d0c0aa;
-  --text-tertiary: #a49178;
-  --accent: #d6b879;
-  --accent-muted: #b99a62;
-  --accent-soft-bg: rgba(214, 184, 121, 0.15);
-  --border-default: rgba(244, 232, 214, 0.16);
-  --border-strong: rgba(244, 232, 214, 0.28);
-  --gradient-header-start: #2b1f13;
-  --gradient-header-mid: #261b10;
-  --gradient-header-end: #130f0a;
+  --bg-app: #16110d;
+  --bg-chrome: #231a12;
+  --bg-surface: #241b14;
+  --bg-surface-elevated: #2e241b;
+  --bg-inset: #3a2e22;
+  --text-primary: #f5e8d6;
+  --text-secondary: #d1c0a9;
+  --text-tertiary: #a9947b;
+  --accent: #d0ad73;
+  --accent-muted: #bc925a;
+  --accent-soft-bg: rgba(188, 146, 90, 0.15);
+  --border-default: rgba(245, 232, 214, 0.13);
+  --border-strong: rgba(245, 232, 214, 0.24);
+  --gradient-header-start: #231a12;
+  --gradient-header-mid: #1c150f;
+  --gradient-header-end: #16110d;
   --shadow: rgba(0, 0, 0, 0.3);
 }
 
@@ -126,6 +126,24 @@ html.theme-oled.scheme-dark {
   --gradient-header-mid: #050d18;
   --gradient-header-end: #000000;
   --shadow: rgba(0, 0, 0, 0.45);
+}
+
+html {
+  --phone-frame-gap: #09090b;
+  --phone-casing: #27272a;
+  --phone-hardware-highlight: rgba(255, 255, 255, 0.15);
+  --phone-hardware-shadow: rgba(0, 0, 0, 0.4);
+  --phone-frame-ring: rgba(255, 255, 255, 0.05);
+  --phone-drop-shadow: rgba(0, 0, 0, 0.6);
+}
+
+html.scheme-light {
+  --phone-frame-gap: #252a30;
+  --phone-casing: #4f5863;
+  --phone-hardware-highlight: rgba(255, 255, 255, 0.34);
+  --phone-hardware-shadow: rgba(12, 18, 26, 0.32);
+  --phone-frame-ring: rgba(255, 255, 255, 0.24);
+  --phone-drop-shadow: rgba(16, 24, 34, 0.26);
 }
 
 /* Global Reset */
@@ -177,7 +195,7 @@ h6 {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background-color: rgba(var(--bg-app), 0.8);
+  background-color: color-mix(in srgb, var(--bg-app) 82%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-default);
@@ -240,6 +258,7 @@ h6 {
   padding: 5px 12px;
   border-radius: 16px;
   cursor: pointer;
+  width: 64px;
   transition: all 0.2s ease;
 }
 
@@ -247,7 +266,10 @@ h6 {
   color: var(--text-primary);
 }
 
-.theme-btn.active {
+.theme-btn.active,
+html.theme-sepia .theme-btn[data-theme="sepia"],
+html.theme-clear .theme-btn[data-theme="clear"],
+html.theme-oled .theme-btn[data-theme="oled"] {
   background-color: var(--bg-surface);
   color: var(--accent);
   box-shadow: 0 2px 4px var(--shadow);
@@ -354,7 +376,7 @@ html.scheme-light .moon-icon {
 .accent-badge {
   background-color: var(--accent-soft-bg);
   color: var(--accent);
-  border: 1px solid rgba(var(--accent), 0.3);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .info-badge {
@@ -433,12 +455,12 @@ html.scheme-light .moon-icon {
 
 .phone-mockup {
   width: 275px;
-  background-color: #09090b; /* Inner frame gap */
-  border: 10px solid #27272a; /* Premium space-gray titanium casing */
+  background-color: var(--phone-frame-gap); /* Inner frame gap */
+  border: 10px solid var(--phone-casing); /* Premium hardware casing */
   border-radius: 40px;
   box-shadow:
-    0 20px 45px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 20px 45px -10px var(--phone-drop-shadow),
+    0 0 0 1px var(--phone-frame-ring);
   position: relative;
   padding: 3px; /* Offset for screen bezel */
   transform: rotate(1deg) translateY(-5px);
@@ -452,9 +474,9 @@ html.scheme-light .moon-icon {
 /* Physical Hardware Buttons */
 .phone-button {
   position: absolute;
-  background-color: #27272a;
-  border-left: 1px solid rgba(255, 255, 255, 0.15);
-  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  background-color: var(--phone-casing);
+  border-left: 1px solid var(--phone-hardware-highlight);
+  border-right: 1px solid var(--phone-hardware-shadow);
   border-radius: 2px 0 0 2px;
   z-index: -1;
 }
@@ -479,8 +501,8 @@ html.scheme-light .moon-icon {
   right: -13px;
   top: 110px;
   border-radius: 0 2px 2px 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
-  border-left: 1px solid rgba(0, 0, 0, 0.4);
+  border-right: 1px solid var(--phone-hardware-highlight);
+  border-left: 1px solid var(--phone-hardware-shadow);
 }
 
 /* Circular Hole-Punch Android Camera */
@@ -499,7 +521,7 @@ html.scheme-light .moon-icon {
 /* Screen Container (Black screen bezel + Bottom Navigation offset) */
 .phone-screen {
   width: 100%;
-  aspect-ratio: 1440 / 3037; /* Matches exact dimensions of app screenshots */
+  aspect-ratio: 758 / 1600; /* Matches exact dimensions of landing screenshots */
   background-color: #000000; /* Dark background to prevent flashes */
   overflow: hidden;
   border: 5px solid #000000; /* Inside black screen bezel */
@@ -522,7 +544,6 @@ html.scheme-light .moon-icon {
   height: 100%;
   object-fit: fill; /* Use fill to avoid cropping the bottom menu text */
   display: block;
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .screenshot-layer {
@@ -531,6 +552,10 @@ html.scheme-light .moon-icon {
   opacity: 0;
   pointer-events: none;
   will-change: opacity;
+}
+
+.screenshot-wrapper.is-crossfade-ready .screenshot-layer {
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .screenshot-layer.is-active {
@@ -913,6 +938,11 @@ html.scheme-light .moon-icon {
   align-items: center;
 }
 
+.store-badge-btn-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .badge-img {
   height: 52px; /* Bigger button sizes */
   width: auto;
@@ -923,7 +953,12 @@ html.scheme-light .moon-icon {
   box-shadow: 0 2px 8px var(--shadow);
 }
 
-.badge-img:hover {
+.store-badge-btn-disabled .badge-img {
+  filter: grayscale(1);
+  opacity: 0.8;
+}
+
+.store-badge-btn:not(.store-badge-btn-disabled) .badge-img:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px var(--shadow);
 }
@@ -1130,5 +1165,28 @@ html.scheme-light .moon-icon {
 
   .theme-switcher {
     display: none; /* Hide theme switcher in header on mobile */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .phone-mockup,
+  .phone-mockup:hover,
+  .gallery-display-wrapper .phone-mockup,
+  .gallery-display-wrapper .phone-mockup:hover,
+  .primary-btn:hover,
+  .secondary-btn:hover,
+  .feature-card:hover,
+  .nav-download-btn:hover,
+  .store-badge-btn:not(.store-badge-btn-disabled) .badge-img:hover {
+    transform: none;
   }
 }

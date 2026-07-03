@@ -39,7 +39,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "monochromeImage": "./assets/images/icon-mono.png",
-        "backgroundColor": "#023c69"
+        "backgroundImage": "./assets/images/background-image.png",
+        "backgroundColor": "#f68a33"
       }
     },
     "web": {
@@ -65,12 +66,12 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#ffffff",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "backgroundColor": "#FBF7F1",
+          "image": "./assets/images/adaptive-icon.png",
+          "imageWidth": 260,
           "dark": {
-            "backgroundColor": "#000000",
-            "image": "./assets/images/splash-icon.png"
+            "backgroundColor": "#16110D",
+            "image": "./assets/images/adaptive-icon.png"
           }
         }
       ],

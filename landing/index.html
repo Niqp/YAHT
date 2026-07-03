@@ -1,385 +1,468 @@
 <!doctype html>
 <html lang="en" class="theme-sepia scheme-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YAHT — Yet Another Habit Tracker | Free & Open Source Habit App</title>
+    <meta
+      name="description"
+      content="A free, open-source, local-first habit tracker for daily, repetition, and timed habits. Licensed under GNU GPL v3. No accounts, no ads, no trackers."
+    />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YAHT — Yet Another Habit Tracker | Free & Open Source Habit App</title>
-  <meta name="description"
-    content="A free, open-source, local-first habit tracker for daily, repetition, and timed habits. Licensed under GNU GPL v3. No accounts, no ads, no trackers." />
+    <script>
+      (function landingThemeBoot() {
+        var allowedThemes = { sepia: true, clear: true, oled: true };
+        var allowedSchemes = { dark: true, light: true };
+        var theme = "sepia";
+        var scheme = "dark";
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-    rel="stylesheet" />
+        try {
+          theme = localStorage.getItem("yaht-landing-theme") || theme;
+          scheme = localStorage.getItem("yaht-landing-scheme") || scheme;
+        } catch {
+          theme = "sepia";
+          scheme = "dark";
+        }
 
-  <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css" />
-</head>
+        if (!allowedThemes[theme]) {
+          theme = "sepia";
+        }
 
-<body>
-  <!-- Header Navigation -->
-  <header class="app-header">
-    <div class="header-container">
-      <div class="logo-area">
-        <img class="app-logo" src="assets/images/yaht_icon.svg" alt="YAHT Logo" />
-        <span class="logo-text">YAHT</span>
-      </div>
+        if (!allowedSchemes[scheme]) {
+          scheme = "dark";
+        }
 
-      <nav class="nav-controls">
-        <!-- Theme Switcher -->
-        <div class="theme-switcher">
-          <button class="theme-btn active" data-theme="sepia" title="Sepia Theme">Sepia</button>
-          <button class="theme-btn" data-theme="clear" title="Clear Theme">Clear</button>
-          <button class="theme-btn" data-theme="oled" title="OLED Theme">OLED</button>
+        document.documentElement.className = "theme-" + theme + " scheme-" + scheme;
+        window.YAHT_LANDING_BOOT = { theme: theme, scheme: scheme };
+      })();
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <!-- Header Navigation -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="logo-area">
+          <img class="app-logo" src="assets/images/yaht_icon.svg" alt="YAHT Logo" />
+          <span class="logo-text">YAHT</span>
         </div>
 
-        <div class="divider"></div>
+        <nav class="nav-controls">
+          <!-- Theme Switcher -->
+          <div class="theme-switcher">
+            <button class="theme-btn" data-theme="sepia" title="Sepia Theme" aria-pressed="false">Sepia</button>
+            <button class="theme-btn" data-theme="clear" title="Clear Theme" aria-pressed="false">Clear</button>
+            <button class="theme-btn" data-theme="oled" title="OLED Theme" aria-pressed="false">OLED</button>
+          </div>
 
-        <!-- Scheme Switcher (Light/Dark) -->
-        <button id="scheme-toggle" class="scheme-toggle" aria-label="Toggle Light/Dark Mode">
-          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path
-              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
-            </path>
-          </svg>
-          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-          </svg>
-        </button>
+          <div class="divider"></div>
 
-        <a href="#download" class="nav-download-btn">Get App</a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-container">
-      <div class="hero-content">
-        <div class="badge-row">
-          <span class="pill-badge accent-badge">v1.0.0</span>
-          <span class="pill-badge info-badge">GNU GPL v3</span>
-        </div>
-        <h1 class="hero-title">Track habits.<br /><span class="highlight-text">Own your data.</span></h1>
-        <p class="hero-description">
-          YAHT (Yet Another Habit Tracker) is a free, open-source habit tracker. It runs entirely on your phone. There
-          are no accounts, no ads, no trackers, and no servers.
-        </p>
-
-        <!-- Action Buttons -->
-        <div class="hero-actions">
-          <a href="#download" class="action-btn primary-btn">
-            <span>Download Now</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-              <path d="M12 5v14M5 12l7 7 7-7" />
-            </svg>
-          </a>
-          <a href="https://github.com/Niqp/YAHT" target="_blank" rel="noopener" class="action-btn secondary-btn">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <!-- Scheme Switcher (Light/Dark) -->
+          <button id="scheme-toggle" class="scheme-toggle" aria-label="Toggle Light/Dark Mode">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="4"></circle>
               <path
-                d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+              ></path>
             </svg>
-            <span>GitHub Source</span>
-          </a>
-        </div>
-      </div>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+            </svg>
+          </button>
 
-      <!-- Hero Phone Mockup -->
-      <div class="hero-mockup-wrapper">
-        <div class="phone-mockup">
-          <div class="phone-button volume-up"></div>
-          <div class="phone-button volume-down"></div>
-          <div class="phone-button power"></div>
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="screenshot-wrapper">
-              <img id="hero-image" src="assets/images/screenshots/YAHT_dark_sepia_today.jpg"
-                alt="YAHT App Today checklist screen" class="mockup-img" width="1440" height="3037" loading="eager"
-                fetchpriority="high" decoding="async" />
+          <a href="#download" class="nav-download-btn">Get App</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-container">
+        <div class="hero-content">
+          <div class="badge-row">
+            <span class="pill-badge accent-badge">v1.0.0</span>
+            <span class="pill-badge info-badge">GNU GPL v3</span>
+          </div>
+          <h1 class="hero-title">Track habits.<br /><span class="highlight-text">Own your data.</span></h1>
+          <p class="hero-description">
+            YAHT (Yet Another Habit Tracker) is a free, open-source habit tracker. It runs entirely on your phone. There
+            are no accounts, no ads, no trackers, and no servers.
+          </p>
+
+          <!-- Action Buttons -->
+          <div class="hero-actions">
+            <a href="#download" class="action-btn primary-btn">
+              <span>Download Now</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M12 5v14M5 12l7 7 7-7" />
+              </svg>
+            </a>
+            <a href="https://github.com/Niqp/YAHT" target="_blank" rel="noopener" class="action-btn secondary-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <path
+                  d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+                />
+              </svg>
+              <span>GitHub Source</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Hero Phone Mockup -->
+        <div class="hero-mockup-wrapper">
+          <div class="phone-mockup">
+            <div class="phone-button volume-up"></div>
+            <div class="phone-button volume-down"></div>
+            <div class="phone-button power"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="screenshot-wrapper">
+                <img
+                  id="hero-image"
+                  src="assets/images/screenshots/YAHT_dark_sepia_today.jpg"
+                  alt="YAHT App Today checklist screen"
+                  class="mockup-img"
+                  width="758"
+                  height="1600"
+                  loading="eager"
+                  fetchpriority="high"
+                  decoding="async"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- GPL & FOSS Section -->
-  <section class="spotlight-section">
-    <div class="section-container">
-      <div class="spotlight-card">
-        <div class="spotlight-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-        </div>
-        <div class="spotlight-content">
-          <h2 class="spotlight-title">Free, open-source, and private</h2>
-          <p class="spotlight-text">
-            YAHT is licensed under the <strong>GNU General Public License v3</strong>. We do not collect any data. All
-            database records stay on your phone, stored locally with MMKV.
-          </p>
-          <div class="badge-group">
-            <span class="spotlight-pill">No Ads</span>
-            <span class="spotlight-pill">No Trackers</span>
-            <span class="spotlight-pill">Works Offline</span>
-            <span class="spotlight-pill">Local Storage</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- App Features Grid -->
-  <section id="features" class="features-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">Simple but powerful</h2>
-        <p class="section-subtitle">YAHT has no clutter. Focus on your routines.</p>
-      </div>
-
-      <div class="features-grid">
-        <!-- Feature 1 -->
-        <div class="feature-card">
-          <div class="feature-icon-box">
+    <!-- GPL & FOSS Section -->
+    <section class="spotlight-section">
+      <div class="section-container">
+        <div class="spotlight-card">
+          <div class="spotlight-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <path d="m9 11 3 3 5-5"></path>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
           </div>
-          <h3 class="feature-card-title">Three habit types</h3>
-          <p class="feature-card-desc">
-            Track simple yes/no checkmarks, counter metrics (like cups of water), or timed routines with an integrated
-            stopwatch.
-          </p>
-        </div>
-
-        <!-- Feature 2 -->
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-          </div>
-          <h3 class="feature-card-title">Alarms & snooze</h3>
-          <p class="feature-card-desc">
-            Set up to four exact alarm reminders per habit. Snooze or mark them as done directly from the notification
-            screen.
-          </p>
-        </div>
-
-        <!-- Feature 3 -->
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 3v18h18"></path>
-              <path d="m18.7 8-5.1 5.2-2.8-2.7L7 14.3"></path>
-            </svg>
-          </div>
-          <h3 class="feature-card-title">Streaks & charts</h3>
-          <p class="feature-card-desc">
-            See your completion history, streaks, and habits over time. All stats are calculated locally on your
-            device.
-          </p>
-        </div>
-
-        <!-- Feature 4 -->
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-          </div>
-          <h3 class="feature-card-title">Easy JSON backups</h3>
-          <p class="feature-card-desc">
-            No signups or cloud accounts. Export your data to a JSON backup file or import it back with one tap.
-          </p>
-        </div>
-
-        <!-- Feature 5 -->
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m12 22 1-1c1.4-1.4 2.4-3.2 3-5.2L18 9l-3-3-6.8 2C6.2 8.6 4.4 9.6 3 11l-1 1"></path>
-              <path d="m18 9 4-4L19 2l-4 4"></path>
-            </svg>
-          </div>
-          <h3 class="feature-card-title">Sepia & OLED themes</h3>
-          <p class="feature-card-desc">
-            Pick warm Sepia tones, clear blue-grays, or a pure black OLED dark mode. Change your week start day in
-            settings.
-          </p>
-        </div>
-
-        <!-- Feature 6 -->
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
-              <line x1="22" y1="11" x2="22" y2="13"></line>
-            </svg>
-          </div>
-          <h3 class="feature-card-title">Lightweight & fast</h3>
-          <p class="feature-card-desc">
-            Zero background battery bleed. Reminders use native system alarm bridges, keeping the app fast and light.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Screenshot Gallery Tabs -->
-  <section class="gallery-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">Explore the Interface</h2>
-        <p class="section-subtitle">
-          Take a tour of YAHT's screens, designed to be modern, tactile, and highly legible.
-        </p>
-      </div>
-
-      <!-- Tab Buttons -->
-      <div class="gallery-tabs">
-        <button class="gallery-tab-btn active" data-img="today">Today's Checklist</button>
-        <button class="gallery-tab-btn" data-img="new">Create Habits</button>
-        <button class="gallery-tab-btn" data-img="stats">Streaks & Charts</button>
-        <button class="gallery-tab-btn" data-img="settings">Settings & Data</button>
-      </div>
-
-      <!-- Gallery Display Frame -->
-      <div class="gallery-display-wrapper">
-        <div class="phone-mockup">
-          <div class="phone-button volume-up"></div>
-          <div class="phone-button volume-down"></div>
-          <div class="phone-button power"></div>
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="screenshot-wrapper">
-              <img id="gallery-image" src="assets/images/screenshots/YAHT_dark_sepia_today.jpg"
-                alt="YAHT App Today's Checklist Preview" class="gallery-screenshot-img" width="1440" height="3037"
-                loading="lazy" decoding="async" />
+          <div class="spotlight-content">
+            <h2 class="spotlight-title">Free, open-source, and private</h2>
+            <p class="spotlight-text">
+              YAHT is licensed under the <strong>GNU General Public License v3</strong>. We do not collect any data. All
+              database records stay on your phone, stored locally with MMKV.
+            </p>
+            <div class="badge-group">
+              <span class="spotlight-pill">No Ads</span>
+              <span class="spotlight-pill">No Trackers</span>
+              <span class="spotlight-pill">Works Offline</span>
+              <span class="spotlight-pill">Local Storage</span>
             </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- Description box linked to tabs -->
-        <div class="gallery-details">
-          <div id="gallery-desc-today" class="desc-card active">
-            <h3>Your daily checklist</h3>
-            <p>
-              The Today screen displays your pending routines. Quickly check off habits, tap counter habits to
-              increment reps, or tap stopwatch icons to trigger active timers. The horizontal date slider lets you
-              review past completions instantly.
+    <!-- App Features Grid -->
+    <section id="features" class="features-section">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">Simple but powerful</h2>
+          <p class="section-subtitle">YAHT has no clutter. Focus on your routines.</p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Feature 1 -->
+          <div class="feature-card">
+            <div class="feature-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <path d="m9 11 3 3 5-5"></path>
+              </svg>
+            </div>
+            <h3 class="feature-card-title">Three habit types</h3>
+            <p class="feature-card-desc">
+              Track simple yes/no checkmarks, counter metrics (like cups of water), or timed routines with an integrated
+              stopwatch.
             </p>
-            <span class="detail-tag">Tactile Gestures</span>
-            <span class="detail-tag">Haptic Feedback</span>
           </div>
-          <div id="gallery-desc-new" class="desc-card">
-            <h3>Create custom habits</h3>
-            <p>
-              Configure routines with custom metrics. Set tracking schedules for daily goals, specific weekdays, or
-              interval days. Setup up to four exact alarms per habit.
+
+          <!-- Feature 2 -->
+          <div class="feature-card">
+            <div class="feature-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <h3 class="feature-card-title">Alarms & snooze</h3>
+            <p class="feature-card-desc">
+              Set up to four exact alarm reminders per habit. Snooze or mark them as done directly from the notification
+              screen.
             </p>
-            <span class="detail-tag">Interval Cycles</span>
-            <span class="detail-tag">Multiple Reminders</span>
           </div>
-          <div id="gallery-desc-stats" class="desc-card">
-            <h3>Streaks & charts</h3>
-            <p>
-              View completion rates, current streaks, and progress trends over time to stay consistent. All
-              calculations are performed on-device.
+
+          <!-- Feature 3 -->
+          <div class="feature-card">
+            <div class="feature-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"></path>
+                <path d="m18.7 8-5.1 5.2-2.8-2.7L7 14.3"></path>
+              </svg>
+            </div>
+            <h3 class="feature-card-title">Streaks & charts</h3>
+            <p class="feature-card-desc">
+              See your completion history, streaks, and habits over time. All stats are calculated locally on your
+              device.
             </p>
-            <span class="detail-tag">Offline Graphs</span>
-            <span class="detail-tag">Streak Tracking</span>
           </div>
-          <div id="gallery-desc-settings" class="desc-card">
-            <h3>Settings & data</h3>
-            <p>
-              Customize the interface, select themes (Sepia, Clear, OLED), or export your habits database to a local
-              JSON backup file. You have total control over your setup.
+
+          <!-- Feature 4 -->
+          <div class="feature-card">
+            <div class="feature-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3 class="feature-card-title">Easy JSON backups</h3>
+            <p class="feature-card-desc">
+              No signups or cloud accounts. Export your data to a JSON backup file or import it back with one tap.
             </p>
-            <span class="detail-tag">JSON Backups</span>
-            <span class="detail-tag">Diagnostic Logs</span>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="feature-card">
+            <div class="feature-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m12 22 1-1c1.4-1.4 2.4-3.2 3-5.2L18 9l-3-3-6.8 2C6.2 8.6 4.4 9.6 3 11l-1 1"></path>
+                <path d="m18 9 4-4L19 2l-4 4"></path>
+              </svg>
+            </div>
+            <h3 class="feature-card-title">Sepia & OLED themes</h3>
+            <p class="feature-card-desc">
+              Pick warm Sepia tones, clear blue-grays, or a pure black OLED dark mode. Change your week start day in
+              settings.
+            </p>
+          </div>
+
+          <!-- Feature 6 -->
+          <div class="feature-card">
+            <div class="feature-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
+                <line x1="22" y1="11" x2="22" y2="13"></line>
+              </svg>
+            </div>
+            <h3 class="feature-card-title">Lightweight & fast</h3>
+            <p class="feature-card-desc">
+              Zero background battery bleed. Reminders use native system alarm bridges, keeping the app fast and light.
+            </p>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Download Section -->
-  <section id="download" class="download-section">
-    <div class="section-container">
-      <div class="download-card">
-        <h2 class="download-title">Download YAHT</h2>
-        <p class="download-subtitle">
-          Get YAHT for Android and iOS. Fully open-source, local-first, and completely free.
-        </p>
-
-        <div class="store-badges">
-          <!-- Apple App Store Badge -->
-          <a href="#" class="store-badge-btn" aria-label="Download on App Store">
-            <img src="assets/images/app-store-badge.svg" alt="Download on the App Store" class="badge-img" />
-          </a>
-
-          <!-- Google Play Store Badge -->
-          <a href="#" class="store-badge-btn" aria-label="Download on Google Play">
-            <img src="assets/images/google-play-badge.svg" alt="Get it on Google Play" class="badge-img" />
-          </a>
+    <!-- Screenshot Gallery Tabs -->
+    <section class="gallery-section">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">Explore the Interface</h2>
+          <p class="section-subtitle">
+            Take a tour of YAHT's screens, designed to be modern, tactile, and highly legible.
+          </p>
         </div>
 
-        <p class="download-foss-notice">
-          Licensed under the
-          <a href="https://github.com/Niqp/YAHT/blob/main/COPYING" target="_blank" rel="noopener">GNU GPL v3</a>. Get
-          the source code directly from our
-          <a href="https://github.com/Niqp/YAHT" target="_blank" rel="noopener">GitHub Repository</a>.
-        </p>
-      </div>
-    </div>
-  </section>
+        <!-- Tab Buttons -->
+        <div class="gallery-tabs" role="tablist" aria-label="YAHT screen previews">
+          <button
+            class="gallery-tab-btn active"
+            data-img="today"
+            role="tab"
+            aria-selected="true"
+            aria-controls="gallery-desc-today"
+          >
+            Today's Checklist
+          </button>
+          <button
+            class="gallery-tab-btn"
+            data-img="new"
+            role="tab"
+            aria-selected="false"
+            aria-controls="gallery-desc-new"
+          >
+            Create Habits
+          </button>
+          <button
+            class="gallery-tab-btn"
+            data-img="stats"
+            role="tab"
+            aria-selected="false"
+            aria-controls="gallery-desc-stats"
+          >
+            Streaks & Charts
+          </button>
+          <button
+            class="gallery-tab-btn"
+            data-img="settings"
+            role="tab"
+            aria-selected="false"
+            aria-controls="gallery-desc-settings"
+          >
+            Settings & Data
+          </button>
+        </div>
 
-  <!-- Footer -->
-  <footer class="app-footer">
-    <div class="section-container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <div class="logo-area">
-            <img class="app-logo" src="assets/images/yaht_icon.svg" alt="YAHT Logo" width="36" height="36" />
-            <span class="logo-text">YAHT</span>
+        <!-- Gallery Display Frame -->
+        <div class="gallery-display-wrapper">
+          <div class="phone-mockup">
+            <div class="phone-button volume-up"></div>
+            <div class="phone-button volume-down"></div>
+            <div class="phone-button power"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="screenshot-wrapper">
+                <img
+                  id="gallery-image"
+                  src="assets/images/screenshots/YAHT_dark_sepia_today.jpg"
+                  alt="YAHT App Today's Checklist Preview"
+                  class="gallery-screenshot-img"
+                  width="758"
+                  height="1600"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </div>
           </div>
-          <p class="brand-desc">A privacy-first local app for habit tracking. Clean, quick, and offline.</p>
-        </div>
 
-        <div class="footer-links">
-          <h4>Project</h4>
-          <a href="https://github.com/Niqp/YAHT" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://github.com/Niqp/YAHT/issues" target="_blank" rel="noopener">Issue Tracker</a>
-          <a href="https://github.com/Niqp/YAHT/blob/main/COPYING" target="_blank" rel="noopener">License (GPL v3)</a>
-        </div>
-
-        <div class="footer-links">
-          <h4>Privacy</h4>
-          <a href="https://github.com/Niqp/YAHT/blob/main/PRIVACY.md" target="_blank" rel="noopener">Privacy Policy</a>
-          <a href="#features">Features</a>
-          <a href="#download">Downloads</a>
+          <!-- Description box linked to tabs -->
+          <div class="gallery-details">
+            <div id="gallery-desc-today" class="desc-card active" role="tabpanel">
+              <h3>Your daily checklist</h3>
+              <p>
+                The Today screen displays your pending routines. Quickly check off habits, tap counter habits to
+                increment reps, or tap stopwatch icons to trigger active timers. The horizontal date slider lets you
+                review past completions instantly.
+              </p>
+              <span class="detail-tag">Tactile Gestures</span>
+              <span class="detail-tag">Haptic Feedback</span>
+            </div>
+            <div id="gallery-desc-new" class="desc-card" role="tabpanel" hidden>
+              <h3>Create custom habits</h3>
+              <p>
+                Configure routines with custom metrics. Set tracking schedules for daily goals, specific weekdays, or
+                interval days. Setup up to four exact alarms per habit.
+              </p>
+              <span class="detail-tag">Interval Cycles</span>
+              <span class="detail-tag">Multiple Reminders</span>
+            </div>
+            <div id="gallery-desc-stats" class="desc-card" role="tabpanel" hidden>
+              <h3>Streaks & charts</h3>
+              <p>
+                View completion rates, current streaks, and progress trends over time to stay consistent. All
+                calculations are performed on-device.
+              </p>
+              <span class="detail-tag">Offline Graphs</span>
+              <span class="detail-tag">Streak Tracking</span>
+            </div>
+            <div id="gallery-desc-settings" class="desc-card" role="tabpanel" hidden>
+              <h3>Settings & data</h3>
+              <p>
+                Customize the interface, select themes (Sepia, Clear, OLED), or export your habits database to a local
+                JSON backup file. You have total control over your setup.
+              </p>
+              <span class="detail-tag">JSON Backups</span>
+              <span class="detail-tag">Diagnostic Logs</span>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="footer-bottom">
-        <p>&copy; 2026 YAHT Habit Tracker. Released as free software under the GNU GPL v3.</p>
-        <p class="signature">Stored entirely on your device.</p>
+    <!-- Download Section -->
+    <section id="download" class="download-section">
+      <div class="section-container">
+        <div class="download-card">
+          <h2 class="download-title">Download YAHT</h2>
+          <p class="download-subtitle">
+            Get YAHT for Android and iOS. Fully open-source, local-first, and completely free.
+          </p>
+
+          <div class="store-badges">
+            <!-- Apple App Store Badge -->
+            <span
+              class="store-badge-btn store-badge-btn-disabled"
+              aria-label="App Store listing coming soon"
+              aria-disabled="true"
+            >
+              <img src="assets/images/app-store-badge.svg" alt="Download on the App Store" class="badge-img" />
+            </span>
+
+            <!-- Google Play Store Badge -->
+            <a href="#" class="store-badge-btn" aria-label="Download on Google Play">
+              <img src="assets/images/google-play-badge.svg" alt="Get it on Google Play" class="badge-img" />
+            </a>
+          </div>
+
+          <p class="download-foss-notice">
+            Licensed under the
+            <a href="https://github.com/Niqp/YAHT/blob/main/COPYING" target="_blank" rel="noopener">GNU GPL v3</a>. Get
+            the source code directly from our
+            <a href="https://github.com/Niqp/YAHT" target="_blank" rel="noopener">GitHub Repository</a>.
+          </p>
+        </div>
       </div>
-    </div>
-  </footer>
+    </section>
 
-  <!-- JavaScript Bundle -->
-  <script src="screenshotCrossfade.js"></script>
-  <script src="script.js"></script>
-</body>
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="section-container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="logo-area">
+              <img class="app-logo" src="assets/images/yaht_icon.svg" alt="YAHT Logo" width="36" height="36" />
+              <span class="logo-text">YAHT</span>
+            </div>
+            <p class="brand-desc">A privacy-first local app for habit tracking. Clean, quick, and offline.</p>
+          </div>
 
+          <div class="footer-links">
+            <h4>Project</h4>
+            <a href="https://github.com/Niqp/YAHT" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/Niqp/YAHT/issues" target="_blank" rel="noopener">Issue Tracker</a>
+            <a href="https://github.com/Niqp/YAHT/blob/main/COPYING" target="_blank" rel="noopener">License (GPL v3)</a>
+          </div>
+
+          <div class="footer-links">
+            <h4>Privacy</h4>
+            <a href="https://github.com/Niqp/YAHT/blob/main/PRIVACY.md" target="_blank" rel="noopener"
+              >Privacy Policy</a
+            >
+            <a href="#features">Features</a>
+            <a href="#download">Downloads</a>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>&copy; 2026 YAHT Habit Tracker. Released as free software under the GNU GPL v3.</p>
+          <p class="signature">Stored entirely on your device.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- JavaScript Bundle -->
+    <script src="screenshotCrossfade.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>
