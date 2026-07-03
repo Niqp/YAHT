@@ -72,7 +72,7 @@ This project uses:
 - [Dayjs](https://day.js.org/) for date handling
 - [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/) for animations
 - [Bottom Sheet](https://github.com/gorhom/react-native-bottom-sheet) for interactive UI components
-- [React Native Chart Kit](https://github.com/indiespirit/react-native-chart-kit) for statistics visualization
+- Custom React Native chart components for statistics visualization
 
 ## Contribute
 
@@ -80,4 +80,5 @@ Feel free to open issues or submit pull requests on GitHub.
 
 ## License
 
-[GNU GPL License](COPYING)
+YAHT is licensed under the [GNU General Public License v3.0 only](COPYING).
+Additional third-party license notes are in [NOTICE](NOTICE).

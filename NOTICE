@@ -1,0 +1,13 @@
+YAHT - Yet Another Habit Tracker
+
+Copyright (C) 2026 YAHT contributors
+
+YAHT is licensed under the GNU General Public License, version 3 only.
+See COPYING for the full license text.
+
+This project also depends on third-party open source packages under their
+own licenses, including MIT, ISC, BSD, Apache-2.0, MPL-2.0, Unlicense,
+CC0-1.0, CC-BY-4.0, BlueOak-1.0.0, and Python-2.0 licensed components.
+The npm dependency graph and resolved versions are recorded in
+package-lock.json. Generated native dependency graphs are produced by
+Expo, CocoaPods, and Gradle for the selected build profile.
