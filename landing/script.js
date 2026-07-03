@@ -10,6 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const heroImage = document.getElementById("hero-image");
   const tabBtns = document.querySelectorAll(".gallery-tab-btn");
   const galleryImage = document.getElementById("gallery-image");
+  const galleryDisplay = document.querySelector(".gallery-display-wrapper");
+  const galleryKeys = Array.from(tabBtns)
+    .map((btn) => btn.getAttribute("data-img"))
+    .filter(Boolean);
 
   // Default configuration keys
   const THEME_KEY = "yaht-landing-theme";
@@ -183,53 +187,152 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------------------------------------------------
   // Screenshot Gallery Navigation
   // -------------------------------------------------------------
+  const activateGalleryItem = (imgKey, options = {}) => {
+    const { animateDescription = true } = options;
+    const targetButton = Array.from(tabBtns).find((btn) => btn.getAttribute("data-img") === imgKey);
+
+    if (!imgKey || !targetButton) {
+      return;
+    }
+
+    currentGalleryImage = imgKey;
+
+    // 1. Update active tab class
+    tabBtns.forEach((tab) => {
+      tab.classList.remove("active");
+      tab.setAttribute("aria-selected", "false");
+    });
+    targetButton.classList.add("active");
+    targetButton.setAttribute("aria-selected", "true");
+
+    // 2. Crossfade to the selected screenshot after the image has loaded
+    if (galleryImage && getScreenshotPath(imgKey)) {
+      updateImageSource(galleryImage, getScreenshotPath(imgKey), `YAHT App ${targetButton.textContent} Preview`, true);
+    }
+
+    // 3. Update description box with a coordinated 'move and fade' animation (eased)
+    const currentActiveCard = document.querySelector(".desc-card.active");
+    const targetCard = document.getElementById(`gallery-desc-${imgKey}`);
+
+    if (currentActiveCard && currentActiveCard !== targetCard) {
+      if (!animateDescription) {
+        currentActiveCard.classList.remove("active", "slide-exit", "slide-enter");
+        currentActiveCard.hidden = true;
+
+        if (targetCard) {
+          targetCard.hidden = false;
+          targetCard.classList.add("active");
+          targetCard.classList.remove("slide-exit", "slide-enter");
+        }
+
+        return;
+      }
+
+      // Animate old text exiting to the left
+      currentActiveCard.classList.remove("active");
+      currentActiveCard.classList.add("slide-exit");
+      currentActiveCard.hidden = false;
+
+      setTimeout(() => {
+        currentActiveCard.classList.remove("slide-exit");
+        currentActiveCard.hidden = true;
+
+        // Animate new text entering from the right
+        if (targetCard) {
+          targetCard.hidden = false;
+          targetCard.classList.add("active", "slide-enter");
+          setTimeout(() => {
+            targetCard.classList.remove("slide-enter");
+          }, 300);
+        }
+      }, 300);
+    } else if (!currentActiveCard && targetCard) {
+      targetCard.hidden = false;
+      targetCard.classList.add("active");
+    }
+  };
+
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const imgKey = btn.getAttribute("data-img");
-      currentGalleryImage = imgKey;
-
-      // 1. Update active tab class
-      tabBtns.forEach((t) => {
-        t.classList.remove("active");
-        t.setAttribute("aria-selected", "false");
-      });
-      btn.classList.add("active");
-      btn.setAttribute("aria-selected", "true");
-
-      // 2. Crossfade to the selected screenshot after the image has loaded
-      if (galleryImage && getScreenshotPath(imgKey)) {
-        updateImageSource(galleryImage, getScreenshotPath(imgKey), `YAHT App ${btn.textContent} Preview`, true);
-      }
-
-      // 3. Update description box with a coordinated 'move and fade' animation (eased)
-      const currentActiveCard = document.querySelector(".desc-card.active");
-      const targetCard = document.getElementById(`gallery-desc-${imgKey}`);
-
-      if (currentActiveCard && currentActiveCard !== targetCard) {
-        // Animate old text exiting to the left
-        currentActiveCard.classList.remove("active");
-        currentActiveCard.classList.add("slide-exit");
-        currentActiveCard.hidden = false;
-
-        setTimeout(() => {
-          currentActiveCard.classList.remove("slide-exit");
-          currentActiveCard.hidden = true;
-
-          // Animate new text entering from the right
-          if (targetCard) {
-            targetCard.hidden = false;
-            targetCard.classList.add("active", "slide-enter");
-            setTimeout(() => {
-              targetCard.classList.remove("slide-enter");
-            }, 300);
-          }
-        }, 300);
-      } else if (!currentActiveCard && targetCard) {
-        targetCard.hidden = false;
-        targetCard.classList.add("active");
-      }
+      activateGalleryItem(btn.getAttribute("data-img"));
     });
   });
+
+  if (galleryDisplay && galleryKeys.length > 1) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    galleryDisplay.addEventListener(
+      "touchstart",
+      (event) => {
+        const touch = event.changedTouches?.[0];
+
+        if (!touch) {
+          return;
+        }
+
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      },
+      { passive: true }
+    );
+
+    galleryDisplay.addEventListener(
+      "touchend",
+      (event) => {
+        const touch = event.changedTouches?.[0];
+
+        if (!touch) {
+          return;
+        }
+
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        const isHorizontalSwipe = Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
+
+        if (!isHorizontalSwipe) {
+          return;
+        }
+
+        const currentIndex = Math.max(galleryKeys.indexOf(currentGalleryImage), 0);
+        const direction = deltaX < 0 ? 1 : -1;
+        const nextIndex = (currentIndex + direction + galleryKeys.length) % galleryKeys.length;
+
+        activateGalleryItem(galleryKeys[nextIndex], { animateDescription: false });
+      },
+      { passive: true }
+    );
+  }
+
+  // -------------------------------------------------------------
+  // Mobile scroll-triggered motion
+  // -------------------------------------------------------------
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  const isCoarseMobile = window.matchMedia?.("(hover: none) and (pointer: coarse), (max-width: 600px)")?.matches;
+  const mobileRevealTargets = document.querySelectorAll("[data-mobile-reveal]");
+
+  if (!prefersReducedMotion && isCoarseMobile && "IntersectionObserver" in window && mobileRevealTargets.length > 0) {
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-mobile-revealed");
+          } else {
+            entry.target.classList.remove("is-mobile-revealed");
+          }
+        });
+      },
+      { rootMargin: "-10% 0px -25%", threshold: 0.35 }
+    );
+
+    mobileRevealTargets.forEach((target) => {
+      revealObserver.observe(target);
+    });
+  } else {
+    mobileRevealTargets.forEach((target) => {
+      target.classList.add("is-mobile-revealed");
+    });
+  }
 
   // Lock the gallery card height to the first (largest) tab dynamically to prevent layout shifting
   const lockGalleryHeight = () => {

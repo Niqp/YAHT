@@ -14,7 +14,10 @@ describe("landing startup rendering", () => {
       <button class="theme-btn" data-theme="clear">Clear</button>
       <button id="scheme-toggle"></button>
       <button class="gallery-tab-btn active" data-img="today">Today</button>
-      <div class="hero-mockup-wrapper">
+      <button class="gallery-tab-btn" data-img="new">Create Habits</button>
+      <button class="gallery-tab-btn" data-img="stats">Stats</button>
+      <button class="gallery-tab-btn" data-img="settings">Settings</button>
+      <div class="hero-mockup-wrapper" data-mobile-reveal>
         <div class="screenshot-wrapper">
           <img id="hero-image" src="assets/images/screenshots/YAHT_dark_sepia_today.jpg" />
         </div>
@@ -23,14 +26,42 @@ describe("landing startup rendering", () => {
         <div class="screenshot-wrapper">
           <img id="gallery-image" src="assets/images/screenshots/YAHT_dark_sepia_today.jpg" />
         </div>
+        <div class="gallery-details">
+          <div id="gallery-desc-today" class="desc-card active" role="tabpanel">Today description</div>
+          <div id="gallery-desc-new" class="desc-card" role="tabpanel" hidden>New description</div>
+          <div id="gallery-desc-stats" class="desc-card" role="tabpanel" hidden>Stats description</div>
+          <div id="gallery-desc-settings" class="desc-card" role="tabpanel" hidden>Settings description</div>
+        </div>
       </div>
-      <div class="gallery-details"></div>
+      <div class="feature-card" data-mobile-reveal>Feature</div>
     `;
 
     localStorage.clear();
     localStorage.setItem("yaht-landing-theme", "clear");
     localStorage.setItem("yaht-landing-scheme", "light");
+    delete window.YAHT;
+    delete window.IntersectionObserver;
+    delete window.matchMedia;
   });
+
+  const setMatchMedia = ({ mobile = false, reducedMotion = false } = {}) => {
+    window.matchMedia = jest.fn((query) => ({
+      matches: query.includes("prefers-reduced-motion") ? reducedMotion : mobile,
+      media: query,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+  };
+
+  const dispatchTouch = (target, type, point) => {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "changedTouches", { value: [{ clientX: point.x, clientY: point.y }] });
+    Object.defineProperty(event, "touches", { value: [{ clientX: point.x, clientY: point.y }] });
+    target.dispatchEvent(event);
+  };
 
   it("does not animate saved screenshot synchronization during startup", () => {
     const updates = [];
@@ -67,6 +98,73 @@ describe("landing startup rendering", () => {
     expect(bootScriptIndex).toBeGreaterThan(-1);
     expect(stylesheetIndex).toBeGreaterThan(-1);
     expect(bootScriptIndex).toBeLessThan(stylesheetIndex);
+  });
+
+  it("advances the gallery when the mobile carousel is swiped left", () => {
+    setMatchMedia({ mobile: true });
+
+    require("../script.js");
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+
+    const gallery = document.querySelector(".gallery-display-wrapper");
+    dispatchTouch(gallery, "touchstart", { x: 240, y: 20 });
+    dispatchTouch(gallery, "touchend", { x: 120, y: 26 });
+
+    const activeTab = document.querySelector(".gallery-tab-btn.active");
+    const todayDesc = document.getElementById("gallery-desc-today");
+    const newDesc = document.getElementById("gallery-desc-new");
+
+    expect(activeTab.getAttribute("data-img")).toBe("new");
+    expect(activeTab.getAttribute("aria-selected")).toBe("true");
+    expect(todayDesc.hidden).toBe(true);
+    expect(newDesc.hidden).toBe(false);
+    expect(newDesc.classList.contains("active")).toBe(true);
+  });
+
+  it("observes mobile reveal targets when motion is allowed on mobile", () => {
+    setMatchMedia({ mobile: true, reducedMotion: false });
+    const observedTargets = [];
+    window.IntersectionObserver = jest.fn(function IntersectionObserver(callback) {
+      this.observe = jest.fn((target) => observedTargets.push(target));
+      this.unobserve = jest.fn();
+      this.disconnect = jest.fn();
+      this.callback = callback;
+    });
+
+    require("../script.js");
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+
+    expect(window.IntersectionObserver).toHaveBeenCalled();
+    expect(observedTargets.map((target) => target.className)).toEqual(
+      expect.arrayContaining(["hero-mockup-wrapper", "feature-card"])
+    );
+  });
+
+  it("skips mobile reveal observers when reduced motion is requested", () => {
+    setMatchMedia({ mobile: true, reducedMotion: true });
+    window.IntersectionObserver = jest.fn();
+
+    require("../script.js");
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+
+    expect(window.IntersectionObserver).not.toHaveBeenCalled();
+  });
+
+  it("marks real landing hover-motion elements for mobile scroll reveals", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+    expect(html).toContain('class="hero-mockup-wrapper" data-mobile-reveal');
+    expect(html).toContain('class="feature-card" data-mobile-reveal');
+    expect(html).toContain('class="gallery-display-wrapper" data-mobile-reveal');
+  });
+
+  it("defines mobile carousel and scroll-trigger styles", () => {
+    const css = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+
+    expect(css).toContain(".gallery-swipe-hint");
+    expect(css).toContain(".is-mobile-revealed");
+    expect(css).toContain("touch-action: pan-y");
+    expect(css).toContain("@media (hover: none) and (pointer: coarse)");
   });
 
   it("requests Google Fonts with fallback font swapping", () => {

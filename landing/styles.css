@@ -744,6 +744,10 @@ html.scheme-light .moon-icon {
     border-color 0.4s ease;
 }
 
+.gallery-swipe-hint {
+  display: none;
+}
+
 .gallery-tab-btn {
   border: none;
   background-color: transparent;
@@ -1106,18 +1110,40 @@ html.scheme-light .moon-icon {
     padding: 0.75rem 1.25rem;
   }
 
+  .hero-section {
+    padding: 3.25rem 0 2rem;
+  }
+
+  .hero-container {
+    gap: 2rem;
+  }
+
   .hero-title {
     font-size: 2.25rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .hero-actions {
     flex-direction: column;
     width: 100%;
+    gap: 0.75rem;
   }
 
   .action-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .phone-mockup {
+    width: min(245px, 74vw);
+  }
+
+  .spotlight-section {
+    padding: 1.5rem 0 2.5rem;
   }
 
   .spotlight-card {
@@ -1131,14 +1157,94 @@ html.scheme-light .moon-icon {
     justify-content: center;
   }
 
+  .features-section {
+    padding: 2.75rem 0;
+  }
+
+  .section-header {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-size: 1.95rem;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
+  }
+
+  .gallery-section {
+    padding: 2.75rem 0 3rem;
+  }
+
   .gallery-tabs {
-    gap: 0.5rem;
+    gap: 0.45rem;
+    width: auto;
+    max-width: none;
+    margin-bottom: 0.6rem;
+    padding: 0.45rem;
+    border-radius: 999px;
   }
 
   .gallery-tab-btn {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-    width: 100%;
+    width: 0.65rem;
+    min-width: 0.65rem;
+    height: 0.65rem;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 999px;
+    font-size: 0;
+    color: transparent;
+    background-color: var(--border-strong);
+  }
+
+  .gallery-tab-btn.active {
+    width: 1.8rem;
+    min-width: 1.8rem;
+  }
+
+  .gallery-swipe-hint {
+    display: block;
+    margin: 0 auto 1.5rem;
+    color: var(--text-tertiary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .gallery-display-wrapper {
+    gap: 1.5rem;
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  .gallery-details {
+    padding: 1.5rem;
+    border-radius: 18px;
+  }
+
+  .desc-card h3 {
+    font-size: 1.4rem;
+  }
+
+  .desc-card p {
+    font-size: 0.95rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .download-section {
+    padding: 3.25rem 0;
   }
 
   .download-card {
@@ -1151,6 +1257,8 @@ html.scheme-light .moon-icon {
 
   .footer-grid {
     grid-template-columns: 1fr;
+    gap: 1.75rem;
+    margin-bottom: 2rem;
   }
 
   .footer-brand {
@@ -1165,6 +1273,35 @@ html.scheme-light .moon-icon {
 
   .theme-switcher {
     display: none; /* Hide theme switcher in header on mobile */
+  }
+
+  .app-footer {
+    padding: 3rem 0 2rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  [data-mobile-reveal] {
+    will-change: transform, box-shadow, border-color;
+  }
+
+  .feature-card.is-mobile-revealed {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 24px var(--shadow);
+  }
+
+  .hero-mockup-wrapper.is-mobile-revealed .phone-mockup,
+  .gallery-display-wrapper.is-mobile-revealed .phone-mockup {
+    transform: rotate(0deg) translateY(-12px);
+  }
+
+  .gallery-display-wrapper {
+    cursor: grab;
+  }
+
+  .gallery-display-wrapper:active {
+    cursor: grabbing;
   }
 }
 
@@ -1185,6 +1322,9 @@ html.scheme-light .moon-icon {
   .primary-btn:hover,
   .secondary-btn:hover,
   .feature-card:hover,
+  .feature-card.is-mobile-revealed,
+  .hero-mockup-wrapper.is-mobile-revealed .phone-mockup,
+  .gallery-display-wrapper.is-mobile-revealed .phone-mockup,
   .nav-download-btn:hover,
   .store-badge-btn:not(.store-badge-btn-disabled) .badge-img:hover {
     transform: none;
