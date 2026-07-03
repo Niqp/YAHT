@@ -72,8 +72,19 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
+  const createCrossfader = window.YAHT?.createScreenshotCrossfader;
+  const heroCrossfader = createCrossfader?.(heroImage);
+  const galleryCrossfader = createCrossfader?.(galleryImage);
+
   const updateImageSource = (image, src, alt, fade = false) => {
     if (!image) {
+      return;
+    }
+
+    const crossfader = image === heroImage ? heroCrossfader : galleryCrossfader;
+
+    if (crossfader) {
+      crossfader.update(src, alt, { animate: fade });
       return;
     }
 
@@ -97,18 +108,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 300);
   };
 
-  const syncScreenshots = (fadeGallery = false) => {
+  const syncScreenshots = (fadeScreenshots = false) => {
     updateImageSource(
       heroImage,
       getScreenshotPath("today"),
-      `YAHT App Today checklist screen in ${currentScheme} ${currentTheme} theme`
+      `YAHT App Today checklist screen in ${currentScheme} ${currentTheme} theme`,
+      fadeScreenshots
     );
 
     updateImageSource(
       galleryImage,
       getScreenshotPath(currentGalleryImage),
       `YAHT App ${currentGalleryImage} screen in ${currentScheme} ${currentTheme} theme`,
-      fadeGallery
+      fadeScreenshots
     );
   };
 
@@ -164,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tabBtns.forEach((t) => t.classList.remove("active"));
       btn.classList.add("active");
 
-      // 2. Change image with a smooth fade to black and back (eased)
+      // 2. Crossfade to the selected screenshot after the image has loaded
       if (galleryImage && getScreenshotPath(imgKey)) {
         updateImageSource(galleryImage, getScreenshotPath(imgKey), `YAHT App ${btn.textContent} Preview`, true);
       }
