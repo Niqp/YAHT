@@ -8,20 +8,29 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "icon": "./assets/images/icon.png",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "tech.niqp.yaht",
       "buildNumber": "1",
       "infoPlist": {
-        "UIBackgroundModes": ["fetch", "processing", "remote-notification"],
+        "UIBackgroundModes": [
+          "fetch",
+          "processing",
+          "remote-notification"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.niqp.yaht",
+      "package": "dev.niqp.yaht",
       "versionCode": 1,
-      "permissions": ["android.permission.SCHEDULE_EXACT_ALARM", "android.permission.VIBRATE"],
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.VIBRATE"
+      ],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
@@ -38,7 +47,10 @@
       "output": "static",
       "build": {
         "babel": {
-          "include": ["@gorhom/bottom-sheet", "react-native-reanimated"]
+          "include": [
+            "@gorhom/bottom-sheet",
+            "react-native-reanimated"
+          ]
         }
       }
     },

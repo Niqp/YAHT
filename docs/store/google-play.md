@@ -3,7 +3,7 @@
 ## Store Listing
 
 - App name: YAHT Habit Tracker
-- Package name: com.niqp.yaht
+- Package name: dev.niqp.yaht
 - Short description: Track habits, timers, reminders, and streaks locally.
 - Full description:
 

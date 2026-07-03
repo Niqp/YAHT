@@ -6,7 +6,7 @@ const withIosNativeReminderActions = require("./with-ios-native-reminder-actions
 
 const ANDROID_SOURCE_DIR = path.join(__dirname, "android-native-reminder-actions");
 const ANDROID_RESOURCE_DIR = path.join(ANDROID_SOURCE_DIR, "res");
-const ANDROID_PACKAGE = "com.niqp.yaht.notifications";
+const ANDROID_PACKAGE = "dev.niqp.yaht.notifications";
 const ANDROID_TARGET_FILE = "YAHTNativeReminderActionsService.kt";
 const ANDROID_MMKV_DEPENDENCY = 'implementation("com.tencent:mmkv:2.0.0")';
 const EXPO_NOTIFICATION_EVENT_ACTION = "expo.modules.notifications.NOTIFICATION_EVENT";

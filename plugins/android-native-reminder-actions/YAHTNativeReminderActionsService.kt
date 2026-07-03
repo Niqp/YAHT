@@ -1,4 +1,4 @@
-package com.niqp.yaht.notifications
+package dev.niqp.yaht.notifications
 
 import android.app.NotificationManager
 import android.content.Context
