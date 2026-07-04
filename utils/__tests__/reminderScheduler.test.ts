@@ -95,7 +95,7 @@ describe("reconcileReminderNotifications", () => {
       nowMs: dayjs("2026-03-21T08:00:00").valueOf(),
     });
 
-    expect(mockPrepareReminderNotifications).toHaveBeenCalledWith({ openAlarmSettings: false });
+    expect(mockPrepareReminderNotifications).toHaveBeenCalledWith();
     expect(mockSchedulePreparedReminderNotification).toHaveBeenCalledTimes(63);
     expect(mockScheduleReminderQueueStopNotification).toHaveBeenCalledTimes(1);
     expect(mockSaveReminderScheduleLedger).toHaveBeenCalledWith(

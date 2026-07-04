@@ -16,6 +16,7 @@ import {
   scheduleReminderNotification,
   scheduleTimerNotification,
 } from "@/utils/notifications";
+import { clearDiagnosticEvents, getDiagnosticEvents } from "@/utils/diagnostics/diagnosticLogger";
 
 const mockGetPermissionsAsync = jest.fn();
 const mockRequestPermissionsAsync = jest.fn();
@@ -49,6 +50,7 @@ jest.mock("expo-notifications", () => ({
 
 const mockCanScheduleExactAlarms = jest.fn();
 const mockOpenSettings = jest.fn();
+const mockAlertAlert = jest.fn();
 
 jest.mock("react-native-permissions", () => ({
   __esModule: true,
@@ -57,6 +59,9 @@ jest.mock("react-native-permissions", () => ({
 }));
 
 jest.mock("react-native", () => ({
+  Alert: {
+    alert: (...args: unknown[]) => mockAlertAlert(...args),
+  },
   Platform: {
     OS: "android",
     select: (obj: Record<string, unknown>) => obj.android ?? obj.default,
@@ -70,6 +75,7 @@ describe("prepareTimerNotifications", () => {
     mockRequestPermissionsAsync.mockResolvedValue({ granted: true });
     mockSetNotificationChannelAsync.mockResolvedValue(undefined);
     mockCanScheduleExactAlarms.mockResolvedValue(true);
+    mockOpenSettings.mockResolvedValue(undefined);
   });
 
   it("returns true when notification and exact alarm access are available", async () => {
@@ -91,6 +97,7 @@ describe("prepareReminderNotifications", () => {
     mockSetNotificationChannelAsync.mockResolvedValue(undefined);
     mockSetNotificationCategoryAsync.mockResolvedValue(undefined);
     mockCanScheduleExactAlarms.mockResolvedValue(true);
+    mockOpenSettings.mockResolvedValue(undefined);
   });
 
   it("creates the reminder channel and interactive category", async () => {
@@ -127,6 +134,7 @@ describe("scheduleTimerNotification", () => {
     mockGetPermissionsAsync.mockResolvedValue({ granted: true });
     mockSetNotificationChannelAsync.mockResolvedValue(undefined);
     mockCanScheduleExactAlarms.mockResolvedValue(true);
+    mockOpenSettings.mockResolvedValue(undefined);
     mockScheduleNotificationAsync.mockResolvedValue("timer-timer-1");
     jest.spyOn(Date, "now").mockReturnValue(1_000);
   });
@@ -172,10 +180,26 @@ describe("scheduleTimerNotification", () => {
     });
   });
 
-  it("returns undefined when exact alarms are unavailable", async () => {
+  it("shows an exact alarm explanation before opening settings for timer notifications", async () => {
     mockCanScheduleExactAlarms.mockResolvedValue(false);
 
     await expect(scheduleTimerNotification("timer-1", "Deep Work", 5_000)).resolves.toBeUndefined();
+    expect(mockAlertAlert).toHaveBeenCalledWith(
+      "Allow exact reminders",
+      "YAHT needs Alarms & reminders access to fire habit reminders at the exact time you choose.",
+      [
+        expect.objectContaining({
+          text: "Open settings",
+        }),
+      ],
+      { cancelable: false }
+    );
+    expect(mockOpenSettings).not.toHaveBeenCalled();
+
+    const buttons = mockAlertAlert.mock.calls.at(-1)?.[2] as Array<{ onPress?: () => void }>;
+    buttons[0].onPress?.();
+
+    expect(mockOpenSettings).toHaveBeenCalledWith("alarms");
     expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
@@ -241,6 +265,7 @@ describe("scheduleReminderNotification", () => {
     mockSetNotificationChannelAsync.mockResolvedValue(undefined);
     mockSetNotificationCategoryAsync.mockResolvedValue(undefined);
     mockCanScheduleExactAlarms.mockResolvedValue(true);
+    mockOpenSettings.mockResolvedValue(undefined);
     mockScheduleNotificationAsync.mockResolvedValue("reminder-series-h1-2026-03-21-123000");
   });
 
@@ -338,7 +363,64 @@ describe("scheduleReminderNotification", () => {
     Object.defineProperty(Platform, "OS", { value: originalPlatform });
   });
 
-  it("returns undefined when reminder exact alarms are unavailable", async () => {
+  it("shows an exact alarm explanation before opening settings for reminders", async () => {
+    mockCanScheduleExactAlarms.mockResolvedValue(false);
+
+    const result = await scheduleReminderNotification({
+      habitId: "h1",
+      habitTitle: "Stretch",
+      timestamp: 123_000,
+      reminderDate: "2026-03-21",
+    });
+
+    expect(result).toBeUndefined();
+    expect(mockAlertAlert).toHaveBeenCalledWith(
+      "Allow exact reminders",
+      "YAHT needs Alarms & reminders access to fire habit reminders at the exact time you choose.",
+      [
+        expect.objectContaining({
+          text: "Open settings",
+        }),
+      ],
+      { cancelable: false }
+    );
+    expect(mockOpenSettings).not.toHaveBeenCalled();
+
+    const buttons = mockAlertAlert.mock.calls.at(-1)?.[2] as Array<{ onPress?: () => void }>;
+    expect(buttons).toHaveLength(1);
+    buttons[0].onPress?.();
+
+    expect(mockOpenSettings).toHaveBeenCalledWith("alarms");
+    expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  it("does not stack exact alarm explanation alerts while one is already visible", async () => {
+    mockCanScheduleExactAlarms.mockResolvedValue(false);
+
+    await scheduleReminderNotification({
+      habitId: "h1",
+      habitTitle: "Stretch",
+      timestamp: 123_000,
+      reminderDate: "2026-03-21",
+    });
+    await scheduleReminderNotification({
+      habitId: "h1",
+      habitTitle: "Stretch",
+      timestamp: 124_000,
+      reminderDate: "2026-03-21",
+    });
+
+    expect(mockAlertAlert).toHaveBeenCalledTimes(1);
+    expect(mockOpenSettings).not.toHaveBeenCalled();
+
+    const buttons = mockAlertAlert.mock.calls.at(-1)?.[2] as Array<{ onPress?: () => void }>;
+    buttons[0].onPress?.();
+
+    expect(mockOpenSettings).toHaveBeenCalledWith("alarms");
+  });
+
+  it("records degraded Android exact alarm diagnostics when exact alarms are unavailable", async () => {
+    clearDiagnosticEvents();
     mockCanScheduleExactAlarms.mockResolvedValue(false);
 
     await expect(
@@ -349,7 +431,20 @@ describe("scheduleReminderNotification", () => {
         reminderDate: "2026-03-21",
       })
     ).resolves.toBeUndefined();
-    expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
+
+    expect(getDiagnosticEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          level: "warn",
+          event: "notifications.exactAlarm.unavailable",
+          context: {
+            action: "show-exact-alarm-explanation",
+            category: "reminders",
+            settingsPrompted: true,
+          },
+        }),
+      ])
+    );
   });
 });
 

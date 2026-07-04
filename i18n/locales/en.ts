@@ -290,6 +290,9 @@ export const en = {
     followUpBody: "Still due. Mark it done when you're finished.",
     stopTitle: "Open YAHT to continue reminders",
     stopBody: "Your reminder queue is full. Open YAHT to schedule the next reminders.",
+    exactAlarmTitle: "Allow exact reminders",
+    exactAlarmBody: "YAHT needs Alarms & reminders access to fire habit reminders at the exact time you choose.",
+    exactAlarmOpenSettings: "Open settings",
   },
   fileOperations: {
     exportTitle: "Export Habits Data",

@@ -1,5 +1,5 @@
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 import { canScheduleExactAlarms, openSettings } from "react-native-permissions";
 import { translate } from "@/i18n";
 import { logError, logEvent, logWarn } from "@/utils/diagnostics/diagnosticLogger";
@@ -14,6 +14,7 @@ const REMINDER_NOTIFICATION_CATEGORY_ID = "habitReminderActions";
 export const REMINDER_NOTIFICATION_PREFIX = "reminder-";
 const REMINDER_KIND = "habitReminder";
 const REMINDER_QUEUE_STOP_KIND = "reminderQueueStop";
+let isExactAlarmSettingsPromptVisible = false;
 
 export const DEFAULT_REMINDER_SNOOZE_MS = 15 * 60 * 1000;
 export const MAX_FOLLOW_UP_REMINDERS_PER_SCHEDULE = 3;
@@ -150,10 +151,40 @@ const ensureReminderCategory = async () => {
   }
 };
 
+const showExactAlarmSettingsPrompt = (logContext: string) => {
+  if (isExactAlarmSettingsPromptVisible) {
+    logEvent("notifications.exactAlarm.promptSuppressed", { category: logContext, reason: "already-visible" });
+    return false;
+  }
+
+  isExactAlarmSettingsPromptVisible = true;
+  Alert.alert(
+    translate("notifications.exactAlarmTitle"),
+    translate("notifications.exactAlarmBody"),
+    [
+      {
+        text: translate("notifications.exactAlarmOpenSettings"),
+        onPress: () => {
+          isExactAlarmSettingsPromptVisible = false;
+          logEvent("notifications.exactAlarm.settingsOpening", { category: logContext });
+          void openSettings("alarms").catch((error) => {
+            logError("notifications.exactAlarm.settingsOpenFailed", {
+              operation: "openExactAlarmSettings",
+              category: logContext,
+              error,
+            });
+          });
+        },
+      },
+    ],
+    { cancelable: false }
+  );
+  return true;
+};
+
 const prepareNotificationsBase = async (
   channelId: string,
   channelConfig: Notifications.NotificationChannelInput,
-  openAlarmSettings: boolean,
   logContext: string
 ): Promise<boolean> => {
   const hasPermission = await ensureNotificationPermission();
@@ -179,9 +210,12 @@ const prepareNotificationsBase = async (
       return true;
     }
 
-    if (openAlarmSettings) {
-      await openSettings("alarms");
-    }
+    const didShowSettingsPrompt = showExactAlarmSettingsPrompt(logContext);
+    logWarn("notifications.exactAlarm.unavailable", {
+      category: logContext,
+      action: didShowSettingsPrompt ? "show-exact-alarm-explanation" : "prompt-already-visible",
+      settingsPrompted: didShowSettingsPrompt,
+    });
   } catch (error) {
     console.error(`Error checking exact alarm access for ${logContext}:`, error);
     logError("notifications.exactAlarm.failed", { operation: "canScheduleExactAlarms", category: logContext, error });
@@ -335,9 +369,7 @@ export const cancelReminderNotificationSeries = async (reminderSeriesId: string)
   }
 };
 
-export const prepareTimerNotifications = async ({
-  openAlarmSettings = true,
-}: { openAlarmSettings?: boolean } = {}): Promise<boolean> => {
+export const prepareTimerNotifications = async (): Promise<boolean> => {
   return prepareNotificationsBase(
     TIMER_CHANNEL_ID,
     {
@@ -345,14 +377,13 @@ export const prepareTimerNotifications = async ({
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
     },
-    openAlarmSettings,
     "timers"
   );
 };
 
 export const scheduleTimerNotification = async (timerId: string, habitTitle: string, remainingMs: number) => {
   try {
-    const canSchedule = await prepareTimerNotifications({ openAlarmSettings: false });
+    const canSchedule = await prepareTimerNotifications();
     if (!canSchedule) {
       logWarn("timer.notification.notScheduled", { timerId, reason: "prepare-failed" });
       return undefined;
@@ -431,9 +462,7 @@ export const cancelAllTimerNotifications = async () => {
   }
 };
 
-export const prepareReminderNotifications = async ({
-  openAlarmSettings = true,
-}: { openAlarmSettings?: boolean } = {}): Promise<boolean> => {
+export const prepareReminderNotifications = async (): Promise<boolean> => {
   return prepareNotificationsBase(
     REMINDER_CHANNEL_ID,
     {
@@ -441,7 +470,6 @@ export const prepareReminderNotifications = async ({
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
     },
-    openAlarmSettings,
     "reminders"
   );
 };
@@ -457,7 +485,7 @@ export const scheduleReminderNotification = async ({
   repeatIntervalMs,
 }: ReminderScheduleParams) => {
   try {
-    const canSchedule = await prepareReminderNotifications({ openAlarmSettings: false });
+    const canSchedule = await prepareReminderNotifications();
     if (!canSchedule) {
       logWarn("reminder.notification.notScheduled", { habitId, reminderDate, reason: "prepare-failed" });
       return undefined;

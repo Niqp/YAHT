@@ -273,7 +273,7 @@ export const reconcileReminderNotifications = async ({
 
     const needsScheduling = reminderEntriesToSchedule.length > 0 || !!stopEntryToSchedule;
     if (needsScheduling) {
-      const canScheduleReminders = await prepareReminderNotifications({ openAlarmSettings: false });
+      const canScheduleReminders = await prepareReminderNotifications();
       if (!canScheduleReminders) {
         saveReminderScheduleLedger({
           version: REMINDER_SCHEDULE_LEDGER_VERSION,

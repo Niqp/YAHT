@@ -79,6 +79,7 @@ const SAFE_BOOLEAN_KEYS = new Set([
   "reminderEnabled",
   "repeatIfNotCompleted",
   "shouldNavigateToToday",
+  "settingsPrompted",
   "targeted",
 ]);
 
