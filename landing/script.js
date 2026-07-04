@@ -9,11 +9,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const schemeToggle = document.getElementById("scheme-toggle");
   const heroImage = document.getElementById("hero-image");
   const tabBtns = document.querySelectorAll(".gallery-tab-btn");
-  const galleryImage = document.getElementById("gallery-image");
-  const galleryDisplay = document.querySelector(".gallery-display-wrapper");
-  const galleryKeys = Array.from(tabBtns)
-    .map((btn) => btn.getAttribute("data-img"))
-    .filter(Boolean);
+  const galleryTabs = document.querySelector(".gallery-tabs");
+  const galleryTrack = document.querySelector(".gallery-track");
+  const gallerySlides = Array.from(document.querySelectorAll(".gallery-slide"));
+  const galleryKeys = gallerySlides.map((slide) => slide.getAttribute("data-img")).filter(Boolean);
+
+  // Must match the mobile breakpoint used in styles.css (@media (max-width: 600px))
+  const MOBILE_MAX_WIDTH_PX = 600;
+  const mobileGalleryQuery = window.matchMedia?.(`(max-width: ${MOBILE_MAX_WIDTH_PX}px)`);
 
   // Default configuration keys
   const THEME_KEY = "yaht-landing-theme";
@@ -27,97 +30,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // Must match the allowlists in the boot script in index.html
+  const ALLOWED_THEMES = ["sepia", "clear", "oled"];
+  const ALLOWED_SCHEMES = ["dark", "light"];
+
   // Retrieve active choices or fall back to Sepia Dark as default
   let currentTheme = window.YAHT_LANDING_BOOT?.theme || getStoredPreference(THEME_KEY, "sepia");
   let currentScheme = window.YAHT_LANDING_BOOT?.scheme || getStoredPreference(SCHEME_KEY, "dark");
+
+  if (!ALLOWED_THEMES.includes(currentTheme)) {
+    currentTheme = "sepia";
+  }
+
+  if (!ALLOWED_SCHEMES.includes(currentScheme)) {
+    currentScheme = "dark";
+  }
+
   let currentGalleryImage = "today";
 
   const SCREENSHOT_DIR = "assets/images/screenshots";
-  const screenshotPaths = {
-    dark: {
-      clear: {
-        today: `${SCREENSHOT_DIR}/YAHT_dark_clear_today.jpg`,
-        new: `${SCREENSHOT_DIR}/YAHT_dark_clear_new.jpg`,
-        stats: `${SCREENSHOT_DIR}/YAHT_dark_clear_stats.jpg`,
-        settings: `${SCREENSHOT_DIR}/YAHT_dark_clear_settings.jpg`,
-      },
-      sepia: {
-        today: `${SCREENSHOT_DIR}/YAHT_dark_sepia_today.jpg`,
-        new: `${SCREENSHOT_DIR}/YAHT_dark_sepia_new.jpg`,
-        stats: `${SCREENSHOT_DIR}/YAHT_dark_sepia_stats.jpg`,
-        settings: `${SCREENSHOT_DIR}/YAHT_dark_sepia_settings.jpg`,
-      },
-      oled: {
-        today: `${SCREENSHOT_DIR}/YAHT_dark_oled_today.jpg`,
-        new: `${SCREENSHOT_DIR}/YAHT_dark_oled_new.jpg`,
-        stats: `${SCREENSHOT_DIR}/YAHT_dark_oled_stats.jpg`,
-        settings: `${SCREENSHOT_DIR}/YAHT_dark_oled_settings.jpg`,
-      },
-    },
-    light: {
-      clear: {
-        today: `${SCREENSHOT_DIR}/YAHT_light_clear_today.jpg`,
-        new: `${SCREENSHOT_DIR}/YAHT_light_clear_new.jpg`,
-        stats: `${SCREENSHOT_DIR}/YAHT_light_clear_stats.jpg`,
-        settings: `${SCREENSHOT_DIR}/YAHT_light_clear_settings.jpg`,
-      },
-      sepia: {
-        today: `${SCREENSHOT_DIR}/YAHT_light_sepia_today.jpg`,
-        new: `${SCREENSHOT_DIR}/YAHT_light_sepia_new.jpg`,
-        stats: `${SCREENSHOT_DIR}/YAHT_light_sepia_stats.jpg`,
-        settings: `${SCREENSHOT_DIR}/YAHT_light_sepia_settings.jpg`,
-      },
-      oled: {
-        today: `${SCREENSHOT_DIR}/YAHT_light_clear_today.jpg`,
-        new: `${SCREENSHOT_DIR}/YAHT_light_clear_new.jpg`,
-        stats: `${SCREENSHOT_DIR}/YAHT_light_clear_stats.jpg`,
-        settings: `${SCREENSHOT_DIR}/YAHT_light_oled_settings.jpg`,
-      },
-    },
-  };
 
   const getScreenshotPath = (screenKey, theme = currentTheme, scheme = currentScheme) => {
-    return (
-      screenshotPaths[scheme]?.[theme]?.[screenKey] ||
-      screenshotPaths[scheme]?.clear?.[screenKey] ||
-      screenshotPaths.dark.sepia[screenKey]
-    );
+    // OLED light renders with the clear light palette, so it reuses the clear
+    // screenshots — except settings, where the visible theme toggle differs.
+    if (scheme === "light" && theme === "oled" && screenKey !== "settings") {
+      theme = "clear";
+    }
+
+    return `${SCREENSHOT_DIR}/YAHT_${scheme}_${theme}_${screenKey}.jpg`;
   };
 
   const createCrossfader = window.YAHT?.createScreenshotCrossfader;
   const heroCrossfader = createCrossfader?.(heroImage);
-  const galleryCrossfader = createCrossfader?.(galleryImage);
+
+  // Tracks the most recently requested src per image so a stale preload
+  // finishing late can't overwrite a newer theme choice.
+  const pendingImageSrc = new WeakMap();
 
   const updateImageSource = (image, src, alt, fade = false) => {
     if (!image) {
       return;
     }
 
-    const crossfader = image === heroImage ? heroCrossfader : galleryCrossfader;
-
-    if (crossfader) {
-      crossfader.update(src, alt, { animate: fade });
+    if (heroCrossfader && image === heroImage) {
+      heroCrossfader.update(src, alt, { animate: fade });
       return;
     }
+
+    image.alt = alt;
 
     if (image.getAttribute("src") === src) {
-      image.alt = alt;
+      pendingImageSrc.delete(image);
       return;
     }
 
-    if (!fade) {
-      image.src = src;
-      image.alt = alt;
-      return;
-    }
-
-    image.style.opacity = "0";
-
-    setTimeout(() => {
-      image.src = src;
-      image.alt = alt;
-      image.style.opacity = "1";
-    }, 300);
+    // Warm the cache before swapping so the phone screen never flashes black
+    pendingImageSrc.set(image, src);
+    const loader = new Image();
+    loader.onload = loader.onerror = () => {
+      if (pendingImageSrc.get(image) === src) {
+        pendingImageSrc.delete(image);
+        image.src = src;
+      }
+    };
+    loader.src = src;
   };
 
   const syncScreenshots = (fadeScreenshots = false) => {
@@ -128,12 +104,18 @@ document.addEventListener("DOMContentLoaded", () => {
       fadeScreenshots
     );
 
-    updateImageSource(
-      galleryImage,
-      getScreenshotPath(currentGalleryImage),
-      `YAHT App ${currentGalleryImage} screen in ${currentScheme} ${currentTheme} theme`,
-      fadeScreenshots
-    );
+    gallerySlides.forEach((slide) => {
+      const screenKey = slide.getAttribute("data-img");
+      const slideImage = slide.querySelector("img");
+
+      if (screenKey && slideImage) {
+        updateImageSource(
+          slideImage,
+          getScreenshotPath(screenKey),
+          `YAHT App ${screenKey} screen in ${currentScheme} ${currentTheme} theme`
+        );
+      }
+    });
   };
 
   // Set classes on root node
@@ -187,69 +169,106 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------------------------------------------------
   // Screenshot Gallery Navigation
   // -------------------------------------------------------------
-  const activateGalleryItem = (imgKey, options = {}) => {
-    const { animateDescription = true } = options;
-    const targetButton = Array.from(tabBtns).find((btn) => btn.getAttribute("data-img") === imgKey);
+  const galleryDetails = document.querySelector(".gallery-details");
+  const galleryDots = document.querySelectorAll(".gallery-dot");
+  const isMobileGallery = () => Boolean(mobileGalleryQuery?.matches);
+  let descAnimationTimer = null;
+  let suppressScrollSync = false;
+  let suppressScrollSyncTimer = null;
 
-    if (!imgKey || !targetButton) {
+  // Center the active chip within the scrollable tab row (mobile)
+  const scrollTabIntoView = (button) => {
+    if (!galleryTabs || galleryTabs.scrollWidth <= galleryTabs.clientWidth) {
       return;
     }
 
+    galleryTabs.scrollTo({
+      left: button.offsetLeft - (galleryTabs.clientWidth - button.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+  };
+
+  const showDescriptionCard = (imgKey, direction, animate) => {
+    const currentActiveCard = document.querySelector(".desc-card.active");
+    const targetCard = document.getElementById(`gallery-desc-${imgKey}`);
+
+    if (!targetCard || currentActiveCard === targetCard) {
+      return;
+    }
+
+    if (descAnimationTimer) {
+      clearTimeout(descAnimationTimer);
+      descAnimationTimer = null;
+    }
+
+    document.querySelectorAll(".desc-card").forEach((card) => {
+      card.classList.remove("slide-exit", "slide-enter");
+    });
+
+    galleryDetails?.style.setProperty("--slide-dir", String(direction));
+
+    if (currentActiveCard) {
+      currentActiveCard.classList.remove("active");
+    }
+
+    targetCard.classList.add("active");
+
+    if (animate && currentActiveCard) {
+      currentActiveCard.classList.add("slide-exit");
+      targetCard.classList.add("slide-enter");
+
+      descAnimationTimer = setTimeout(() => {
+        currentActiveCard.classList.remove("slide-exit");
+        targetCard.classList.remove("slide-enter");
+        descAnimationTimer = null;
+      }, 320);
+    }
+  };
+
+  const activateGalleryItem = (imgKey, options = {}) => {
+    const { scrollTrack = true } = options;
+    const targetButton = Array.from(tabBtns).find((btn) => btn.getAttribute("data-img") === imgKey);
+
+    if (!imgKey || !targetButton || imgKey === currentGalleryImage) {
+      return;
+    }
+
+    const previousIndex = galleryKeys.indexOf(currentGalleryImage);
+    const nextIndex = galleryKeys.indexOf(imgKey);
     currentGalleryImage = imgKey;
 
-    // 1. Update active tab class
     tabBtns.forEach((tab) => {
       tab.classList.remove("active");
       tab.setAttribute("aria-selected", "false");
     });
     targetButton.classList.add("active");
     targetButton.setAttribute("aria-selected", "true");
+    scrollTabIntoView(targetButton);
 
-    // 2. Crossfade to the selected screenshot after the image has loaded
-    if (galleryImage && getScreenshotPath(imgKey)) {
-      updateImageSource(galleryImage, getScreenshotPath(imgKey), `YAHT App ${targetButton.textContent} Preview`, true);
+    galleryDots.forEach((dot) => {
+      dot.classList.toggle("active", dot.getAttribute("data-img") === imgKey);
+    });
+
+    // Desktop crossfades between stacked slides; on mobile all slides stay visible
+    gallerySlides.forEach((slide) => {
+      slide.classList.toggle("active", slide.getAttribute("data-img") === imgKey);
+    });
+
+    // On mobile, glide the snap track to the selected slide
+    if (scrollTrack && galleryTrack && isMobileGallery() && nextIndex >= 0) {
+      suppressScrollSync = true;
+      clearTimeout(suppressScrollSyncTimer);
+      suppressScrollSyncTimer = setTimeout(() => {
+        suppressScrollSync = false;
+      }, 700);
+
+      galleryTrack.scrollTo({
+        left: nextIndex * galleryTrack.clientWidth,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
     }
 
-    // 3. Update description box with a coordinated 'move and fade' animation (eased)
-    const currentActiveCard = document.querySelector(".desc-card.active");
-    const targetCard = document.getElementById(`gallery-desc-${imgKey}`);
-
-    if (currentActiveCard && currentActiveCard !== targetCard) {
-      if (!animateDescription) {
-        currentActiveCard.classList.remove("active", "slide-exit", "slide-enter");
-        currentActiveCard.hidden = true;
-
-        if (targetCard) {
-          targetCard.hidden = false;
-          targetCard.classList.add("active");
-          targetCard.classList.remove("slide-exit", "slide-enter");
-        }
-
-        return;
-      }
-
-      // Animate old text exiting to the left
-      currentActiveCard.classList.remove("active");
-      currentActiveCard.classList.add("slide-exit");
-      currentActiveCard.hidden = false;
-
-      setTimeout(() => {
-        currentActiveCard.classList.remove("slide-exit");
-        currentActiveCard.hidden = true;
-
-        // Animate new text entering from the right
-        if (targetCard) {
-          targetCard.hidden = false;
-          targetCard.classList.add("active", "slide-enter");
-          setTimeout(() => {
-            targetCard.classList.remove("slide-enter");
-          }, 300);
-        }
-      }, 300);
-    } else if (!currentActiveCard && targetCard) {
-      targetCard.hidden = false;
-      targetCard.classList.add("active");
-    }
+    showDescriptionCard(imgKey, nextIndex >= previousIndex ? 1 : -1, !prefersReducedMotion);
   };
 
   tabBtns.forEach((btn) => {
@@ -258,57 +277,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  if (galleryDisplay && galleryKeys.length > 1) {
-    let touchStartX = 0;
-    let touchStartY = 0;
+  // Keep tabs and description in sync while the user swipes the snap track
+  if (galleryTrack && galleryKeys.length > 1) {
+    let scrollSyncFrame = null;
 
-    galleryDisplay.addEventListener(
-      "touchstart",
-      (event) => {
-        const touch = event.changedTouches?.[0];
-
-        if (!touch) {
+    galleryTrack.addEventListener(
+      "scroll",
+      () => {
+        if (!isMobileGallery() || suppressScrollSync || scrollSyncFrame) {
           return;
         }
 
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
+        scrollSyncFrame = requestAnimationFrame(() => {
+          scrollSyncFrame = null;
+          const slideWidth = galleryTrack.clientWidth;
+
+          if (!slideWidth) {
+            return;
+          }
+
+          const index = Math.round(galleryTrack.scrollLeft / slideWidth);
+          const imgKey = galleryKeys[Math.max(0, Math.min(index, galleryKeys.length - 1))];
+
+          if (imgKey && imgKey !== currentGalleryImage) {
+            activateGalleryItem(imgKey, { scrollTrack: false });
+          }
+        });
       },
       { passive: true }
     );
 
-    galleryDisplay.addEventListener(
-      "touchend",
-      (event) => {
-        const touch = event.changedTouches?.[0];
-
-        if (!touch) {
-          return;
-        }
-
-        const deltaX = touch.clientX - touchStartX;
-        const deltaY = touch.clientY - touchStartY;
-        const isHorizontalSwipe = Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
-
-        if (!isHorizontalSwipe) {
-          return;
-        }
-
-        const currentIndex = Math.max(galleryKeys.indexOf(currentGalleryImage), 0);
-        const direction = deltaX < 0 ? 1 : -1;
-        const nextIndex = (currentIndex + direction + galleryKeys.length) % galleryKeys.length;
-
-        activateGalleryItem(galleryKeys[nextIndex], { animateDescription: false });
-      },
-      { passive: true }
-    );
+    galleryTrack.addEventListener("scrollend", () => {
+      clearTimeout(suppressScrollSyncTimer);
+      suppressScrollSync = false;
+    });
   }
 
   // -------------------------------------------------------------
   // Mobile scroll-triggered motion
   // -------------------------------------------------------------
   const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  const isCoarseMobile = window.matchMedia?.("(hover: none) and (pointer: coarse), (max-width: 600px)")?.matches;
+  const isCoarseMobile = window.matchMedia?.(
+    `(hover: none) and (pointer: coarse), (max-width: ${MOBILE_MAX_WIDTH_PX}px)`
+  )?.matches;
   const mobileRevealTargets = document.querySelectorAll("[data-mobile-reveal]");
 
   if (!prefersReducedMotion && isCoarseMobile && "IntersectionObserver" in window && mobileRevealTargets.length > 0) {
@@ -380,16 +391,4 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
-  // Lock the gallery card height to the first (largest) tab dynamically to prevent layout shifting
-  const lockGalleryHeight = () => {
-    const detailsContainer = document.querySelector(".gallery-details");
-    if (detailsContainer) {
-      detailsContainer.style.minHeight = "auto";
-      detailsContainer.style.minHeight = `${detailsContainer.offsetHeight}px`;
-    }
-  };
-
-  window.addEventListener("load", lockGalleryHeight);
-  window.addEventListener("resize", lockGalleryHeight);
 });

@@ -4,8 +4,9 @@
 
 /* Define color tokens for themes and schemes */
 
-/* 1. CLEAR THEME */
-html.theme-clear.scheme-light {
+/* 1. CLEAR THEME (OLED light shares this palette — only its settings screenshot differs) */
+html.theme-clear.scheme-light,
+html.theme-oled.scheme-light {
   --bg-app: #f6f8fb;
   --bg-chrome: #eaf0f7;
   --bg-surface: #ffffff;
@@ -86,28 +87,7 @@ html.theme-sepia.scheme-dark {
   --shadow: rgba(0, 0, 0, 0.3);
 }
 
-/* 3. OLED THEME */
-html.theme-oled.scheme-light {
-  /* OLED light falls back to clear light */
-  --bg-app: #f6f8fb;
-  --bg-chrome: #eaf0f7;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #f9fbfe;
-  --bg-inset: #eff3f8;
-  --text-primary: #18212c;
-  --text-secondary: #4f6278;
-  --text-tertiary: #76879b;
-  --accent: #3f74b5;
-  --accent-muted: #7099cc;
-  --accent-soft-bg: rgba(63, 116, 181, 0.12);
-  --border-default: rgba(24, 33, 44, 0.11);
-  --border-strong: rgba(24, 33, 44, 0.22);
-  --gradient-header-start: #b5cbe4;
-  --gradient-header-mid: #dde8f5;
-  --gradient-header-end: #f6f8fb;
-  --shadow: rgba(0, 0, 0, 0.05);
-}
-
+/* 3. OLED THEME (light scheme falls back to clear light above) */
 html.theme-oled.scheme-dark {
   --bg-app: #000000;
   --bg-chrome: #050b14;
@@ -238,9 +218,11 @@ h6 {
   gap: 1.25rem;
 }
 
-/* Theme Switcher controls */
+/* Theme Switcher controls (34px tall, matching the scheme toggle and Get App button) */
 .theme-switcher {
   display: flex;
+  align-items: center;
+  height: 34px;
   background-color: var(--bg-inset);
   border: 1px solid var(--border-default);
   padding: 3px;
@@ -255,7 +237,8 @@ h6 {
   font-family: "Outfit", sans-serif;
   font-size: 0.8rem;
   font-weight: 600;
-  padding: 5px 12px;
+  height: 26px;
+  padding: 0 12px;
   border-radius: 16px;
   cursor: pointer;
   width: 64px;
@@ -309,12 +292,15 @@ html.theme-oled .theme-btn[data-theme="oled"] {
 html.scheme-dark .sun-icon {
   display: block;
 }
+
 html.scheme-dark .moon-icon {
   display: none;
 }
+
 html.scheme-light .sun-icon {
   display: none;
 }
+
 html.scheme-light .moon-icon {
   display: block;
 }
@@ -323,7 +309,10 @@ html.scheme-light .moon-icon {
   text-decoration: none;
   background-color: var(--accent);
   color: var(--bg-app);
-  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
   border-radius: 20px;
   font-family: "Outfit", sans-serif;
   font-weight: 700;
@@ -455,14 +444,17 @@ html.scheme-light .moon-icon {
 
 .phone-mockup {
   width: 275px;
-  background-color: var(--phone-frame-gap); /* Inner frame gap */
-  border: 10px solid var(--phone-casing); /* Premium hardware casing */
+  background-color: var(--phone-frame-gap);
+  /* Inner frame gap */
+  border: 10px solid var(--phone-casing);
+  /* Premium hardware casing */
   border-radius: 40px;
   box-shadow:
     0 20px 45px -10px var(--phone-drop-shadow),
     0 0 0 1px var(--phone-frame-ring);
   position: relative;
-  padding: 3px; /* Offset for screen bezel */
+  padding: 3px;
+  /* Offset for screen bezel */
   transform: rotate(1deg) translateY(-5px);
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -521,19 +513,25 @@ html.scheme-light .moon-icon {
 /* Screen Container (Black screen bezel + Bottom Navigation offset) */
 .phone-screen {
   width: 100%;
-  aspect-ratio: 758 / 1600; /* Matches exact dimensions of landing screenshots */
-  background-color: #000000; /* Dark background to prevent flashes */
+  aspect-ratio: 758 / 1600;
+  /* Matches exact dimensions of landing screenshots */
+  background-color: #000000;
+  /* Dark background to prevent flashes */
   overflow: hidden;
-  border: 5px solid #000000; /* Inside black screen bezel */
-  border-radius: 24px; /* Matches screen corner radius */
+  border: 5px solid #000000;
+  /* Inside black screen bezel */
+  border-radius: 24px;
+  /* Matches screen corner radius */
   display: flex;
   flex-direction: column;
-  padding-bottom: 0; /* Removed bottom border padding as requested */
+  padding-bottom: 0;
+  /* Removed bottom border padding as requested */
 }
 
 .screenshot-wrapper {
   flex: 1;
-  background-color: #000000; /* Fades to black when screenshot opacity is animated */
+  background-color: #000000;
+  /* Fades to black when screenshot opacity is animated */
   overflow: hidden;
   position: relative;
 }
@@ -542,7 +540,8 @@ html.scheme-light .moon-icon {
 .gallery-screenshot-img {
   width: 100%;
   height: 100%;
-  object-fit: fill; /* Use fill to avoid cropping the bottom menu text */
+  object-fit: fill;
+  /* Use fill to avoid cropping the bottom menu text */
   display: block;
 }
 
@@ -572,7 +571,8 @@ html.scheme-light .moon-icon {
 }
 
 .spotlight-card {
-  background-color: var(--bg-surface); /* Stand out clearly on light sepia backgrounds */
+  background-color: var(--bg-surface);
+  /* Stand out clearly on light sepia backgrounds */
   border: 1px solid var(--border-default);
   border-radius: 20px;
   padding: 2rem 2.5rem;
@@ -715,24 +715,29 @@ html.scheme-light .moon-icon {
 
 .gallery-section {
   padding: 3rem 0;
-  background-color: var(--bg-app); /* Theme-dependent section background */
+  background-color: var(--bg-app);
+  /* Theme-dependent section background */
   transition: background-color 0.4s ease;
 }
 
 .gallery-section .section-title {
-  color: var(--text-primary); /* Theme-dependent title */
+  color: var(--text-primary);
+  /* Theme-dependent title */
 }
 
 .gallery-section .section-subtitle {
-  color: var(--text-secondary); /* Theme-dependent subtitle */
+  color: var(--text-secondary);
+  /* Theme-dependent subtitle */
 }
 
 .gallery-tabs {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  margin: 0 auto 4.5rem auto; /* Increased space between categories selector and mockup */
-  background-color: var(--bg-inset); /* Theme-dependent inset background */
+  margin: 0 auto 4.5rem auto;
+  /* Increased space between categories selector and mockup */
+  background-color: var(--bg-inset);
+  /* Theme-dependent inset background */
   padding: 6px;
   border-radius: 30px;
   border: 1px solid var(--border-default);
@@ -744,14 +749,11 @@ html.scheme-light .moon-icon {
     border-color 0.4s ease;
 }
 
-.gallery-swipe-hint {
-  display: none;
-}
-
 .gallery-tab-btn {
   border: none;
   background-color: transparent;
-  color: var(--text-secondary); /* Theme-dependent text color */
+  color: var(--text-secondary);
+  /* Theme-dependent text color */
   padding: 8px 20px;
   border-radius: 24px;
   font-family: "Outfit", sans-serif;
@@ -767,8 +769,10 @@ html.scheme-light .moon-icon {
 }
 
 .gallery-tab-btn.active {
-  background-color: var(--accent); /* Theme-dependent active accent color */
-  color: var(--bg-app); /* Theme-dependent text color on active tab */
+  background-color: var(--accent);
+  /* Theme-dependent active accent color */
+  color: var(--bg-app);
+  /* Theme-dependent text color on active tab */
   box-shadow: 0 2px 6px var(--shadow);
 }
 
@@ -777,66 +781,92 @@ html.scheme-light .moon-icon {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr;
   gap: 4rem;
-  align-items: center; /* Center phone and card vertically as requested */
+  align-items: center;
+  /* Center phone and card vertically as requested */
 }
 
 .gallery-display-wrapper .phone-mockup {
   margin: 0 auto;
-  transform: rotate(-1deg) translateY(-5px); /* Tilt to the left as requested */
+  transform: rotate(-1deg) translateY(-5px);
+  /* Tilt to the left as requested */
 }
 
 .gallery-display-wrapper .phone-mockup:hover {
   transform: rotate(0deg) translateY(-12px);
 }
 
-.screenshot-wrapper {
+/* Slide track: stacked crossfade on desktop, horizontal snap scroll on mobile */
+.gallery-track {
   flex: 1;
+  display: grid;
   background-color: #000000;
   overflow: hidden;
-  position: relative;
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
+}
+
+.gallery-slide {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.gallery-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Swipe affordances: dots and hint only appear on the mobile carousel */
+.gallery-dots,
+.gallery-swipe-hint {
+  display: none;
 }
 
 .gallery-details {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-surface); /* Card background on container */
-  border: 1px solid var(--border-default); /* Card border on container */
+  display: grid;
+  align-content: center;
+  /* Vertically center description texts inside the card */
+  background-color: var(--bg-surface);
+  /* Card background on container */
+  border: 1px solid var(--border-default);
+  /* Card border on container */
   border-radius: 24px;
   padding: 2.5rem;
   box-shadow: 0 8px 24px var(--shadow);
-  justify-content: center; /* Vertically center description texts inside the card */
   transition:
     background-color 0.4s ease,
     border-color 0.4s ease;
 }
 
+/* Cards are grid-stacked so the container always fits the tallest one */
 .desc-card {
-  display: none;
+  grid-area: 1 / 1;
+  visibility: hidden;
+  align-self: center;
 }
 
 .desc-card.active {
-  display: block;
+  visibility: visible;
 }
 
 .desc-card h3 {
   font-size: 1.75rem;
   margin-bottom: 0.75rem;
-  color: var(--text-primary); /* Same black/white color as other headings */
+  color: var(--text-primary);
+  /* Same black/white color as other headings */
 }
 
 .desc-card p {
   font-size: 1.05rem;
-  color: var(--text-secondary); /* Theme-dependent paragraph text */
+  color: var(--text-secondary);
+  /* Theme-dependent paragraph text */
   margin-bottom: 1.5rem;
   line-height: 1.6;
 }
 
 .detail-tag {
   display: inline-block;
-  background-color: var(--bg-inset); /* Theme-dependent tag background */
+  background-color: var(--bg-inset);
+  /* Theme-dependent tag background */
   color: var(--text-secondary);
   border: 1px solid var(--border-default);
   padding: 5px 12px;
@@ -855,38 +885,40 @@ html.scheme-light .moon-icon {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
-/* Card slide animations */
+/* Card slide animations (direction set via --slide-dir: 1 forward, -1 backward) */
 .desc-card.slide-exit {
-  display: block;
-  animation: slideOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  visibility: visible;
+  animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .desc-card.slide-enter {
-  display: block;
-  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes slideOutLeft {
+@keyframes slideOut {
   from {
     opacity: 1;
     transform: translateX(0);
   }
+
   to {
     opacity: 0;
-    transform: translateX(-16px);
+    transform: translateX(calc(var(--slide-dir, 1) * -16px));
   }
 }
 
-@keyframes slideInRight {
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(16px);
+    transform: translateX(calc(var(--slide-dir, 1) * 16px));
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -902,7 +934,8 @@ html.scheme-light .moon-icon {
 }
 
 .download-card {
-  background-color: var(--bg-surface); /* Stand out clearly on light sepia backgrounds */
+  background-color: var(--bg-surface);
+  /* Stand out clearly on light sepia backgrounds */
   border: 1px solid var(--border-default);
   border-radius: 24px;
   padding: 4rem 2rem;
@@ -948,7 +981,8 @@ html.scheme-light .moon-icon {
 }
 
 .badge-img {
-  height: 52px; /* Bigger button sizes */
+  height: 52px;
+  /* Bigger button sizes */
   width: auto;
   border-radius: 8px;
   transition:
@@ -1101,6 +1135,7 @@ html.scheme-light .moon-icon {
   }
 }
 
+/* Breakpoint mirrored in script.js (MOBILE_MAX_WIDTH_PX) — keep in sync */
 @media (max-width: 600px) {
   .section-container {
     padding: 0 1.25rem;
@@ -1183,91 +1218,104 @@ html.scheme-light .moon-icon {
   }
 
   .gallery-section {
-    padding: 2.25rem 0 2.5rem;
-  }
-
-  .gallery-section .section-container {
-    display: flex;
-    flex-direction: column;
+    padding: 2.5rem 0 1rem;
   }
 
   .gallery-section .section-header {
-    order: 1;
-    margin-bottom: 1.35rem;
+    margin-bottom: 2rem;
   }
 
+  .gallery-section .section-subtitle {
+    font-size: 0.95rem;
+  }
+
+  /* Swiping the carousel replaces the tabs on mobile */
   .gallery-tabs {
-    order: 3;
-    gap: 0.4rem;
-    width: auto;
-    max-width: none;
-    margin: 0.7rem auto 0.2rem;
-    padding: 0;
-    border-radius: 999px;
-    border: none;
-    background-color: transparent;
+    display: none;
   }
 
-  .gallery-tab-btn {
-    width: 0.48rem;
-    min-width: 0.48rem;
-    height: 0.48rem;
-    padding: 0;
-    overflow: hidden;
+  /* Screenshots scroll natively inside the phone screen */
+  .gallery-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .gallery-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gallery-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    opacity: 1;
+    transition: none;
+    pointer-events: auto;
+  }
+
+  .gallery-display-wrapper {
+    gap: 0;
+  }
+
+  .gallery-display-wrapper .phone-mockup {
+    width: min(200px, 55vw);
+    margin: 0 auto;
+    transform: rotate(-1deg) translateY(-3px);
+  }
+
+  /* Dots mirror the track position right below the phone */
+  .gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.45rem;
+    margin: 1.5rem auto 0;
+  }
+
+  .gallery-dot {
+    width: 6px;
+    height: 6px;
     border-radius: 999px;
-    font-size: 0;
-    color: transparent;
     background-color: var(--border-strong);
+    transition:
+      width 0.25s ease,
+      background-color 0.25s ease;
   }
 
-  .gallery-tab-btn.active {
-    width: 1.35rem;
-    min-width: 1.35rem;
+  .gallery-dot.active {
+    width: 18px;
+    background-color: var(--accent);
   }
 
   .gallery-swipe-hint {
-    order: 4;
     display: block;
-    margin: 0 auto 0.8rem;
+    margin: 0.6rem auto 0;
     color: var(--text-tertiary);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
     text-align: center;
     text-transform: uppercase;
   }
 
-  .gallery-display-wrapper {
-    display: contents;
-    user-select: none;
-  }
-
-  .gallery-display-wrapper .phone-mockup {
-    order: 2;
-    width: min(180px, 48vw);
-    margin: 0 auto;
-    transform: rotate(-1deg) translateY(-3px);
-    touch-action: pan-y;
-  }
-
   .gallery-details {
-    order: 5;
-    width: min(100%, 330px);
-    margin: 0 auto;
-    padding: 1rem;
+    width: min(100%, 340px);
+    margin: 1.5rem auto 0;
+    padding: 1.35rem 1.4rem;
     border-radius: 16px;
-    touch-action: pan-y;
   }
 
   .desc-card h3 {
-    font-size: 1.16rem;
-    margin-bottom: 0.45rem;
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
   }
 
   .desc-card p {
-    font-size: 0.84rem;
-    line-height: 1.45;
-    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-bottom: 0.85rem;
   }
 
   .detail-tag {
@@ -1304,8 +1352,28 @@ html.scheme-light .moon-icon {
     text-align: center;
   }
 
-  .theme-switcher {
-    display: none; /* Hide theme switcher in header on mobile */
+  /* Compact header so the theme switcher stays usable on mobile */
+  .logo-text {
+    display: none;
+  }
+
+  .nav-controls {
+    gap: 0.6rem;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .theme-btn {
+    width: auto;
+    padding: 0 9px;
+    font-size: 0.72rem;
+  }
+
+  .nav-download-btn {
+    padding: 0 12px;
+    font-size: 0.8rem;
   }
 
   .app-footer {
@@ -1329,16 +1397,10 @@ html.scheme-light .moon-icon {
     transform: rotate(0deg) translateY(-12px);
   }
 
-  .gallery-display-wrapper {
-    cursor: grab;
-  }
-
-  .gallery-display-wrapper:active {
-    cursor: grabbing;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

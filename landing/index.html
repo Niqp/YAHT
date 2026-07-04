@@ -96,8 +96,8 @@
           </div>
           <h1 class="hero-title">Track habits.<br /><span class="highlight-text">Own your data.</span></h1>
           <p class="hero-description">
-            YAHT (Yet Another Habit Tracker) is a free, open-source habit tracker. It runs entirely on your phone. There
-            are no accounts, no ads, no trackers, and no servers.
+            YAHT (Yet Another Habit Tracker) is free and open-source. It runs entirely on your phone. There are no
+            accounts, no ads, no trackers, and no servers.
           </p>
 
           <!-- Action Buttons -->
@@ -158,8 +158,9 @@
           <div class="spotlight-content">
             <h2 class="spotlight-title">Free, open-source, and private</h2>
             <p class="spotlight-text">
-              YAHT is licensed under the <strong>GNU General Public License v3</strong>. We do not collect any data. All
-              database records stay on your phone, stored locally with MMKV.
+              YAHT is licensed under the <strong>GNU General Public License v3</strong>. We do not collect any data.
+              Everything lives on your phone — there is no server. Export and import your habits freely; they are
+              yours.
             </p>
             <div class="badge-group">
               <span class="spotlight-pill">No Ads</span>
@@ -176,8 +177,8 @@
     <section id="features" class="features-section">
       <div class="section-container">
         <div class="section-header">
-          <h2 class="section-title">Simple but powerful</h2>
-          <p class="section-subtitle">YAHT has no clutter. Focus on your routines.</p>
+          <h2 class="section-title">Everything you need, nothing you don't</h2>
+          <p class="section-subtitle">No clutter, no feature bloat — just your routines.</p>
         </div>
 
         <div class="features-grid">
@@ -191,7 +192,7 @@
             </div>
             <h3 class="feature-card-title">Three habit types</h3>
             <p class="feature-card-desc">
-              Track simple yes/no checkmarks, counter metrics (like cups of water), or timed routines with an integrated
+              Track simple yes/no checkmarks, counters (like cups of water), or timed routines with an integrated
               stopwatch.
             </p>
           </div>
@@ -206,8 +207,8 @@
             </div>
             <h3 class="feature-card-title">Alarms & snooze</h3>
             <p class="feature-card-desc">
-              Set up to four exact alarm reminders per habit. Snooze or mark them as done directly from the notification
-              screen.
+              Set an exact alarm per habit, with optional follow-up nags spaced however you like. Snooze or mark habits
+              done right from the notification.
             </p>
           </div>
 
@@ -249,10 +250,10 @@
                 <path d="m18 9 4-4L19 2l-4 4"></path>
               </svg>
             </div>
-            <h3 class="feature-card-title">Sepia & OLED themes</h3>
+            <h3 class="feature-card-title">Make it yours</h3>
             <p class="feature-card-desc">
-              Pick warm Sepia tones, clear blue-grays, or a pure black OLED dark mode. Change your week start day in
-              settings.
+              Pick warm Sepia tones, clear blue-grays, or a pure black OLED dark mode — each with light and dark
+              variants.
             </p>
           </div>
 
@@ -264,9 +265,10 @@
                 <line x1="22" y1="11" x2="22" y2="13"></line>
               </svg>
             </div>
-            <h3 class="feature-card-title">Lightweight & fast</h3>
+            <h3 class="feature-card-title">Reliable reminders</h3>
             <p class="feature-card-desc">
-              Zero background battery bleed. Reminders use native system alarm bridges, keeping the app fast and light.
+              Notifications fire even when the app is fully closed, and timezone correction keeps them on schedule when
+              you travel.
             </p>
           </div>
         </div>
@@ -277,10 +279,8 @@
     <section class="gallery-section">
       <div class="section-container">
         <div class="section-header">
-          <h2 class="section-title">Explore the Interface</h2>
-          <p class="section-subtitle">
-            Take a tour of YAHT's screens, designed to be modern, tactile, and highly legible.
-          </p>
+          <h2 class="section-title">See it in action</h2>
+          <p class="section-subtitle">A quick tour of YAHT's screens.</p>
         </div>
 
         <!-- Tab Buttons -->
@@ -322,30 +322,73 @@
             Settings & Data
           </button>
         </div>
-        <p class="gallery-swipe-hint" aria-hidden="true">Swipe to explore screens</p>
-
         <!-- Gallery Display Frame -->
         <div class="gallery-display-wrapper" data-mobile-reveal>
-          <div class="phone-mockup">
-            <div class="phone-button volume-up"></div>
-            <div class="phone-button volume-down"></div>
-            <div class="phone-button power"></div>
-            <div class="phone-notch"></div>
-            <div class="phone-screen">
-              <div class="screenshot-wrapper">
-                <img
-                  id="gallery-image"
-                  src="assets/images/screenshots/YAHT_dark_sepia_today.jpg"
-                  alt="YAHT App Today's Checklist Preview"
-                  class="gallery-screenshot-img"
-                  width="758"
-                  height="1600"
-                  loading="lazy"
-                  decoding="async"
-                />
+          <div class="gallery-stage">
+            <div class="phone-mockup">
+              <div class="phone-button volume-up"></div>
+              <div class="phone-button volume-down"></div>
+              <div class="phone-button power"></div>
+              <div class="phone-notch"></div>
+              <div class="phone-screen">
+                <div class="gallery-track" aria-live="polite">
+                  <div class="gallery-slide active" data-img="today">
+                    <img
+                      src="assets/images/screenshots/YAHT_dark_sepia_today.jpg"
+                      alt="YAHT App Today's Checklist screen"
+                      class="gallery-screenshot-img"
+                      width="758"
+                      height="1600"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <div class="gallery-slide" data-img="new">
+                    <img
+                      src="assets/images/screenshots/YAHT_dark_sepia_new.jpg"
+                      alt="YAHT App habit creation screen"
+                      class="gallery-screenshot-img"
+                      width="758"
+                      height="1600"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <div class="gallery-slide" data-img="stats">
+                    <img
+                      src="assets/images/screenshots/YAHT_dark_sepia_stats.jpg"
+                      alt="YAHT App streaks and charts screen"
+                      class="gallery-screenshot-img"
+                      width="758"
+                      height="1600"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                  <div class="gallery-slide" data-img="settings">
+                    <img
+                      src="assets/images/screenshots/YAHT_dark_sepia_settings.jpg"
+                      alt="YAHT App settings and data screen"
+                      class="gallery-screenshot-img"
+                      width="758"
+                      height="1600"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Passive position indicator for the swipeable track -->
+          <div class="gallery-dots" aria-hidden="true">
+            <span class="gallery-dot active" data-img="today"></span>
+            <span class="gallery-dot" data-img="new"></span>
+            <span class="gallery-dot" data-img="stats"></span>
+            <span class="gallery-dot" data-img="settings"></span>
+          </div>
+          <p class="gallery-swipe-hint" aria-hidden="true">Swipe the phone to see more</p>
 
           <!-- Description box linked to tabs -->
           <div class="gallery-details">
@@ -356,19 +399,19 @@
                 increment reps, or tap stopwatch icons to trigger active timers. The horizontal date slider lets you
                 review past completions instantly.
               </p>
-              <span class="detail-tag">Tactile Gestures</span>
+              <span class="detail-tag">One-Tap Check-Off</span>
               <span class="detail-tag">Haptic Feedback</span>
             </div>
-            <div id="gallery-desc-new" class="desc-card" role="tabpanel" hidden>
+            <div id="gallery-desc-new" class="desc-card" role="tabpanel">
               <h3>Create custom habits</h3>
               <p>
-                Configure routines with custom metrics. Set tracking schedules for daily goals, specific weekdays, or
-                interval days. Setup up to four exact alarms per habit.
+                Build routines around checkmarks, counters, or timers. Schedule them for every day, specific weekdays,
+                or repeating intervals. Add an exact alarm with optional follow-up nags.
               </p>
-              <span class="detail-tag">Interval Cycles</span>
-              <span class="detail-tag">Multiple Reminders</span>
+              <span class="detail-tag">Flexible Schedules</span>
+              <span class="detail-tag">Nag Reminders</span>
             </div>
-            <div id="gallery-desc-stats" class="desc-card" role="tabpanel" hidden>
+            <div id="gallery-desc-stats" class="desc-card" role="tabpanel">
               <h3>Streaks & charts</h3>
               <p>
                 View completion rates, current streaks, and progress trends over time to stay consistent. All
@@ -377,14 +420,14 @@
               <span class="detail-tag">Offline Graphs</span>
               <span class="detail-tag">Streak Tracking</span>
             </div>
-            <div id="gallery-desc-settings" class="desc-card" role="tabpanel" hidden>
+            <div id="gallery-desc-settings" class="desc-card" role="tabpanel">
               <h3>Settings & data</h3>
               <p>
-                Customize the interface, select themes (Sepia, Clear, OLED), or export your habits database to a local
-                JSON backup file. You have total control over your setup.
+                Pick a theme (Sepia, Clear, OLED), set your week start day, and export or import your habits as a local
+                JSON file. Your data stays yours, in a format you can read.
               </p>
               <span class="detail-tag">JSON Backups</span>
-              <span class="detail-tag">Diagnostic Logs</span>
+              <span class="detail-tag">Local-Only Data</span>
             </div>
           </div>
         </div>
