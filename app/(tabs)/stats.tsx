@@ -64,27 +64,28 @@ export default function StatsScreen() {
         <View
           style={[
             styles.safeAreaContent,
-            styles.emptyContainer,
             { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right },
           ]}
         >
-          <View
-            style={[styles.emptyIconContainer, { backgroundColor: colors.bgInset, borderColor: colors.borderDefault }]}
-          >
-            <BarChart2 size={24} color={colors.iconPrimary} strokeWidth={2} />
-          </View>
-          <AppText variant="heading" style={styles.emptyTitle}>
-            {t("stats.emptyTitle")}
-          </AppText>
-          <AppText variant="body" color={colors.textSecondary} style={styles.emptyText}>
-            {t("stats.emptyBody")}
-          </AppText>
-          <View style={styles.emptyAction}>
-            <ScaleButton
-              label={t("stats.createHabit")}
-              onPress={() => router.push("/add")}
-              accessibilityHint={t("stats.createHabitHint")}
-            />
+          <View style={styles.emptyContainer}>
+            <View
+              style={[styles.emptyIconContainer, { backgroundColor: colors.bgInset, borderColor: colors.borderDefault }]}
+            >
+              <BarChart2 size={24} color={colors.iconPrimary} strokeWidth={2} />
+            </View>
+            <AppText variant="heading" style={styles.emptyTitle}>
+              {t("stats.emptyTitle")}
+            </AppText>
+            <AppText variant="body" color={colors.textSecondary} style={styles.emptyText}>
+              {t("stats.emptyBody")}
+            </AppText>
+            <View style={styles.emptyAction}>
+              <ScaleButton
+                label={t("stats.createHabit")}
+                onPress={() => router.push("/add")}
+                accessibilityHint={t("stats.createHabitHint")}
+              />
+            </View>
           </View>
         </View>
       </View>
