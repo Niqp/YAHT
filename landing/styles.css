@@ -1183,22 +1183,35 @@ html.scheme-light .moon-icon {
   }
 
   .gallery-section {
-    padding: 2.75rem 0 3rem;
+    padding: 2.25rem 0 2.5rem;
+  }
+
+  .gallery-section .section-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .gallery-section .section-header {
+    order: 1;
+    margin-bottom: 1.35rem;
   }
 
   .gallery-tabs {
-    gap: 0.45rem;
+    order: 3;
+    gap: 0.4rem;
     width: auto;
     max-width: none;
-    margin-bottom: 0.6rem;
-    padding: 0.45rem;
+    margin: 0.7rem auto 0.2rem;
+    padding: 0;
     border-radius: 999px;
+    border: none;
+    background-color: transparent;
   }
 
   .gallery-tab-btn {
-    width: 0.65rem;
-    min-width: 0.65rem;
-    height: 0.65rem;
+    width: 0.48rem;
+    min-width: 0.48rem;
+    height: 0.48rem;
     padding: 0;
     overflow: hidden;
     border-radius: 999px;
@@ -1208,15 +1221,16 @@ html.scheme-light .moon-icon {
   }
 
   .gallery-tab-btn.active {
-    width: 1.8rem;
-    min-width: 1.8rem;
+    width: 1.35rem;
+    min-width: 1.35rem;
   }
 
   .gallery-swipe-hint {
+    order: 4;
     display: block;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 0.8rem;
     color: var(--text-tertiary);
-    font-size: 0.78rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-align: center;
@@ -1224,23 +1238,42 @@ html.scheme-light .moon-icon {
   }
 
   .gallery-display-wrapper {
-    gap: 1.5rem;
-    touch-action: pan-y;
+    display: contents;
     user-select: none;
   }
 
+  .gallery-display-wrapper .phone-mockup {
+    order: 2;
+    width: min(180px, 48vw);
+    margin: 0 auto;
+    transform: rotate(-1deg) translateY(-3px);
+    touch-action: pan-y;
+  }
+
   .gallery-details {
-    padding: 1.5rem;
-    border-radius: 18px;
+    order: 5;
+    width: min(100%, 330px);
+    margin: 0 auto;
+    padding: 1rem;
+    border-radius: 16px;
+    touch-action: pan-y;
   }
 
   .desc-card h3 {
-    font-size: 1.4rem;
+    font-size: 1.16rem;
+    margin-bottom: 0.45rem;
   }
 
   .desc-card p {
-    font-size: 0.95rem;
-    margin-bottom: 1.1rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    margin-bottom: 0.75rem;
+  }
+
+  .detail-tag {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+    margin-bottom: 0.25rem;
   }
 
   .download-section {

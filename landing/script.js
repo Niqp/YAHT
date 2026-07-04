@@ -312,15 +312,57 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileRevealTargets = document.querySelectorAll("[data-mobile-reveal]");
 
   if (!prefersReducedMotion && isCoarseMobile && "IntersectionObserver" in window && mobileRevealTargets.length > 0) {
+    const featureRevealTargets = Array.from(mobileRevealTargets).filter((target) =>
+      target.classList.contains("feature-card")
+    );
+    const visibleFeatureTargets = new Set();
+    const updateCenteredFeatureReveal = () => {
+      if (visibleFeatureTargets.size === 0) {
+        featureRevealTargets.forEach((target) => target.classList.remove("is-mobile-revealed"));
+        return;
+      }
+
+      const viewportMiddle = window.innerHeight / 2;
+      let centeredTarget;
+      let shortestDistance = Number.POSITIVE_INFINITY;
+
+      visibleFeatureTargets.forEach((target) => {
+        const rect = target.getBoundingClientRect();
+        const targetMiddle = rect.top + rect.height / 2;
+        const distance = Math.abs(targetMiddle - viewportMiddle);
+
+        if (distance < shortestDistance) {
+          shortestDistance = distance;
+          centeredTarget = target;
+        }
+      });
+
+      featureRevealTargets.forEach((target) => {
+        target.classList.toggle("is-mobile-revealed", target === centeredTarget);
+      });
+    };
+
     const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          if (entry.target.classList.contains("feature-card")) {
+            if (entry.isIntersecting) {
+              visibleFeatureTargets.add(entry.target);
+            } else {
+              visibleFeatureTargets.delete(entry.target);
+            }
+
+            return;
+          }
+
           if (entry.isIntersecting) {
             entry.target.classList.add("is-mobile-revealed");
           } else {
             entry.target.classList.remove("is-mobile-revealed");
           }
         });
+
+        updateCenteredFeatureReveal();
       },
       { rootMargin: "-10% 0px -25%", threshold: 0.35 }
     );
@@ -328,9 +370,14 @@ document.addEventListener("DOMContentLoaded", () => {
     mobileRevealTargets.forEach((target) => {
       revealObserver.observe(target);
     });
+
+    window.addEventListener("scroll", updateCenteredFeatureReveal, { passive: true });
+    window.addEventListener("resize", updateCenteredFeatureReveal);
   } else {
     mobileRevealTargets.forEach((target) => {
-      target.classList.add("is-mobile-revealed");
+      if (!target.classList.contains("feature-card")) {
+        target.classList.add("is-mobile-revealed");
+      }
     });
   }
 
