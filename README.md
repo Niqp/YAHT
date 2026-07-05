@@ -1,15 +1,36 @@
-# YAHT - Yet Another Habit Tracker
+<p align="center">
+  <img src="media/YAHTLogo.png" alt="YAHT logo" width="128" />
+</p>
 
-A modern, feature-rich habit tracking app built with React Native and Expo.
+<h1 align="center">YAHT — Yet Another Habit Tracker</h1>
 
-## Features
+<p align="center">
+  Track habits. Own your data.<br />
+  A free, open-source, privacy-first habit tracker built with React Native and Expo.
+</p>
 
-- Create and track both repetition-based and timer-based habits
-- Customizable week start day
-- Dark and light theme support
-- View detailed statistics of your habits
-- Import/export data functionality
-- Built with performance and usability in mind
+<p align="center">
+  <a href="https://yaht.niqp.dev"><b>yaht.niqp.dev</b></a>
+</p>
+
+<p align="center">
+  <img src="media/YAHT_light_clear_today.jpg" alt="Today screen (light theme)" width="19%" />
+  <img src="media/YAHT_dark_clear_stats.jpg" alt="Statistics screen (dark theme)" width="19%" />
+  <img src="media/YAHT_dark_oled_new.jpg" alt="New habit screen (OLED theme)" width="19%" />
+  <img src="media/YAHT_dark_sepia_settings.jpg" alt="Settings screen (sepia theme)" width="19%" />
+</p>
+
+## Why YAHT?
+
+Everything you need, nothing you don't — no clutter, no feature bloat, no signups, no cloud accounts. All your data stays on your device.
+
+- **Three habit types** — simple yes/no checkmarks, counters (like cups of water), or timed routines with an integrated stopwatch
+- **Alarms & snooze** — set an exact alarm per habit, with optional follow-up nags spaced however you like; snooze or complete habits right from the notification
+- **Reliable reminders** — notifications fire even when the app is fully closed, with timezone correction when you travel
+- **Streaks & charts** — completion history, streaks, and habit trends over time, all calculated locally
+- **Easy JSON backups** — export your data to a JSON file or import it back with one tap
+- **Make it yours** — warm Sepia tones, clear blue-grays, or pure black OLED dark mode, each with light and dark variants; customizable week start day
+- **Localized** — available in English and Russian
 
 ## Getting Started
 
@@ -57,26 +78,33 @@ A modern, feature-rich habit tracking app built with React Native and Expo.
 - `npm test` - Run Jest
 - `npm run format:check` - Check Prettier formatting
 
+## Tech Stack
+
+- [Expo](https://expo.dev) with [Expo Router](https://docs.expo.dev/router/introduction) for file-based routing
+- [Zustand](https://github.com/pmndrs/zustand) for state management, persisted with [MMKV](https://github.com/mrousavy/react-native-mmkv)
+- [i18next](https://www.i18next.com/) for localization
+- [Dayjs](https://day.js.org/) for date handling
+- [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/) for animations
+- [Bottom Sheet](https://github.com/gorhom/react-native-bottom-sheet) for interactive UI components
+- Custom React Native chart components for statistics visualization
+
+## Project Layout
+
+- `app/` — screens (Expo Router)
+- `components/`, `hooks/`, `store/`, `utils/` — app logic and UI
+- `i18n/` — localization (English, Russian)
+- `landing/` — the [yaht.niqp.dev](https://yaht.niqp.dev) landing page
+- `media/` — logos and screenshots
+
 ## Release Preparation
 
 - `PRIVACY.md` contains the app privacy policy for store listings.
 - `store.config.json` contains Apple App Store metadata for EAS Metadata.
 - `docs/store/apple-app-store.md` and `docs/store/google-play.md` contain platform-specific submission notes, privacy declarations, and screenshot checklists.
 
-## Development
-
-This project uses:
-
-- [Expo](https://expo.dev) with [Expo Router](https://docs.expo.dev/router/introduction) for file-based routing
-- [Zustand](https://github.com/pmndrs/zustand) for state management
-- [Dayjs](https://day.js.org/) for date handling
-- [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/) for animations
-- [Bottom Sheet](https://github.com/gorhom/react-native-bottom-sheet) for interactive UI components
-- Custom React Native chart components for statistics visualization
-
 ## Contribute
 
-Feel free to open issues or submit pull requests on GitHub.
+Feel free to open issues or submit pull requests on [GitHub](https://github.com/Niqp/YAHT).
 
 ## License
 
