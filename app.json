@@ -13,12 +13,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "tech.niqp.yaht",
+      "bundleIdentifier": "dev.niqp.yaht",
       "buildNumber": "1",
       "infoPlist": {
         "UIBackgroundModes": [
-          "fetch",
-          "processing",
           "remote-notification"
         ],
         "ITSAppUsesNonExemptEncryption": false
