@@ -12,13 +12,10 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "dev.niqp.yaht",
       "buildNumber": "1",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "remote-notification"
-        ],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -57,7 +54,7 @@
         "expo-notifications",
         {
           "color": "#023c69",
-          "enableBackgroundRemoteNotifications": true
+          "enableBackgroundRemoteNotifications": false
         }
       ],
       [
