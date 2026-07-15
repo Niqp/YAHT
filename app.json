@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "description": "A local-first habit tracker for daily, repetition, and timed habits with reminders, statistics, and data import/export.",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "icon": "./assets/images/icon.png",
     "assetBundlePatterns": [
