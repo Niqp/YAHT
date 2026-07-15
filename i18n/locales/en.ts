@@ -218,7 +218,7 @@ export const en = {
     emojiInputHint: "Enter a one-emoji icon for this habit",
     closeEmojiPicker: "Close emoji picker",
     close: "Close",
-    titleLengthHint: "Keep it short enough to scan at a glance.",
+    titleLengthHint: "Tap the circle to pick an icon. Keep the title short enough to scan at a glance.",
     completionGoal: "Completion goal",
     completionGoalDescription: "Decide how this habit should be marked complete.",
     completionSimple: "Simple",

@@ -21,6 +21,7 @@ export default function EmojiPickerField({
   accessibilityHint = translate("form.emojiInputHint"),
 }: EmojiPickerFieldProps) {
   const { colors } = useTheme();
+  const hasValue = Boolean(value);
 
   return (
     <TextInput
@@ -28,7 +29,8 @@ export default function EmojiPickerField({
         styles.input,
         {
           backgroundColor: colors.bgInset,
-          borderColor: colors.inputBorder,
+          borderColor: hasValue ? colors.inputBorder : colors.accentSoftBorder,
+          borderStyle: hasValue ? "solid" : "dashed",
           color: colors.textPrimary,
         },
       ]}

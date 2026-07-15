@@ -47,9 +47,11 @@ interface AddHabitDraftState {
   markClean: () => void;
 }
 
+// Icon starts empty so the picker can show its "no icon chosen yet" state;
+// saving falls back to DEFAULT_HABIT_ICON when the user never picks one.
 const createDefaultDraft = () => ({
   title: "",
-  icon: DEFAULT_HABIT_ICON,
+  icon: "",
   repetitionType: RepetitionType.DAILY,
   selectedDays: [],
   customDays: 1,

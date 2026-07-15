@@ -1,3 +1,4 @@
+import { Pencil, SmilePlus } from "lucide-react-native";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EmojiPopup } from "react-native-emoji-popup";
@@ -11,7 +12,6 @@ import AppText from "../AppText";
 interface EmojiPickerFieldProps {
   value: string;
   onChange: (emoji: string) => void;
-  placeholder?: string;
   accessibilityLabel?: string;
   accessibilityHint?: string;
 }
@@ -19,13 +19,12 @@ interface EmojiPickerFieldProps {
 export default function EmojiPickerField({
   value,
   onChange,
-  placeholder = "✨",
   accessibilityLabel = translate("form.habitEmoji"),
   accessibilityHint = translate("form.emojiPickerHint"),
 }: EmojiPickerFieldProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const displayValue = value || placeholder;
+  const hasValue = Boolean(value);
 
   return (
     <EmojiPopup
@@ -60,23 +59,50 @@ export default function EmojiPickerField({
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityHint={accessibilityHint}
-        style={[
-          styles.trigger,
-          {
-            backgroundColor: colors.bgInset,
-            borderColor: colors.inputBorder,
-          },
-        ]}
+        style={styles.triggerWrapper}
       >
-        <AppText variant="title" style={styles.emojiText} color={value ? colors.textPrimary : colors.textTertiary}>
-          {displayValue}
-        </AppText>
+        <View
+          style={[
+            styles.trigger,
+            {
+              backgroundColor: colors.bgInset,
+              borderColor: hasValue ? colors.inputBorder : colors.accentSoftBorder,
+              borderStyle: hasValue ? "solid" : "dashed",
+            },
+          ]}
+        >
+          {hasValue ? (
+            <AppText variant="title" style={styles.emojiText} color={colors.textPrimary}>
+              {value}
+            </AppText>
+          ) : (
+            <SmilePlus size={24} color={colors.accentMuted} />
+          )}
+        </View>
+
+        {hasValue && (
+          <View
+            style={[
+              styles.editBadge,
+              {
+                backgroundColor: colors.accent,
+                borderColor: colors.bgSurface,
+              },
+            ]}
+          >
+            <Pencil size={10} color={colors.buttonPrimaryText} />
+          </View>
+        )}
       </View>
     </EmojiPopup>
   );
 }
 
 const styles = StyleSheet.create({
+  triggerWrapper: {
+    width: 52,
+    height: 52,
+  },
   trigger: {
     width: 52,
     height: 52,
@@ -89,6 +115,17 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 28,
     textAlign: "center",
+  },
+  editBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: BorderRadius.full,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalContent: {
     paddingBottom: Spacing.base,

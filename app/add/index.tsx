@@ -4,7 +4,7 @@ import { getElevation } from "@/constants/Elevation";
 import { Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
-import { DEFAULT_REPETITION_GOAL, useAddHabitDraftStore } from "@/store/addHabitDraftStore";
+import { DEFAULT_HABIT_ICON, DEFAULT_REPETITION_GOAL, useAddHabitDraftStore } from "@/store/addHabitDraftStore";
 import { useHabitStore } from "@/store/habitStore";
 import { CompletionType, Habit, RepetitionConfig, RepetitionType } from "@/types/habit";
 import { getCurrentDateStamp } from "@/utils/date";
@@ -480,6 +480,7 @@ export default function AddEditHabitScreen() {
       setScheduleError(null);
 
       const completion = buildCompletionConfig(completionType, resolvedCompletionGoal);
+      const resolvedIcon = icon.trim() || DEFAULT_HABIT_ICON;
 
       const reminder = reminderEnabled
         ? {
@@ -499,7 +500,7 @@ export default function AddEditHabitScreen() {
       if (isEditMode && habitId) {
         await updateHabit(habitId, {
           title: normalizedTitle,
-          icon,
+          icon: resolvedIcon,
           repetition,
           completion,
           reminder,
@@ -507,7 +508,7 @@ export default function AddEditHabitScreen() {
       } else {
         const habitData: Omit<Habit, "id"> = {
           title: normalizedTitle,
-          icon,
+          icon: resolvedIcon,
           completionHistory: {},
           completion,
           repetition,
