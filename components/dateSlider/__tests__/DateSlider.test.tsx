@@ -36,6 +36,8 @@ type MockRecyclerListViewProps = {
 let mockStore: UseBoundStore<StoreApi<MockHabitStoreState>>;
 let mockCurrentDate = TODAY;
 let mockTodayLabel = "Today";
+let mockLanguage = "en";
+let mockLocalizedDayNameCallCount = 0;
 let appStateChangeListener: ((state: string) => void) | null = null;
 
 const createMockStore = (selectedDate = TODAY) =>
@@ -84,7 +86,7 @@ jest.mock("@/hooks/useAllHabitsStreak", () => ({
 
 jest.mock("@/i18n", () => ({
   useTranslation: () => ({
-    i18n: { language: "en" },
+    i18n: { language: mockLanguage },
     t: (key: string, values?: { date?: string }) => {
       if (key === "date.today") {
         return mockTodayLabel;
@@ -114,6 +116,10 @@ jest.mock("@/utils/date", () => {
   return {
     ...actual,
     getCurrentDateDayjs: () => mockDayjs(mockCurrentDate),
+    getLocalizedShortDayName: (...args: Parameters<typeof actual.getLocalizedShortDayName>) => {
+      mockLocalizedDayNameCallCount += 1;
+      return actual.getLocalizedShortDayName(...args);
+    },
   };
 });
 
@@ -217,6 +223,8 @@ describe("DateSlider", () => {
     jest.restoreAllMocks();
     mockCurrentDate = TODAY;
     mockTodayLabel = "Today";
+    mockLanguage = "en";
+    mockLocalizedDayNameCallCount = 0;
     appStateChangeListener = null;
     mockStore = createMockStore();
     jest.spyOn(AppState, "addEventListener").mockImplementation((_eventType, listener) => {
@@ -230,6 +238,19 @@ describe("DateSlider", () => {
         }),
       };
     });
+  });
+
+  it("builds the initial range once and rebuilds only after a locale change", () => {
+    const view = render(<DateSlider />);
+
+    expect(mockLocalizedDayNameCallCount).toBe(545);
+
+    view.rerender(<DateSlider />);
+    expect(mockLocalizedDayNameCallCount).toBe(545);
+
+    mockLanguage = "ru";
+    view.rerender(<DateSlider />);
+    expect(mockLocalizedDayNameCallCount).toBe(1090);
   });
 
   it("updates selected date and selected-item UI when a date is pressed", () => {

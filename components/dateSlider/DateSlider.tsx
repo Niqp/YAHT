@@ -165,6 +165,7 @@ export default function DateSlider() {
   const initialScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRangeExtensionAtRef = useRef<string | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const dateRangeLocaleRef = useRef(locale);
 
   const [listWidth, setListWidth] = useState(() => Math.max(1, Math.round(viewportWidth)));
   const [today, setToday] = useState(() => formatDate(getCurrentDateDayjs()));
@@ -281,6 +282,11 @@ export default function DateSlider() {
   });
 
   useEffect(() => {
+    if (dateRangeLocaleRef.current === locale) {
+      return;
+    }
+
+    dateRangeLocaleRef.current = locale;
     const todayDate = getCurrentDateDayjs();
     const pastDates = generateDateRange(addDays(todayDate, -180), 180, locale);
     const futureDates = generateDateRange(todayDate, 365, locale);
