@@ -221,26 +221,6 @@ jest.mock("@/components/habitForm", () => {
         </Pressable>
       </View>
     ),
-    DiscardChangesSheet: ({
-      isOpen,
-      onClose,
-      onDiscard,
-    }: {
-      isOpen: boolean;
-      onClose: () => void;
-      onDiscard: () => void;
-    }) =>
-      isOpen ? (
-        <View>
-          <Text>Discard Changes Sheet</Text>
-          <Pressable onPress={onDiscard}>
-            <Text>Discard Sheet CTA</Text>
-          </Pressable>
-          <Pressable onPress={onClose}>
-            <Text>Keep Editing Sheet CTA</Text>
-          </Pressable>
-        </View>
-      ) : null,
     SheetTriggerCard: ({ label, onPress }: { label: string; onPress: () => void }) => (
       <Pressable onPress={onPress}>
         <Text>{label}</Text>
@@ -329,7 +309,6 @@ describe("AddEditHabitScreen exit flow", () => {
       "Your new habit has not been saved yet.",
       expect.any(Array)
     );
-    expect(screen.queryByText("Discard Changes Sheet")).toBeNull();
 
     const keepEditingButton = getLatestAlertButtons().find((button) => button.text === "Keep Editing");
     act(() => {
@@ -389,15 +368,24 @@ describe("AddEditHabitScreen exit flow", () => {
     expect(mockNavigationDispatch).toHaveBeenCalledWith(preventedGoBackAction);
   });
 
-  it("keeps using the discard sheet on Android cancel when the form is dirty", () => {
+  it("shows the native discard alert on Android cancel when the form is dirty", () => {
     setPlatform("android");
     render(<AddEditHabitScreen />);
 
     fireEvent.changeText(screen.getByTestId("title-input"), "Read");
     fireEvent.press(screen.getByText("Cancel"));
 
-    expect(screen.getByText("Discard Changes Sheet")).toBeOnTheScreen();
-    expect(alertSpy).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith(
+      "Discard changes?",
+      "Your new habit has not been saved yet.",
+      expect.any(Array)
+    );
+
+    const discardButton = getLatestAlertButtons().find((button) => button.text === "Discard");
+    act(() => {
+      discardButton?.onPress?.();
+    });
+    expect(mockRouterBack).toHaveBeenCalledTimes(1);
   });
 
   it("opens setup panels as native add-flow routes", () => {

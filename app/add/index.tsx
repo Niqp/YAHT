@@ -1,4 +1,4 @@
-import { BasicInfoSection, DiscardChangesSheet, SheetTriggerCard } from "@/components/habitForm";
+import { BasicInfoSection, SheetTriggerCard } from "@/components/habitForm";
 import { AppText, ScaleButton } from "@/components/ui";
 import { getElevation } from "@/constants/Elevation";
 import { Spacing } from "@/constants/Spacing";
@@ -12,7 +12,7 @@ import { usePreventRemove } from "@react-navigation/native";
 import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { CalendarDays, CheckSquare, Bell } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TFunction } from "i18next";
 
@@ -263,7 +263,6 @@ export default function AddEditHabitScreen() {
   const allowProgrammaticRemoveRef = useRef(false);
   const pendingNavigationActionRef = useRef<unknown>(null);
   const isDiscardAlertOpenRef = useRef(false);
-  const [isDiscardSheetOpen, setIsDiscardSheetOpen] = useState(false);
 
   const navigation = useNavigation();
   const hasUnsavedChanges = isDirty;
@@ -284,7 +283,6 @@ export default function AddEditHabitScreen() {
 
   const exitWithoutPrompt = useCallback(
     (action?: unknown) => {
-      setIsDiscardSheetOpen(false);
       clearPendingExit();
 
       if (action) {
@@ -300,7 +298,6 @@ export default function AddEditHabitScreen() {
   );
 
   const handleKeepEditing = useCallback(() => {
-    setIsDiscardSheetOpen(false);
     clearPendingExit();
   }, [clearPendingExit]);
 
@@ -310,29 +307,24 @@ export default function AddEditHabitScreen() {
   }, [exitWithoutPrompt]);
 
   const showDiscardConfirmation = useCallback(() => {
-    if (Platform.OS === "ios") {
-      if (isDiscardAlertOpenRef.current) {
-        return;
-      }
-
-      isDiscardAlertOpenRef.current = true;
-
-      Alert.alert(t("addHabit.alerts.unsavedTitle"), isEditMode ? t("form.discardEdit") : t("form.discardCreate"), [
-        {
-          text: t("form.keepEditing"),
-          style: "cancel",
-          onPress: handleKeepEditing,
-        },
-        {
-          text: t("form.discard"),
-          style: "destructive",
-          onPress: handleDiscardConfirmed,
-        },
-      ]);
+    if (isDiscardAlertOpenRef.current) {
       return;
     }
 
-    setIsDiscardSheetOpen(true);
+    isDiscardAlertOpenRef.current = true;
+
+    Alert.alert(t("addHabit.alerts.unsavedTitle"), isEditMode ? t("form.discardEdit") : t("form.discardCreate"), [
+      {
+        text: t("form.keepEditing"),
+        style: "cancel",
+        onPress: handleKeepEditing,
+      },
+      {
+        text: t("form.discard"),
+        style: "destructive",
+        onPress: handleDiscardConfirmed,
+      },
+    ]);
   }, [handleDiscardConfirmed, handleKeepEditing, isEditMode, t]);
 
   const attemptClose = useCallback(
@@ -702,13 +694,6 @@ export default function AddEditHabitScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
-
-      <DiscardChangesSheet
-        isOpen={Platform.OS !== "ios" && isDiscardSheetOpen}
-        isEditMode={isEditMode}
-        onClose={handleKeepEditing}
-        onDiscard={handleDiscardConfirmed}
-      />
     </View>
   );
 }
