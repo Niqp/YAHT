@@ -1,23 +1,15 @@
 import { Platform, StyleProp, ViewStyle } from "react-native";
 
-export interface WheelPickerItem {
-  value: number;
-  label: string;
-}
-
 export interface WheelPickerProps {
-  data: ReadonlyArray<WheelPickerItem>;
+  /** Domain values only — labels are produced lazily per rendered row via formatLabel. */
+  values: ReadonlyArray<number>;
+  /** Localized label for a value. Defaults to String(value). Called only for visible rows on Android. */
+  formatLabel?: (value: number) => string;
   value: number;
   onChange: (value: number) => void;
   style?: StyleProp<ViewStyle>;
   itemHeight?: number;
   visibleItemCount?: number;
-  virtualized?: boolean;
-  initialNumToRender?: number;
-  maxToRenderPerBatch?: number;
-  windowSize?: number;
-  updateCellsBatchingPeriod?: number;
-  animateMount?: boolean;
 }
 
 export const DEFAULT_WHEEL_PICKER_HEIGHT = 120;

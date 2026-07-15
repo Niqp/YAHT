@@ -35,15 +35,15 @@ jest.mock("@react-native-picker/picker", () => {
 
 jest.mock("@quidone/react-native-wheel-picker", () => {
   const React = require("react");
-  const { Text, View } = require("react-native");
+  const { Pressable, Text, View } = require("react-native");
 
-  const BaseWheelPicker = ({ data, value, onValueChanged, testID = "base-wheel-picker" }: any) => (
+  const BaseWheelPicker = ({ data, value, onValueChanged, renderItem, itemTextStyle, testID = "base-wheel-picker" }: any) => (
     <View testID={testID}>
       <Text>{`selected:${String(value)}`}</Text>
-      {data.map((item: { label: string; value: number }) => (
-        <Text key={`${item.value}-${item.label}`} onPress={() => onValueChanged?.({ item })}>
-          {item.label}
-        </Text>
+      {data.map((item: { value: number }, index: number) => (
+        <Pressable key={item.value} onPress={() => onValueChanged?.({ item })}>
+          {renderItem({ item, index, itemTextStyle })}
+        </Pressable>
       ))}
     </View>
   );
@@ -54,41 +54,37 @@ jest.mock("@quidone/react-native-wheel-picker", () => {
     __esModule: true,
     default: BaseWheelPicker,
     withVirtualized,
+    usePickerItemHeight: () => 40,
   };
 });
 
+const setPlatform = (os: string) => {
+  Object.defineProperty(Platform, "OS", {
+    configurable: true,
+    value: os,
+  });
+};
+
 describe("WheelPicker", () => {
   beforeEach(() => {
-    Object.defineProperty(Platform, "OS", {
-      configurable: true,
-      value: originalPlatform,
-    });
+    setPlatform(originalPlatform);
   });
 
   afterAll(() => {
-    Object.defineProperty(Platform, "OS", {
-      configurable: true,
-      value: originalPlatform,
-    });
+    setPlatform(originalPlatform);
   });
 
   it("uses the native iOS picker and maps onValueChange correctly", () => {
-    Object.defineProperty(Platform, "OS", {
-      configurable: true,
-      value: "ios",
-    });
+    setPlatform("ios");
 
     const handleChange = jest.fn();
 
     render(
       <WheelPicker
-        data={[
-          { label: "One", value: 1 },
-          { label: "Two", value: 2 },
-        ]}
+        values={[1, 2]}
+        formatLabel={(value) => (value === 1 ? "One" : "Two")}
         value={1}
         onChange={handleChange}
-        animateMount={false}
       />
     );
 
@@ -100,32 +96,33 @@ describe("WheelPicker", () => {
     expect(handleChange).toHaveBeenCalledWith(2);
   });
 
-  it("keeps using the existing non-iOS wheel picker path", () => {
-    Object.defineProperty(Platform, "OS", {
-      configurable: true,
-      value: "android",
-    });
+  it("renders labels lazily via renderItem on the non-iOS wheel", () => {
+    setPlatform("android");
 
     const handleChange = jest.fn();
+    const formatLabel = jest.fn((value: number) => `Item ${value}`);
 
-    render(
-      <WheelPicker
-        data={[
-          { label: "Three", value: 3 },
-          { label: "Four", value: 4 },
-        ]}
-        value={3}
-        onChange={handleChange}
-        virtualized
-        animateMount={false}
-      />
-    );
+    render(<WheelPicker values={[3, 4]} formatLabel={formatLabel} value={3} onChange={handleChange} />);
 
-    expect(screen.getByTestId("virtualized-wheel-picker")).toBeOnTheScreen();
+    expect(screen.getByTestId("base-wheel-picker")).toBeOnTheScreen();
     expect(screen.getByText("selected:3")).toBeOnTheScreen();
+    expect(formatLabel).toHaveBeenCalledWith(3);
+    expect(formatLabel).toHaveBeenCalledWith(4);
 
-    fireEvent.press(screen.getByText("Four"));
+    fireEvent.press(screen.getByText("Item 4"));
 
     expect(handleChange).toHaveBeenCalledWith(4);
+  });
+
+  it("switches to the virtualized wheel automatically for large value ranges", () => {
+    setPlatform("android");
+
+    const values = Array.from({ length: 100 }, (_, index) => index + 1);
+
+    render(<WheelPicker values={values} value={1} onChange={jest.fn()} />);
+
+    expect(screen.getByTestId("virtualized-wheel-picker")).toBeOnTheScreen();
+    // Default label falls back to String(value).
+    expect(screen.getByText("42")).toBeOnTheScreen();
   });
 });

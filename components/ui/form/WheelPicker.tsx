@@ -1,27 +1,36 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { InteractionManager, Platform, StyleSheet, View } from "react-native";
+import React, { memo, useCallback, useMemo } from "react";
+import { Platform, StyleProp, StyleSheet, Text, TextStyle, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeIn } from "react-native-reanimated";
 
 import { BorderRadius } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
-import BaseWheelPicker, { withVirtualized } from "@quidone/react-native-wheel-picker";
+import BaseWheelPicker, {
+  usePickerItemHeight,
+  withVirtualized,
+  type PickerItem,
+  type RenderItemProps,
+} from "@quidone/react-native-wheel-picker";
 
-import { type WheelPickerItem, type WheelPickerProps } from "./WheelPicker.shared";
+import { type WheelPickerProps } from "./WheelPicker.shared";
 
 const VirtualizedBaseWheelPicker = withVirtualized(BaseWheelPicker);
 
-function IOSWheelPicker({ data, value, onChange, style, animateMount = true }: WheelPickerProps) {
+// Above this size the Android wheel virtualizes so mount cost stays
+// proportional to visible rows, not the full value range.
+const VIRTUALIZATION_THRESHOLD = 48;
+const VIRTUALIZED_LIST_PROPS = {
+  initialNumToRender: 5,
+  maxToRenderPerBatch: 8,
+  windowSize: 7,
+} as const;
+
+const defaultFormatLabel = (value: number) => String(value);
+
+function IOSWheelPicker({ values, formatLabel = defaultFormatLabel, value, onChange, style }: WheelPickerProps) {
   const { colors } = useTheme();
 
-  const resolvedValue = useMemo(() => {
-    if (data.some((item) => item.value === value)) {
-      return value;
-    }
-
-    return data[0]?.value;
-  }, [data, value]);
+  const resolvedValue = useMemo(() => (values.includes(value) ? value : values[0]), [values, value]);
 
   const itemStyle = useMemo(
     () => ({
@@ -31,73 +40,60 @@ function IOSWheelPicker({ data, value, onChange, style, animateMount = true }: W
     [colors.textPrimary]
   );
 
-  const content = (
-    <Picker
-      selectedValue={resolvedValue}
-      onValueChange={(nextValue) => {
-        const resolvedNextValue = typeof nextValue === "number" ? nextValue : Number(nextValue);
-        onChange(Number.isFinite(resolvedNextValue) ? resolvedNextValue : (resolvedValue ?? value));
-      }}
-      itemStyle={itemStyle}
-      selectionColor={colors.pickerSelectionBg}
-      style={styles.iosPicker}
-    >
-      {data.map((item) => (
-        <Picker.Item
-          key={`${item.value}-${item.label}`}
-          label={item.label}
-          value={item.value}
-          color={colors.textPrimary}
-        />
-      ))}
-    </Picker>
+  return (
+    <View style={style}>
+      <Picker
+        selectedValue={resolvedValue}
+        onValueChange={(nextValue) => {
+          const resolvedNextValue = typeof nextValue === "number" ? nextValue : Number(nextValue);
+          onChange(Number.isFinite(resolvedNextValue) ? resolvedNextValue : (resolvedValue ?? value));
+        }}
+        itemStyle={itemStyle}
+        selectionColor={colors.pickerSelectionBg}
+        style={styles.iosPicker}
+      >
+        {values.map((itemValue) => (
+          <Picker.Item key={itemValue} label={formatLabel(itemValue)} value={itemValue} color={colors.textPrimary} />
+        ))}
+      </Picker>
+    </View>
   );
+}
 
-  if (animateMount) {
-    return (
-      <Animated.View entering={FadeIn.duration(200)} style={style}>
-        {content}
-      </Animated.View>
-    );
-  }
+function LazyPickerItem({
+  value,
+  formatLabel,
+  itemTextStyle,
+}: {
+  value: number;
+  formatLabel: (value: number) => string;
+  itemTextStyle: StyleProp<TextStyle>;
+}) {
+  const height = usePickerItemHeight();
 
-  return <View style={style}>{content}</View>;
+  return <Text style={[styles.wheelItemText, { lineHeight: height }, itemTextStyle]}>{formatLabel(value)}</Text>;
 }
 
 function AndroidWebWheelPicker({
-  data,
+  values,
+  formatLabel = defaultFormatLabel,
   value,
   onChange,
   style,
   itemHeight = 40,
   visibleItemCount = 3,
-  virtualized = false,
-  initialNumToRender,
-  maxToRenderPerBatch,
-  windowSize,
-  updateCellsBatchingPeriod,
-  animateMount = true,
 }: WheelPickerProps) {
   const { colors } = useTheme();
-  const [isReady, setIsReady] = useState(!animateMount);
 
-  useEffect(() => {
-    if (animateMount) {
-      let task: ReturnType<typeof InteractionManager.runAfterInteractions> | null = null;
-      const timeoutId = setTimeout(() => {
-        task = InteractionManager.runAfterInteractions(() => {
-          setIsReady(true);
-        });
-      }, 350);
+  const data = useMemo(() => values.map((itemValue) => ({ value: itemValue })), [values]);
 
-      return () => {
-        clearTimeout(timeoutId);
-        task?.cancel();
-      };
-    } else {
-      setIsReady(true);
-    }
-  }, [animateMount]);
+  const renderItem = useCallback(
+    ({ item, itemTextStyle }: RenderItemProps<PickerItem<number>>) => (
+      <LazyPickerItem value={item.value} formatLabel={formatLabel} itemTextStyle={itemTextStyle} />
+    ),
+    [formatLabel]
+  );
+
   const renderOverlay = useCallback(
     ({ itemHeight }: { itemHeight: number }) => (
       <View pointerEvents="none" style={styles.selectionOverlayContainer}>
@@ -112,47 +108,26 @@ function AndroidWebWheelPicker({
     ),
     [colors.pickerSelectionBg]
   );
+
   const itemTextStyle = useMemo(() => ({ color: colors.textPrimary, fontSize: 18 }), [colors.textPrimary]);
   const commonProps = {
     data,
     value,
-    onValueChanged: ({ item }: { item: WheelPickerItem }) => onChange(item.value),
+    onValueChanged: ({ item }: { item: PickerItem<number> }) => onChange(item.value),
     style,
     itemHeight,
     visibleItemCount,
     itemTextStyle,
+    renderItem,
     renderOverlay,
     enableScrollByTapOnItem: true,
   } as const;
 
-  let content;
-  if (virtualized) {
-    content = (
-      <VirtualizedBaseWheelPicker
-        {...commonProps}
-        initialNumToRender={initialNumToRender}
-        maxToRenderPerBatch={maxToRenderPerBatch}
-        windowSize={windowSize}
-        updateCellsBatchingPeriod={updateCellsBatchingPeriod}
-      />
-    );
-  } else {
-    content = <BaseWheelPicker {...commonProps} />;
+  if (values.length > VIRTUALIZATION_THRESHOLD) {
+    return <VirtualizedBaseWheelPicker {...commonProps} {...VIRTUALIZED_LIST_PROPS} />;
   }
 
-  if (animateMount) {
-    if (isReady) {
-      return (
-        <Animated.View entering={FadeIn.duration(200)} style={style}>
-          {content}
-        </Animated.View>
-      );
-    } else {
-      return <View style={style} />;
-    }
-  }
-
-  return content;
+  return <BaseWheelPicker {...commonProps} />;
 }
 
 function WheelPicker(props: WheelPickerProps) {
@@ -169,6 +144,10 @@ const styles = StyleSheet.create({
   iosPicker: {
     width: "100%",
     height: "100%",
+  },
+  wheelItemText: {
+    textAlign: "center",
+    fontSize: 20,
   },
   selectionOverlayContainer: {
     ...StyleSheet.absoluteFillObject,

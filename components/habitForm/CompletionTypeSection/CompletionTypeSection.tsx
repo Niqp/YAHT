@@ -7,6 +7,7 @@ import { DurationInput, FormSection, PresetPills, WheelPicker } from "@/componen
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
+import { useUnitLabelFormatter } from "@/i18n/units";
 import { CompletionType } from "@/types/habit";
 import { WHEEL_PICKER_CARD_HEIGHT, WHEEL_PICKER_HEIGHT } from "@/components/ui/form/WheelPicker.shared";
 
@@ -28,6 +29,89 @@ const REPETITION_PRESETS = [
   { label: "20", value: 20 },
 ] as const;
 
+const REPETITION_VALUES = Array.from({ length: 100 }, (_, index) => index + 1);
+
+function SimplePanel() {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+
+  return (
+    <View style={[styles.panel, styles.centeredPanel]}>
+      <View style={styles.infoBlockCentered}>
+        <View style={[styles.placeholderBadge, { backgroundColor: colors.accentSoftBg }]}>
+          <CheckSquare size={34} color={colors.accent} />
+        </View>
+        <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
+          {t("form.oneTapDone")}
+        </AppText>
+        <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
+          {t("form.oneTapDoneDescription")}
+        </AppText>
+      </View>
+    </View>
+  );
+}
+
+function RepetitionsPanel({
+  completionGoal,
+  setCompletionGoal,
+}: {
+  completionGoal: number;
+  setCompletionGoal: (goal: number) => void;
+}) {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const formatRepetitionLabel = useUnitLabelFormatter("rep");
+
+  return (
+    <View style={styles.panel}>
+      <View style={styles.completionTypeContainer}>
+        <View style={styles.completionTypeDescription}>
+          <RotateCcw size={24} color={colors.accent} />
+          <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+            {t("form.repetitionGoalDescription")}
+          </AppText>
+        </View>
+        <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
+          <WheelPicker
+            values={REPETITION_VALUES}
+            formatLabel={formatRepetitionLabel}
+            value={completionGoal}
+            onChange={setCompletionGoal}
+            style={styles.picker}
+          />
+        </View>
+        <PresetPills options={REPETITION_PRESETS} selectedValue={completionGoal} onSelect={setCompletionGoal} />
+      </View>
+    </View>
+  );
+}
+
+function TimedPanel({
+  completionGoal,
+  setCompletionGoal,
+}: {
+  completionGoal: number;
+  setCompletionGoal: (goal: number) => void;
+}) {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.panel}>
+      <View style={styles.completionTypeContainer}>
+        <View style={styles.completionTypeDescription}>
+          <Clock size={24} color={colors.accent} />
+          <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+            {t("form.timedGoalDescription")}
+          </AppText>
+        </View>
+        <DurationInput valueMs={completionGoal} onChangeMs={setCompletionGoal} />
+      </View>
+    </View>
+  );
+}
+
 const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
   completionType,
   setCompletionType,
@@ -40,14 +124,6 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
 }) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const repetitionOptions = useMemo(
-    () =>
-      Array.from({ length: 100 }, (_, index) => ({
-        value: index + 1,
-        label: t("addHabit.units.rep", { count: index + 1 }),
-      })),
-    [t]
-  );
 
   const segmentedIndex = useMemo(
     () => (completionType === CompletionType.SIMPLE ? 0 : completionType === CompletionType.REPETITIONS ? 1 : 2),
@@ -56,56 +132,11 @@ const CompletionTypeSection: React.FC<CompletionTypeSectionProps> = ({
 
   const activePanel =
     completionType === CompletionType.SIMPLE ? (
-      <View style={[styles.panel, styles.centeredPanel]}>
-        <View style={styles.infoBlockCentered}>
-          <View style={[styles.placeholderBadge, { backgroundColor: colors.accentSoftBg }]}>
-            <CheckSquare size={34} color={colors.accent} />
-          </View>
-          <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
-            {t("form.oneTapDone")}
-          </AppText>
-          <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
-            {t("form.oneTapDoneDescription")}
-          </AppText>
-        </View>
-      </View>
+      <SimplePanel />
     ) : completionType === CompletionType.REPETITIONS ? (
-      <View style={styles.panel}>
-        <View style={styles.completionTypeContainer}>
-          <View style={styles.completionTypeDescription}>
-            <RotateCcw size={24} color={colors.accent} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              {t("form.repetitionGoalDescription")}
-            </AppText>
-          </View>
-          <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
-            <WheelPicker
-              data={repetitionOptions}
-              value={completionGoal}
-              onChange={setCompletionGoal}
-              style={styles.picker}
-              virtualized
-              initialNumToRender={5}
-              maxToRenderPerBatch={8}
-              windowSize={7}
-              animateMount={presentation === "sheet"}
-            />
-          </View>
-          <PresetPills options={REPETITION_PRESETS} selectedValue={completionGoal} onSelect={setCompletionGoal} />
-        </View>
-      </View>
+      <RepetitionsPanel completionGoal={completionGoal} setCompletionGoal={setCompletionGoal} />
     ) : (
-      <View style={styles.panel}>
-        <View style={styles.completionTypeContainer}>
-          <View style={styles.completionTypeDescription}>
-            <Clock size={24} color={colors.accent} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              {t("form.timedGoalDescription")}
-            </AppText>
-          </View>
-          <DurationInput valueMs={completionGoal} onChangeMs={setCompletionGoal} />
-        </View>
-      </View>
+      <TimedPanel completionGoal={completionGoal} setCompletionGoal={setCompletionGoal} />
     );
 
   const content = (

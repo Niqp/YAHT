@@ -22,15 +22,10 @@ interface ReminderSectionProps {
   showHeading?: boolean;
 }
 
-const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
-  value: i,
-  label: i.toString().padStart(2, "0"),
-}));
+const HOUR_VALUES = Array.from({ length: 24 }, (_, i) => i);
+const MINUTE_VALUES = Array.from({ length: 60 }, (_, i) => i);
 
-const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => ({
-  value: i,
-  label: i.toString().padStart(2, "0"),
-}));
+const formatTwoDigitLabel = (value: number) => value.toString().padStart(2, "0");
 
 const INTERVAL_PRESET_VALUES = [
   { minutes: 5, value: 5 * 60000 },
@@ -100,11 +95,11 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
                 {t("form.hour")}
               </AppText>
               <WheelPicker
-                data={HOUR_OPTIONS}
+                values={HOUR_VALUES}
+                formatLabel={formatTwoDigitLabel}
                 value={hour}
                 onChange={setHour}
                 style={styles.picker}
-                animateMount={presentation === "sheet"}
               />
             </View>
 
@@ -119,11 +114,11 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
                 {t("form.minute")}
               </AppText>
               <WheelPicker
-                data={MINUTE_OPTIONS}
+                values={MINUTE_VALUES}
+                formatLabel={formatTwoDigitLabel}
                 value={minute}
                 onChange={setMinute}
                 style={styles.picker}
-                animateMount={presentation === "sheet"}
               />
             </View>
           </View>

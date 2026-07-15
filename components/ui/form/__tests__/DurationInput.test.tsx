@@ -17,6 +17,7 @@ jest.mock("@/hooks/useTheme", () => ({
 
 jest.mock("@/i18n", () => ({
   useTranslation: () => ({
+    i18n: { language: "en" },
     t: (key: string, params?: { count?: number }) => {
       if (typeof params?.count === "number") {
         return `${params.count} ${key}`;
@@ -32,19 +33,16 @@ jest.mock("../WheelPicker", () => {
   const { Pressable, Text, View } = require("react-native");
 
   return function MockWheelPicker(props: {
-    data: Array<{ label: string; value: number }>;
+    values: ReadonlyArray<number>;
+    formatLabel?: (value: number) => string;
     onChange: (value: number) => void;
-    virtualized?: boolean;
   }) {
     const callIndex = wheelPickerCalls.length;
     wheelPickerCalls.push(props);
 
     return (
       <View testID={`wheel-${callIndex}`}>
-        <Text>{props.virtualized ? "virtualized" : "base"}</Text>
-        <Pressable
-          onPress={() => props.onChange(props.data[callIndex === 0 ? 2 : 1]?.value ?? props.data[0]?.value ?? 0)}
-        >
+        <Pressable onPress={() => props.onChange(props.values[callIndex === 0 ? 2 : 1] ?? props.values[0] ?? 0)}>
           <Text>{`change-${callIndex}`}</Text>
         </Pressable>
       </View>
@@ -66,18 +64,35 @@ describe("DurationInput", () => {
     wheelPickerCalls.length = 0;
   });
 
-  it("uses non-virtualized wheels so it can live inside scrollable form screens", () => {
-    render(<DurationInput valueMs={60 * 60000} onChangeMs={jest.fn()} animateMount={false} />);
+  it("passes value ranges with lazy label formatters to the wheels", () => {
+    render(<DurationInput valueMs={60 * 60000} onChangeMs={jest.fn()} />);
 
     expect(wheelPickerCalls).toHaveLength(2);
-    expect(wheelPickerCalls.every((props) => props.virtualized !== true)).toBe(true);
-    expect(screen.getAllByText("base")).toHaveLength(2);
+
+    const [hourWheel, minuteWheel] = wheelPickerCalls as Array<{
+      values: ReadonlyArray<number>;
+      formatLabel: (value: number) => string;
+    }>;
+
+    expect(hourWheel.values).toHaveLength(24);
+    expect(minuteWheel.values).toHaveLength(60);
+    expect(hourWheel.formatLabel(2)).toBe("2 addHabit.units.hr");
+    expect(minuteWheel.formatLabel(30)).toBe("30 addHabit.units.min");
+  });
+
+  it("hides the zero-minute option while the hour wheel is at zero", () => {
+    render(<DurationInput valueMs={5 * 60000} onChangeMs={jest.fn()} />);
+
+    const minuteWheel = wheelPickerCalls[1] as { values: ReadonlyArray<number> };
+
+    expect(minuteWheel.values).toHaveLength(59);
+    expect(minuteWheel.values[0]).toBe(1);
   });
 
   it("keeps hour and minute wheel changes functional", () => {
     const handleChange = jest.fn();
 
-    render(<DurationInput valueMs={60 * 60000} onChangeMs={handleChange} animateMount={false} />);
+    render(<DurationInput valueMs={60 * 60000} onChangeMs={handleChange} />);
 
     fireEvent.press(screen.getByText("change-0"));
     fireEvent.press(screen.getByText("change-1"));

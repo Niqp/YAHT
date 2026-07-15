@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { BorderRadius, Spacing } from "@/constants/Spacing";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
+import { useUnitLabelFormatter } from "@/i18n/units";
 
 import AppText from "../AppText";
 import PresetPills from "./PresetPills";
@@ -19,49 +20,32 @@ const DURATION_PRESET_VALUES = [
   { hours: 1, value: 60 * 60 * 1000 },
 ] as const;
 
+const HOUR_VALUES = Array.from({ length: 24 }, (_, index) => index);
+const ALL_MINUTE_VALUES = Array.from({ length: 60 }, (_, index) => index);
+const NONZERO_MINUTE_VALUES = ALL_MINUTE_VALUES.slice(1);
+
 interface DurationInputProps {
   valueMs: number;
   onChangeMs: (valueMs: number) => void;
-  animateMount?: boolean;
 }
-function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInputProps) {
+function DurationInput({ valueMs, onChangeMs }: DurationInputProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const formatHourLabel = useUnitLabelFormatter("hr");
+  const formatMinuteLabel = useUnitLabelFormatter("min");
   const normalizedValueMs = Math.max(MIN_DURATION_MS, valueMs);
   const durationPresets = useMemo(
     () =>
       DURATION_PRESET_VALUES.map((preset) => ({
         value: preset.value,
-        label:
-          "hours" in preset
-            ? t("addHabit.units.hr", { count: preset.hours })
-            : t("addHabit.units.min", { count: preset.minutes }),
+        label: "hours" in preset ? formatHourLabel(preset.hours) : formatMinuteLabel(preset.minutes),
       })),
-    [t]
-  );
-  const hourOptions = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, index) => ({
-        value: index,
-        label: t("addHabit.units.hr", { count: index }),
-      })),
-    [t]
-  );
-  const allMinuteOptions = useMemo(
-    () =>
-      Array.from({ length: 60 }, (_, index) => ({
-        value: index,
-        label: t("addHabit.units.min", { count: index }),
-      })),
-    [t]
+    [formatHourLabel, formatMinuteLabel]
   );
 
   const hours = Math.floor(normalizedValueMs / 3600000);
   const minutes = Math.floor((normalizedValueMs % 3600000) / 60000);
-  const minuteOptions = useMemo(
-    () => (hours === 0 ? allMinuteOptions.slice(1) : allMinuteOptions),
-    [allMinuteOptions, hours]
-  );
+  const minuteValues = hours === 0 ? NONZERO_MINUTE_VALUES : ALL_MINUTE_VALUES;
 
   useEffect(() => {
     if (valueMs < MIN_DURATION_MS) {
@@ -93,11 +77,11 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
               {t("form.hour")}
             </AppText>
             <WheelPicker
-              data={hourOptions}
+              values={HOUR_VALUES}
+              formatLabel={formatHourLabel}
               value={hours}
               onChange={handleHoursChange}
               style={styles.picker}
-              animateMount={animateMount}
             />
           </View>
 
@@ -108,11 +92,11 @@ function DurationInput({ valueMs, onChangeMs, animateMount = true }: DurationInp
               {t("form.minute")}
             </AppText>
             <WheelPicker
-              data={minuteOptions}
+              values={minuteValues}
+              formatLabel={formatMinuteLabel}
               value={minutes}
               onChange={handleMinutesChange}
               style={styles.picker}
-              animateMount={animateMount}
             />
           </View>
         </View>

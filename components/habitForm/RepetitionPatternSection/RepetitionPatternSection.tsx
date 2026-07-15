@@ -5,6 +5,7 @@ import { RepetitionType } from "@/types/habit";
 import { addDays, getLocalizedShortDayName, getOrderedWeekDays } from "@/utils/date";
 import { haptic } from "@/utils/haptics";
 import { useTranslation } from "@/i18n";
+import { useUnitLabelFormatter } from "@/i18n/units";
 import { isSupportedLocale } from "@/i18n/locale";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -37,55 +38,44 @@ const SEGMENT_VALUES = [
   RepetitionType.MONTHLY,
 ] as const;
 
-const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
-  repetitionType,
-  setRepetitionType,
+const INTERVAL_VALUES = Array.from({ length: 365 }, (_, index) => index + 1);
+const MONTH_VALUES = Array.from({ length: 24 }, (_, index) => index + 1);
+const INTERVAL_PRESET_VALUES = [1, 2, 3, 7] as const;
+const MONTH_PRESET_VALUES = [1, 2, 3, 6] as const;
+
+function DailyPanel() {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+
+  return (
+    <View style={[styles.panel, styles.centeredPanel]}>
+      <View style={styles.infoBlockCentered}>
+        <View style={[styles.placeholderBadge, { backgroundColor: colors.accentSoftBg }]}>
+          <CalendarDays size={34} color={colors.accent} />
+        </View>
+        <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
+          {t("form.dueEveryDay")}
+        </AppText>
+        <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
+          {t("form.dailyCaption")}
+        </AppText>
+      </View>
+    </View>
+  );
+}
+
+function WeekdaysPanel({
   selectedDays,
   setSelectedDays,
-  customDays,
-  setCustomDays,
-  customMonths,
-  setCustomMonths,
   weekStartDay,
-  errorMessage,
-  presentation = "card",
-  showHeading = true,
-}) => {
+}: {
+  selectedDays: number[];
+  setSelectedDays: (days: number[]) => void;
+  weekStartDay: number;
+}) {
   const { colors } = useTheme();
   const { i18n, t } = useTranslation();
   const locale = isSupportedLocale(i18n.language) ? i18n.language : "en";
-  const intervalOptions = useMemo(
-    () =>
-      Array.from({ length: 365 }, (_, index) => ({
-        value: index + 1,
-        label: t("addHabit.units.day", { count: index + 1 }),
-      })),
-    [t]
-  );
-  const intervalPresets = useMemo(
-    () =>
-      [1, 2, 3, 7].map((value) => ({
-        label: t("addHabit.units.day", { count: value }),
-        value,
-      })),
-    [t]
-  );
-  const monthOptions = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, index) => ({
-        value: index + 1,
-        label: t("addHabit.units.month", { count: index + 1 }),
-      })),
-    [t]
-  );
-  const monthPresets = useMemo(
-    () =>
-      [1, 2, 3, 6].map((value) => ({
-        label: t("addHabit.units.month", { count: value }),
-        value,
-      })),
-    [t]
-  );
 
   const orderedWeekdays = useMemo(() => getOrderedWeekDays(weekStartDay, locale), [locale, weekStartDay]);
   const weekdayOptions = useMemo(
@@ -96,7 +86,6 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
       })),
     [locale, orderedWeekdays]
   );
-  const segmentedIndex = useMemo(() => SEGMENT_VALUES.indexOf(repetitionType), [repetitionType]);
   const selectedDayCount = useMemo(
     () => new Set(selectedDays.filter((day) => day >= 0 && day <= 6)).size,
     [selectedDays]
@@ -122,144 +111,185 @@ const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
     [selectedDays, setSelectedDays]
   );
 
-  const activePanel =
-    repetitionType === RepetitionType.DAILY ? (
-      <View style={[styles.panel, styles.centeredPanel]}>
-        <View style={styles.infoBlockCentered}>
-          <View style={[styles.placeholderBadge, { backgroundColor: colors.accentSoftBg }]}>
-            <CalendarDays size={34} color={colors.accent} />
-          </View>
-          <AppText variant="title" color={colors.textPrimary} style={styles.placeholderTitle}>
-            {t("form.dueEveryDay")}
-          </AppText>
-          <AppText variant="caption" color={colors.textSecondary} style={styles.placeholderCaption}>
-            {t("form.dailyCaption")}
+  return (
+    <View style={styles.panel}>
+      <View style={styles.scheduleControlBlock}>
+        <View style={styles.completionTypeDescription}>
+          <CalendarDays size={24} color={colors.accent} />
+          <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+            {t("form.pickWeekdays")}
           </AppText>
         </View>
-      </View>
-    ) : repetitionType === RepetitionType.WEEKDAYS ? (
-      <View style={styles.panel}>
-        <View style={styles.scheduleControlBlock}>
-          <View style={styles.completionTypeDescription}>
-            <CalendarDays size={24} color={colors.accent} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              {t("form.pickWeekdays")}
-            </AppText>
-          </View>
-          <View style={styles.weekdaySelector}>
-            <View style={styles.weekdayRail}>
-              {weekdayOptions.map((option) => {
-                const isActive = selectedDays.includes(option.value);
+        <View style={styles.weekdaySelector}>
+          <View style={styles.weekdayRail}>
+            {weekdayOptions.map((option) => {
+              const isActive = selectedDays.includes(option.value);
 
-                return (
-                  <Pressable
-                    key={String(option.value)}
-                    onPress={() => handleDayToggle(option.value)}
-                    android_ripple={{ color: colors.ripple, borderless: false }}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isActive }}
-                    style={({ pressed }) => [
-                      styles.weekdayPill,
-                      {
-                        backgroundColor: isActive ? colors.chipSelectedBg : colors.chipBg,
-                        borderColor: isActive ? colors.chipSelectedBorder : colors.chipBorder,
-                      },
-                      !isActive ? styles.weekdayPillInactive : null,
-                      pressed ? styles.weekdayPillPressed : null,
-                    ]}
-                  >
-                    <AppText
-                      variant="small"
-                      color={isActive ? colors.chipSelectedText : colors.chipText}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.82}
-                      style={styles.weekdayPillText}
-                    >
-                      {option.label}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <AppText variant="small" color={selectedDayCount > 0 ? colors.textTertiary : colors.danger}>
-              {selectedDayCount > 0 ? t("form.selectedDays", { count: selectedDayCount }) : t("form.pickAtLeastOneDay")}
-            </AppText>
-            <View style={styles.weekdayPresetRow}>
-              {[
-                { label: t("form.quickWeekdays"), days: quickWeekdayDays },
-                { label: t("form.quickWeekend"), days: quickWeekendDays },
-                { label: t("form.quickEveryDay"), days: quickEveryDayDays },
-              ].map((preset) => (
+              return (
                 <Pressable
-                  key={preset.label}
-                  onPress={() => setSelectedDays(preset.days)}
+                  key={String(option.value)}
+                  onPress={() => handleDayToggle(option.value)}
                   android_ripple={{ color: colors.ripple, borderless: false }}
                   accessibilityRole="button"
+                  accessibilityState={{ selected: isActive }}
                   style={({ pressed }) => [
-                    styles.weekdayPresetButton,
+                    styles.weekdayPill,
                     {
-                      backgroundColor: colors.chipBg,
-                      borderColor: colors.chipBorder,
+                      backgroundColor: isActive ? colors.chipSelectedBg : colors.chipBg,
+                      borderColor: isActive ? colors.chipSelectedBorder : colors.chipBorder,
                     },
+                    !isActive ? styles.weekdayPillInactive : null,
                     pressed ? styles.weekdayPillPressed : null,
                   ]}
                 >
-                  <AppText variant="small" color={colors.chipText} numberOfLines={1} adjustsFontSizeToFit>
-                    {preset.label}
+                  <AppText
+                    variant="small"
+                    color={isActive ? colors.chipSelectedText : colors.chipText}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.82}
+                    style={styles.weekdayPillText}
+                  >
+                    {option.label}
                   </AppText>
                 </Pressable>
-              ))}
-            </View>
+              );
+            })}
+          </View>
+          <AppText variant="small" color={selectedDayCount > 0 ? colors.textTertiary : colors.danger}>
+            {selectedDayCount > 0 ? t("form.selectedDays", { count: selectedDayCount }) : t("form.pickAtLeastOneDay")}
+          </AppText>
+          <View style={styles.weekdayPresetRow}>
+            {[
+              { label: t("form.quickWeekdays"), days: quickWeekdayDays },
+              { label: t("form.quickWeekend"), days: quickWeekendDays },
+              { label: t("form.quickEveryDay"), days: quickEveryDayDays },
+            ].map((preset) => (
+              <Pressable
+                key={preset.label}
+                onPress={() => setSelectedDays(preset.days)}
+                android_ripple={{ color: colors.ripple, borderless: false }}
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.weekdayPresetButton,
+                  {
+                    backgroundColor: colors.chipBg,
+                    borderColor: colors.chipBorder,
+                  },
+                  pressed ? styles.weekdayPillPressed : null,
+                ]}
+              >
+                <AppText variant="small" color={colors.chipText} numberOfLines={1} adjustsFontSizeToFit>
+                  {preset.label}
+                </AppText>
+              </Pressable>
+            ))}
           </View>
         </View>
       </View>
+    </View>
+  );
+}
+
+function IntervalPanel({ customDays, setCustomDays }: { customDays: number; setCustomDays: (days: number) => void }) {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const formatDayLabel = useUnitLabelFormatter("day");
+  const intervalPresets = useMemo(
+    () => INTERVAL_PRESET_VALUES.map((value) => ({ label: formatDayLabel(value), value })),
+    [formatDayLabel]
+  );
+
+  return (
+    <View style={styles.panel}>
+      <View style={styles.scheduleControlBlock}>
+        <View style={styles.completionTypeDescription}>
+          <RotateCcw size={24} color={colors.accent} />
+          <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+            {t("form.dueEveryDays", { count: customDays })}
+          </AppText>
+        </View>
+        <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
+          <WheelPicker
+            values={INTERVAL_VALUES}
+            formatLabel={formatDayLabel}
+            value={customDays}
+            onChange={setCustomDays}
+            style={styles.picker}
+          />
+        </View>
+        <PresetPills options={intervalPresets} selectedValue={customDays} onSelect={setCustomDays} />
+      </View>
+    </View>
+  );
+}
+
+function MonthlyPanel({
+  customMonths,
+  setCustomMonths,
+}: {
+  customMonths: number;
+  setCustomMonths: (months: number) => void;
+}) {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const formatMonthLabel = useUnitLabelFormatter("month");
+  const monthPresets = useMemo(
+    () => MONTH_PRESET_VALUES.map((value) => ({ label: formatMonthLabel(value), value })),
+    [formatMonthLabel]
+  );
+
+  return (
+    <View style={styles.panel}>
+      <View style={styles.scheduleControlBlock}>
+        <View style={styles.completionTypeDescription}>
+          <CalendarCheck size={24} color={colors.accent} />
+          <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
+            {t("form.dueEveryMonths", { count: customMonths })}
+          </AppText>
+        </View>
+        <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
+          <WheelPicker
+            values={MONTH_VALUES}
+            formatLabel={formatMonthLabel}
+            value={customMonths}
+            onChange={setCustomMonths}
+            style={styles.picker}
+          />
+        </View>
+        <PresetPills options={monthPresets} selectedValue={customMonths} onSelect={setCustomMonths} />
+      </View>
+    </View>
+  );
+}
+
+const RepetitionPatternSection: React.FC<RepetitionPatternSectionProps> = ({
+  repetitionType,
+  setRepetitionType,
+  selectedDays,
+  setSelectedDays,
+  customDays,
+  setCustomDays,
+  customMonths,
+  setCustomMonths,
+  weekStartDay,
+  errorMessage,
+  presentation = "card",
+  showHeading = true,
+}) => {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  const segmentedIndex = useMemo(() => SEGMENT_VALUES.indexOf(repetitionType), [repetitionType]);
+
+  const activePanel =
+    repetitionType === RepetitionType.DAILY ? (
+      <DailyPanel />
+    ) : repetitionType === RepetitionType.WEEKDAYS ? (
+      <WeekdaysPanel selectedDays={selectedDays} setSelectedDays={setSelectedDays} weekStartDay={weekStartDay} />
     ) : repetitionType === RepetitionType.INTERVAL ? (
-      <View style={styles.panel}>
-        <View style={styles.scheduleControlBlock}>
-          <View style={styles.completionTypeDescription}>
-            <RotateCcw size={24} color={colors.accent} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              {t("form.dueEveryDays", { count: customDays })}
-            </AppText>
-          </View>
-          <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
-            <WheelPicker
-              data={intervalOptions}
-              value={customDays}
-              onChange={setCustomDays}
-              style={styles.picker}
-              virtualized
-              initialNumToRender={5}
-              maxToRenderPerBatch={8}
-              windowSize={7}
-              animateMount={presentation === "sheet"}
-            />
-          </View>
-          <PresetPills options={intervalPresets} selectedValue={customDays} onSelect={setCustomDays} />
-        </View>
-      </View>
+      <IntervalPanel customDays={customDays} setCustomDays={setCustomDays} />
     ) : (
-      <View style={styles.panel}>
-        <View style={styles.scheduleControlBlock}>
-          <View style={styles.completionTypeDescription}>
-            <CalendarCheck size={24} color={colors.accent} />
-            <AppText variant="body" color={colors.textSecondary} style={styles.completionDescription} numberOfLines={2}>
-              {t("form.dueEveryMonths", { count: customMonths })}
-            </AppText>
-          </View>
-          <View style={[styles.pickerSurface, { backgroundColor: colors.bgInset }]}>
-            <WheelPicker
-              data={monthOptions}
-              value={customMonths}
-              onChange={setCustomMonths}
-              style={styles.picker}
-              animateMount={presentation === "sheet"}
-            />
-          </View>
-          <PresetPills options={monthPresets} selectedValue={customMonths} onSelect={setCustomMonths} />
-        </View>
-      </View>
+      <MonthlyPanel customMonths={customMonths} setCustomMonths={setCustomMonths} />
     );
 
   const content = (
