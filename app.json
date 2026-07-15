@@ -2,7 +2,7 @@
   "expo": {
     "name": "YAHT Habit Tracker",
     "slug": "yaht",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A local-first habit tracker for daily, repetition, and timed habits with reminders, statistics, and data import/export.",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "dev.niqp.yaht",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
