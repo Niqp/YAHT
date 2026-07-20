@@ -82,6 +82,7 @@ function AndroidWebWheelPicker({
   style,
   itemHeight = 40,
   visibleItemCount = 3,
+  virtualized = true,
 }: WheelPickerProps) {
   const { colors } = useTheme();
 
@@ -123,7 +124,7 @@ function AndroidWebWheelPicker({
     enableScrollByTapOnItem: true,
   } as const;
 
-  if (values.length > VIRTUALIZATION_THRESHOLD) {
+  if (virtualized && values.length > VIRTUALIZATION_THRESHOLD) {
     return <VirtualizedBaseWheelPicker {...commonProps} {...VIRTUALIZED_LIST_PROPS} />;
   }
 

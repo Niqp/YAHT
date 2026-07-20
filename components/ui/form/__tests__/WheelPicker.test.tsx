@@ -37,7 +37,14 @@ jest.mock("@quidone/react-native-wheel-picker", () => {
   const React = require("react");
   const { Pressable, Text, View } = require("react-native");
 
-  const BaseWheelPicker = ({ data, value, onValueChanged, renderItem, itemTextStyle, testID = "base-wheel-picker" }: any) => (
+  const BaseWheelPicker = ({
+    data,
+    value,
+    onValueChanged,
+    renderItem,
+    itemTextStyle,
+    testID = "base-wheel-picker",
+  }: any) => (
     <View testID={testID}>
       <Text>{`selected:${String(value)}`}</Text>
       {data.map((item: { value: number }, index: number) => (
@@ -124,5 +131,16 @@ describe("WheelPicker", () => {
     expect(screen.getByTestId("virtualized-wheel-picker")).toBeOnTheScreen();
     // Default label falls back to String(value).
     expect(screen.getByText("42")).toBeOnTheScreen();
+  });
+
+  it("can keep a large wheel non-virtualized inside a ScrollView", () => {
+    setPlatform("android");
+
+    const values = Array.from({ length: 60 }, (_, index) => index);
+
+    render(<WheelPicker values={values} value={0} onChange={jest.fn()} virtualized={false} />);
+
+    expect(screen.getByTestId("base-wheel-picker")).toBeOnTheScreen();
+    expect(screen.queryByTestId("virtualized-wheel-picker")).not.toBeOnTheScreen();
   });
 });

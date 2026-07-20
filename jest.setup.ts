@@ -8,11 +8,3 @@ jest.mock("expo-splash-screen", () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
   hideAsync: jest.fn(() => Promise.resolve()),
 }));
-
-jest.mock("react-native-emoji-popup", () => {
-  const React = require("react");
-
-  return {
-    EmojiPopup: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
-  };
-});

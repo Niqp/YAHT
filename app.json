@@ -2,15 +2,13 @@
   "expo": {
     "name": "YAHT Habit Tracker",
     "slug": "yaht",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "A local-first habit tracker for daily, repetition, and timed habits with reminders, statistics, and data import/export.",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "icon": "./assets/images/icon.png",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "dev.niqp.yaht",
@@ -21,10 +19,7 @@
     },
     "android": {
       "package": "dev.niqp.yaht",
-      "permissions": [
-        "android.permission.SCHEDULE_EXACT_ALARM",
-        "android.permission.VIBRATE"
-      ],
+      "permissions": ["android.permission.SCHEDULE_EXACT_ALARM", "android.permission.VIBRATE"],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
@@ -42,10 +37,7 @@
       "output": "static",
       "build": {
         "babel": {
-          "include": [
-            "@gorhom/bottom-sheet",
-            "react-native-reanimated"
-          ]
+          "include": ["@gorhom/bottom-sheet", "react-native-reanimated"]
         }
       }
     },

@@ -3,13 +3,15 @@ import { Platform, StyleProp, ViewStyle } from "react-native";
 export interface WheelPickerProps {
   /** Domain values only — labels are produced lazily per rendered row via formatLabel. */
   values: ReadonlyArray<number>;
-  /** Localized label for a value. Defaults to String(value). Called only for visible rows on Android. */
+  /** Localized label for a value. Defaults to String(value). */
   formatLabel?: (value: number) => string;
   value: number;
   onChange: (value: number) => void;
   style?: StyleProp<ViewStyle>;
   itemHeight?: number;
   visibleItemCount?: number;
+  /** Disable when the wheel is rendered inside a same-axis ScrollView. */
+  virtualized?: boolean;
 }
 
 export const DEFAULT_WHEEL_PICKER_HEIGHT = 120;

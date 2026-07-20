@@ -32,6 +32,8 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ title, setTitle, ic
             value={title}
             onChangeText={setTitle}
             placeholder={t("form.habitTitlePlaceholder")}
+            returnKeyType="done"
+            submitBehavior="blurAndSubmit"
             accessibilityLabel={t("form.habitTitle")}
             accessibilityHint={t("form.habitTitleHint")}
           />

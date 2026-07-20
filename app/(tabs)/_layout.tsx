@@ -3,11 +3,14 @@ import { Tabs } from "expo-router";
 import { Home, BarChart2, Settings } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { Platform, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Spacing } from "@/constants/Spacing";
 import { Typography } from "@/constants/Typography";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "@/i18n";
+
+const TAB_BAR_CONTENT_HEIGHT = 55;
 
 const TAB_SCREENS = [
   {
@@ -27,22 +30,27 @@ const TAB_SCREENS = [
 export default function TabsLayout() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
-  const tabBarPlatformStyle = useMemo(
-    () =>
-      Platform.select({
-        ios: {
-          borderTopColor: colors.navBorder,
-          borderTopWidth: StyleSheet.hairlineWidth,
-        },
-        android: {
-          elevation: 8,
-          borderTopColor: colors.navBorder,
-          borderTopWidth: 1,
-        },
-      }) ?? {},
-    [colors.navBorder]
-  );
+  const tabBarPlatformStyle = useMemo(() => {
+    if (Platform.OS === "android") {
+      return {
+        elevation: 8,
+        borderTopColor: colors.navBorder,
+        borderTopWidth: 1,
+        height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+      };
+    }
+
+    if (Platform.OS === "ios") {
+      return {
+        borderTopColor: colors.navBorder,
+        borderTopWidth: StyleSheet.hairlineWidth,
+      };
+    }
+
+    return {};
+  }, [colors.navBorder, insets.bottom]);
 
   const screenOptions = useMemo<BottomTabNavigationOptions>(
     () => ({
@@ -52,7 +60,7 @@ export default function TabsLayout() {
       tabBarStyle: {
         backgroundColor: colors.navBg,
         ...tabBarPlatformStyle,
-        minHeight: 60,
+        minHeight: TAB_BAR_CONTENT_HEIGHT,
       },
       tabBarLabelStyle: {
         ...Typography.small,

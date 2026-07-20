@@ -12,7 +12,7 @@ import { usePreventRemove } from "@react-navigation/native";
 import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { CalendarDays, CheckSquare, Bell } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Keyboard, KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TFunction } from "i18next";
 
@@ -256,7 +256,6 @@ export default function AddEditHabitScreen() {
   const setCompletionError = useAddHabitDraftStore((state) => state.setCompletionError);
   const markDraftClean = useAddHabitDraftStore((state) => state.markClean);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const hasInitializedFormRef = useRef(false);
   const hasHandledMissingHabitRef = useRef(false);
@@ -386,18 +385,6 @@ export default function AddEditHabitScreen() {
 
     hasInitializedFormRef.current = true;
   }, [habit, habitId, isHydrated, loadHabit, navigateBack, t]);
-
-  // Workaround for RN #52596: KeyboardAvoidingView leaves residual bottom padding on Android
-  // after keyboard dismissal. Disabling it on hide forces an immediate offset reset to zero.
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", () => setIsKeyboardVisible(true));
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => setIsKeyboardVisible(false));
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   const getPanelParams = useCallback(() => (habitId ? { habitId } : undefined), [habitId]);
 
@@ -603,11 +590,12 @@ export default function AddEditHabitScreen() {
         }}
       />
 
-      <KeyboardAvoidingView behavior="padding" enabled={isKeyboardVisible} style={styles.keyboardContainer}>
+      <View style={styles.contentContainer}>
         <ScrollView
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
           <BasicInfoSection title={title} setTitle={setTitle} icon={icon} setIcon={setIcon} errorMessage={titleError} />
@@ -694,7 +682,7 @@ export default function AddEditHabitScreen() {
             />
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 }
@@ -703,7 +691,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  keyboardContainer: {
+  contentContainer: {
     flex: 1,
   },
   scrollContainer: {

@@ -100,6 +100,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
                 value={hour}
                 onChange={setHour}
                 style={styles.picker}
+                virtualized={false}
               />
             </View>
 
@@ -119,6 +120,7 @@ const ReminderSection: React.FC<ReminderSectionProps> = ({
                 value={minute}
                 onChange={setMinute}
                 style={styles.picker}
+                virtualized={false}
               />
             </View>
           </View>
