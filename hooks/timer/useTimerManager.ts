@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { useHabitStore } from "@/store/habitStore";
+import { useTimerClockStore } from "@/store/timerClockStore";
 import { logError, logEvent } from "@/utils/diagnostics/diagnosticLogger";
 import { cancelAllTimerNotifications, scheduleTimerNotification } from "@/utils/notifications";
 import { getTimerRemainingMs } from "@/utils/timer";
@@ -17,25 +18,52 @@ export const useTimerManager = () => {
   // Use individual selectors instead of returning an object
   const isHydrated = useHabitStore((state) => state._hasHydrated);
   const activeTimers = useHabitStore((state) => state.activeTimers);
-  const habits = useHabitStore((state) => state.habits);
   const tickForeground = useHabitStore((state) => state.tickForeground);
   const reconcileActiveTimers = useHabitStore((state) => state.reconcileActiveTimers);
 
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isColdLaunch = useRef(true);
+  const isReconcilingRef = useRef(false);
+  const shouldRunForegroundTickerRef = useRef(true);
+
+  const stopForegroundTicker = useCallback(() => {
+    if (!timerIntervalRef.current) return;
+
+    clearInterval(timerIntervalRef.current);
+    timerIntervalRef.current = null;
+  }, []);
+
+  const updateAllActiveTimers = useCallback(() => {
+    const nowMs = Date.now();
+    useTimerClockStore.getState().setNowMs(nowMs);
+    void tickForeground(nowMs);
+  }, [tickForeground]);
+
+  const startForegroundTicker = useCallback(() => {
+    stopForegroundTicker();
+
+    if (Object.keys(useHabitStore.getState().activeTimers).length === 0) return;
+
+    updateAllActiveTimers();
+    timerIntervalRef.current = setInterval(updateAllActiveTimers, TIMER_UPDATE_INTERVAL);
+  }, [stopForegroundTicker, updateAllActiveTimers]);
 
   const reconcileTimers = useCallback(async () => {
+    isReconcilingRef.current = true;
+    stopForegroundTicker();
+
     try {
       await reconcileActiveTimers();
     } catch (error) {
       if (error instanceof Error) console.error(`Error reconciling active timers: ${error.message}`, error);
       logError("timer.reconcile.failed", { operation: "reconcileActiveTimers", error });
+    } finally {
+      isReconcilingRef.current = false;
+      if (shouldRunForegroundTickerRef.current) {
+        startForegroundTicker();
+      }
     }
-  }, [reconcileActiveTimers]);
-
-  const updateAllActiveTimers = useCallback(() => {
-    void tickForeground(Date.now());
-  }, [tickForeground]);
+  }, [reconcileActiveTimers, startForegroundTicker, stopForegroundTicker]);
 
   const clearTimerNotifications = useCallback(async () => {
     try {
@@ -54,8 +82,10 @@ export const useTimerManager = () => {
       const nowMs = Date.now();
       const schedulingTasks: Promise<unknown>[] = [];
 
-      for (const [habitId, dateTimers] of Object.entries(activeTimers)) {
-        const habit = habits[habitId];
+      const { activeTimers: currentActiveTimers, habits: currentHabits } = useHabitStore.getState();
+
+      for (const [habitId, dateTimers] of Object.entries(currentActiveTimers)) {
+        const habit = currentHabits[habitId];
         if (!habit) continue;
 
         for (const [date, timer] of Object.entries(dateTimers)) {
@@ -76,38 +106,23 @@ export const useTimerManager = () => {
         error,
       });
     }
-  }, [activeTimers, habits]);
+  }, []);
 
   useLayoutEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
-
-    // Clear any existing interval first
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
+    if (!isHydrated) return;
 
     const hasActiveTimers = Object.keys(activeTimers).length > 0;
 
     if (!hasActiveTimers) {
+      stopForegroundTicker();
       void clearTimerNotifications();
+    } else if (shouldRunForegroundTickerRef.current && !isColdLaunch.current && !isReconcilingRef.current) {
+      void clearTimerNotifications();
+      startForegroundTicker();
     }
 
-    if (hasActiveTimers && appStateRef.current === "active") {
-      void clearTimerNotifications();
-      timerIntervalRef.current = setInterval(updateAllActiveTimers, TIMER_UPDATE_INTERVAL);
-    }
-
-    // Clean up on unmount or when dependencies change
-    return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        timerIntervalRef.current = null;
-      }
-    };
-  }, [activeTimers, clearTimerNotifications, isHydrated, updateAllActiveTimers]);
+    return stopForegroundTicker;
+  }, [activeTimers, clearTimerNotifications, isHydrated, startForegroundTicker, stopForegroundTicker]);
 
   // Handle app state changes
   useEffect(() => {
@@ -118,37 +133,46 @@ export const useTimerManager = () => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       try {
         const previousAppState = appStateRef.current;
+        appStateRef.current = nextAppState;
 
-        if (previousAppState.match(/inactive|background/) && nextAppState === "active") {
+        if (nextAppState.match(/inactive|background/)) {
+          shouldRunForegroundTickerRef.current = false;
+          stopForegroundTicker();
+          void scheduleBackgroundTimerNotifications();
+        } else if (
+          nextAppState === "active" &&
+          (previousAppState === "inactive" || previousAppState === "background")
+        ) {
+          shouldRunForegroundTickerRef.current = true;
           void clearTimerNotifications();
           void reconcileTimers();
         }
 
-        if (previousAppState === "active" && nextAppState.match(/inactive|background/)) {
-          void scheduleBackgroundTimerNotifications();
-        }
-
         logEvent("timer.appStateHandled", { appState: nextAppState });
-        appStateRef.current = nextAppState;
       } catch (error) {
         if (error instanceof Error) console.error(`Error handling app state change: ${error.message}`, error);
         logError("timer.appStateFailed", { operation: "handleAppStateChange", error });
       }
     };
 
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+
     if (isColdLaunch.current) {
-      // App was launched from a cold state, reconcile all active timers once.
+      // Reconcile persisted timestamps before starting the foreground ticker.
+      isColdLaunch.current = false;
       void clearTimerNotifications();
       void reconcileTimers();
-      isColdLaunch.current = false;
     }
-
-    // Subscribe to app state changes
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
 
     // Cleanup on unmount
     return () => {
       subscription.remove();
     };
-  }, [clearTimerNotifications, isHydrated, reconcileTimers, scheduleBackgroundTimerNotifications]);
+  }, [
+    clearTimerNotifications,
+    isHydrated,
+    reconcileTimers,
+    scheduleBackgroundTimerNotifications,
+    stopForegroundTicker,
+  ]);
 };

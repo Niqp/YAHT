@@ -1,8 +1,9 @@
 import React from "react";
-import { render, screen } from "@testing-library/react-native";
+import { act, render, screen } from "@testing-library/react-native";
 import { Colors } from "@/constants/Colors";
 import { CompletionType, RepetitionType, type Habit, type HabitMap } from "@/types/habit";
 import HabitItem from "../HabitItem";
+import { useTimerClockStore } from "@/store/timerClockStore";
 
 const mockOnLongPress = jest.fn();
 
@@ -13,7 +14,6 @@ const mockState: {
   activateTimer: jest.Mock;
   removeTimer: jest.Mock;
   activeTimers: Record<string, Record<string, unknown>>;
-  timerRenderTickMs: number;
 } = {
   habits: {},
   selectedDate: "2026-02-20",
@@ -21,7 +21,6 @@ const mockState: {
   activateTimer: jest.fn(),
   removeTimer: jest.fn(),
   activeTimers: {},
-  timerRenderTickMs: 0,
 };
 
 jest.mock("@/store/habitStore", () => ({
@@ -68,7 +67,7 @@ describe("HabitItem presentation states", () => {
       "habit-1": makeHabit(),
     };
     mockState.activeTimers = {};
-    mockState.timerRenderTickMs = 0;
+    useTimerClockStore.setState({ nowMs: 0 });
   });
 
   it("dims scheduled future habits", () => {
@@ -97,5 +96,32 @@ describe("HabitItem presentation states", () => {
       backgroundColor: Colors.sepia.light.dangerSoftBg,
       opacity: 1,
     });
+  });
+
+  it("advances an active timed habit from the shared render clock without pausing", () => {
+    const resumedAt = "2026-02-20T10:00:00.000Z";
+    mockState.habits = {
+      "habit-1": makeHabit({
+        completion: { type: CompletionType.TIMED, goal: 60_000 },
+        completionHistory: {
+          "2026-02-20": { isCompleted: false, value: 0 },
+        },
+      }),
+    };
+    mockState.activeTimers = {
+      "habit-1": {
+        "2026-02-20": { id: "timer-1", lastResumedAt: resumedAt },
+      },
+    };
+    useTimerClockStore.setState({ nowMs: new Date(resumedAt).valueOf() });
+
+    render(<HabitItem habitId="habit-1" onLongPress={mockOnLongPress} />);
+    expect(screen.getByText("00:00:00 / 00:01:00")).toBeTruthy();
+
+    act(() => {
+      useTimerClockStore.getState().setNowMs(new Date(resumedAt).valueOf() + 1_000);
+    });
+
+    expect(screen.getByText("00:00:01 / 00:01:00")).toBeTruthy();
   });
 });

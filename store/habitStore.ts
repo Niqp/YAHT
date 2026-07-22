@@ -17,7 +17,6 @@ export interface HabitState {
   habits: HabitMap;
   selectedDate: string;
   activeTimers: TimerMap;
-  timerRenderTickMs: number;
   error: string | null;
 
   // Methods will be implemented in slices

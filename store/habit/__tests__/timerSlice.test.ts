@@ -17,10 +17,7 @@ jest.mock("expo-crypto", () => ({
 const DATE = "2026-02-16";
 const DEFAULT_NOW = "2026-02-16T10:00:00.000Z";
 
-type TimerHarnessState = Pick<
-  HabitState,
-  "habits" | "activeTimers" | "selectedDate" | "error" | "timerRenderTickMs"
-> & {
+type TimerHarnessState = Pick<HabitState, "habits" | "activeTimers" | "selectedDate" | "error"> & {
   updateCompletion: HabitState["updateCompletion"];
   updateCompletionMultiple: HabitState["updateCompletionMultiple"];
 };
@@ -44,7 +41,6 @@ function createHarness(initialHabits: HabitMap, selectedDate = DATE) {
     activeTimers: {},
     selectedDate,
     error: null,
-    timerRenderTickMs: 0,
     updateCompletion: async () => {},
     updateCompletionMultiple: async () => {},
   };
@@ -310,11 +306,5 @@ describe("createTimerSlice behavior", () => {
     expect(harness.getState().habits.h1.completionHistory[DATE]).toEqual({ isCompleted: true, value: 2_000 });
     expect(cancelTimerNotification).toHaveBeenCalledWith("timer-1");
     expect(harness.getState().activeTimers.h1).toBeUndefined();
-  });
-
-  it("ticks foreground render signal", () => {
-    const harness = createHarness({ h1: makeHabit({ id: "h1" }) });
-    harness.slice.tickForeground(1234);
-    expect(harness.getState().timerRenderTickMs).toBe(1234);
   });
 });

@@ -2,6 +2,7 @@ import { useHabitProgress } from "@/hooks/habit/useHabitProgress";
 import { useHabitDisplay } from "@/hooks/habit/useHabitDisplay";
 import { useTheme } from "@/hooks/useTheme";
 import { useHabitStore } from "@/store/habitStore";
+import { useTimerClockStore } from "@/store/timerClockStore";
 import { Habit, CompletionType } from "@/types/habit";
 import type { HabitPresentationStatus } from "@/utils/habitPresentation";
 import { getEpochMilliseconds } from "@/utils/date";
@@ -41,7 +42,7 @@ export default function HabitItem({ habitId, onLongPress, presentationStatus = "
   const startTimer = useHabitStore((state) => state.activateTimer);
   const removeTimer = useHabitStore((state) => state.removeTimer);
   const timer = useHabitStore((state) => state.activeTimers[habitId]?.[selectedDate]);
-  const timerRenderTickMs = useHabitStore((state) => state.timerRenderTickMs);
+  const timerRenderTickMs = useTimerClockStore((state) => (timer?.lastResumedAt ? state.nowMs : 0));
   const isTimerActive = !!timer?.lastResumedAt;
 
   const elapsedTime = React.useMemo(() => {

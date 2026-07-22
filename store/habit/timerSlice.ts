@@ -12,7 +12,6 @@ import { logEvent } from "@/utils/diagnostics/diagnosticLogger";
 
 export interface TimerSlice {
   activeTimers: TimerMap;
-  timerRenderTickMs: number;
   tickForeground: (nowMs?: number) => Promise<void>;
   reconcileActiveTimers: (nowIso?: string) => Promise<void>;
   activateTimer: (habitId: string, date: DateStamp) => void;
@@ -21,11 +20,9 @@ export interface TimerSlice {
 
 export const createTimerSlice: StateCreator<HabitState, [], [], TimerSlice> = (set, get) => ({
   activeTimers: {},
-  timerRenderTickMs: Date.now(),
 
   tickForeground: async (nowMs) => {
     const resolvedNowMs = nowMs ?? Date.now();
-    set({ timerRenderTickMs: resolvedNowMs });
     await processActiveTimers({
       set,
       get,

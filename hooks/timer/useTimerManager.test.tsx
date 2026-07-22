@@ -4,6 +4,7 @@ import { AppState, AppStateStatus } from "react-native";
 import { useTimerManager } from "@/hooks/timer/useTimerManager";
 import { cancelAllTimerNotifications, scheduleTimerNotification } from "@/utils/notifications";
 import { CompletionType, RepetitionType, type Habit } from "@/types/habit";
+import { useTimerClockStore } from "@/store/timerClockStore";
 
 let appStateListener: ((status: AppStateStatus) => void) | undefined;
 const removeListener = jest.fn();
@@ -47,6 +48,8 @@ function TestComponent() {
 describe("useTimerManager", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    appStateListener = undefined;
+    useTimerClockStore.setState({ nowMs: 0 });
     jest.useFakeTimers();
     jest.spyOn(Date, "now").mockReturnValue(new Date("2026-02-16T10:00:00.000Z").valueOf());
     Object.defineProperty(AppState, "currentState", {
@@ -88,7 +91,7 @@ describe("useTimerManager", () => {
     expect(cancelAllTimerNotifications).toHaveBeenCalledTimes(3);
   });
 
-  it("starts foreground ticking when active timers exist", () => {
+  it("starts the shared foreground ticker when active timers exist", async () => {
     mockStoreState.activeTimers = {
       h1: {
         "2026-02-16": { id: "timer-1", lastResumedAt: "2026-02-16T09:00:00.000Z" },
@@ -96,12 +99,41 @@ describe("useTimerManager", () => {
     };
 
     render(<TestComponent />);
+    await act(async () => {
+      await Promise.resolve();
+    });
 
+    const callsAfterReconcile = mockStoreState.tickForeground.mock.calls.length;
     act(() => {
       jest.advanceTimersByTime(1000);
     });
 
-    expect(mockStoreState.tickForeground).toHaveBeenCalled();
+    expect(mockStoreState.tickForeground).toHaveBeenCalledTimes(callsAfterReconcile + 1);
+    expect(useTimerClockStore.getState().nowMs).toBe(new Date("2026-02-16T10:00:00.000Z").valueOf());
+  });
+
+  it("starts ticking when Android AppState is unresolved at cold launch", async () => {
+    Object.defineProperty(AppState, "currentState", {
+      configurable: true,
+      value: null,
+    });
+    mockStoreState.activeTimers = {
+      h1: {
+        "2026-02-16": { id: "timer-1", lastResumedAt: "2026-02-16T09:00:00.000Z" },
+      },
+    };
+
+    render(<TestComponent />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const callsAfterReconcile = mockStoreState.tickForeground.mock.calls.length;
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(mockStoreState.tickForeground).toHaveBeenCalledTimes(callsAfterReconcile + 1);
   });
 
   it("cancels all notifications when no active timers exist", () => {
@@ -123,5 +155,39 @@ describe("useTimerManager", () => {
     });
 
     expect(scheduleTimerNotification).toHaveBeenCalledWith("timer-1", "Habit h1", 2_000);
+  });
+
+  it("stops ticking in background and restarts after foreground reconciliation", async () => {
+    mockStoreState.activeTimers = {
+      h1: {
+        "2026-02-16": { id: "timer-1", lastResumedAt: "2026-02-16T09:00:00.000Z" },
+      },
+    };
+
+    render(<TestComponent />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    act(() => {
+      appStateListener?.("background");
+    });
+    const callsAtBackground = mockStoreState.tickForeground.mock.calls.length;
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+    expect(mockStoreState.tickForeground).toHaveBeenCalledTimes(callsAtBackground);
+
+    await act(async () => {
+      appStateListener?.("active");
+      await Promise.resolve();
+    });
+    const callsAfterForegroundReconcile = mockStoreState.tickForeground.mock.calls.length;
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+    expect(mockStoreState.tickForeground).toHaveBeenCalledTimes(callsAfterForegroundReconcile + 1);
   });
 });

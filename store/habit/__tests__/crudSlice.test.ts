@@ -16,7 +16,7 @@ jest.mock("expo-crypto", () => ({
 
 // ─── Harness ──────────────────────────────────────────────────────────────────
 
-type CRUDHarnessState = Pick<HabitState, "habits" | "activeTimers" | "selectedDate" | "error" | "timerRenderTickMs">;
+type CRUDHarnessState = Pick<HabitState, "habits" | "activeTimers" | "selectedDate" | "error">;
 
 function createHarness(initialHabits: HabitMap = {}) {
   let state: CRUDHarnessState = {
@@ -24,7 +24,6 @@ function createHarness(initialHabits: HabitMap = {}) {
     activeTimers: {},
     selectedDate: "2026-01-01",
     error: null,
-    timerRenderTickMs: 0,
   };
 
   const set = (updater: Partial<HabitState> | ((s: HabitState) => Partial<HabitState>)) => {

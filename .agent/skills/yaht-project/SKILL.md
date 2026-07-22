@@ -44,7 +44,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/`        | Expo Router pages. Root `_layout.tsx` provides GestureHandler, SafeArea, React Navigation theme, BottomSheet, and TimerManager providers. Tabs: `today`, `stats`, `settings`. `app/add/` is a modal nested native-stack flow for create/edit, with `index.tsx` as the main form and child routes for completion, repetition, and reminders.                                                                      |
 | `components/` | UI components grouped by feature in subfolders. Each component may have a colocated `.styles.ts` file.                                                                                                                                                                                                                                                                                                           |
-| `store/`      | Zustand stores. `habitStore.ts` is the main store composed of slices in `store/habit/`. `themeStore.ts` handles appearance + `weekStartDay`.                                                                                                                                                                                                                                                                     |
+| `store/`      | Zustand stores. `habitStore.ts` is the persisted domain store composed of slices in `store/habit/`; `timerClockStore.ts` is the non-persisted shared render clock for active timed cards. `themeStore.ts` handles appearance + `weekStartDay`.                                                                                                                                                                   |
 | `hooks/`      | Custom hooks. `timer/useTimerManager.ts` handles background/foreground timer sync. `habit/` has display and progress hooks. `useStats.ts` computes statistics. `useTheme.ts` wraps `themeStore`.                                                                                                                                                                                                                 |
 | `i18n/`       | Localization bootstrap and catalogs. `index.ts` initializes i18next/ICU and exports React/non-React translation helpers, `locale.ts` resolves supported device locales, and `locales/*.ts` contains English/Russian message catalogs.                                                                                                                                                                            |
 | `types/`      | TypeScript type definitions: `habit.ts` (core domain types), `timer.ts`, `date.ts` (string type aliases).                                                                                                                                                                                                                                                                                                        |
@@ -60,7 +60,7 @@ description: Comprehensive context and patterns for working with the YAHT (Yet A
 
 ### Zustand Slice Pattern
 
-The app uses a **single Zustand store** composed of slices spread into the root creator:
+The app uses a **main persisted Zustand store** composed of slices spread into the root creator:
 
 ```typescript
 export const useHabitStore = create<HabitState>()(
@@ -103,13 +103,15 @@ export const useHabitStore = create<HabitState>()(
 
 ### Timer System
 
-Timestamp-based approach across `store/habit/timerSlice.ts` and `hooks/timer/useTimerManager.ts`:
+Timestamp-based approach across `store/habit/timerSlice.ts`, `store/timerClockStore.ts`, and `hooks/timer/useTimerManager.ts`:
 
-1. `activateTimer()` stores `lastResumedAt` ISO timestamp
-2. `useTimerManager` ticks every 1s via `setInterval`, calling `tickForeground(nowMs)`
-3. On foreground resume, `reconcileActiveTimers()` recalculates true elapsed time from `lastResumedAt`
-4. Auto-completes habits when `elapsedTime + storedValue >= goal`
-5. `TimerManager` component in root layout mounts the hook
+1. `activateTimer()` persists a `lastResumedAt` ISO timestamp; timestamps, not interval counts, are the elapsed-time source of truth.
+2. One foreground `setInterval` updates the non-persisted `timerClockStore` every second and calls `tickForeground(nowMs)` for goal processing.
+3. Only active timed habit cards subscribe to the shared render clock; the persisted habit store is not rewritten for ordinary display ticks.
+4. On background transition, `useTimerManager` stops the foreground ticker and schedules native timer notifications.
+5. On cold launch or foreground resume, `reconcileActiveTimers()` commits elapsed time from `lastResumedAt` before the shared ticker restarts.
+6. Goal processing either keeps the timer active beyond completion or clamps/removes it according to `timedHabitGoalBehavior`.
+7. The root layout mounts `useTimerManager`.
 
 ### Reminder Notification System
 
