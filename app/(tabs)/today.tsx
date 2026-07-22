@@ -53,7 +53,7 @@ export default function TodayScreen() {
     setSelectedHabit(habit);
   }, []);
 
-  const closeBottomSheet = useCallback(() => {
+  const dismissBottomSheet = useCallback(() => {
     setSelectedHabit(null);
   }, []);
 
@@ -84,9 +84,7 @@ export default function TodayScreen() {
           )}
         </View>
       </View>
-      {showContent ? (
-        <HabitBottomSheet habit={selectedHabit} onClose={closeBottomSheet} isOpen={selectedHabit !== null} />
-      ) : null}
+      {showContent && selectedHabit ? <HabitBottomSheet habit={selectedHabit} onDismiss={dismissBottomSheet} /> : null}
     </View>
   );
 }

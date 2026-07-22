@@ -5,7 +5,7 @@ import type { Habit } from "@/types/habit";
 import type BottomSheet from "@gorhom/bottom-sheet";
 import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Spacing } from "@/constants/Spacing";
 import styles from "./HabitBottomSheet.styles";
@@ -15,15 +15,13 @@ import HabitBottomSheetHeader from "./HabitBottomSheetHeader/HabitBottomSheetHea
 import HabitBottomSheetStatus from "./HabitBottomSheetStatus/HabitBottomSheetStatus";
 
 interface HabitBottomSheetProps {
-  habit: Habit | null;
-  isOpen: boolean;
-  onClose: () => void;
+  habit: Habit;
+  onDismiss: () => void;
 }
 
-export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottomSheetProps) {
+export default function HabitBottomSheet({ habit, onDismiss }: HabitBottomSheetProps) {
   const insets = useSafeAreaInsets();
-  const habitId = habit?.id;
-  const liveHabit = useHabitStore((state) => (habitId ? (state.habits[habitId] ?? null) : null));
+  const liveHabit = useHabitStore((state) => state.habits[habit.id] ?? null);
   const deleteHabit = useHabitStore((state) => state.deleteHabit);
   const updateCompletion = useHabitStore((state) => state.updateCompletion);
   const selectedDate = useHabitStore((state) => state.selectedDate);
@@ -32,22 +30,26 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
   const isCompleted = !!liveHabit?.completionHistory?.[selectedDate]?.isCompleted;
   const currentValue = liveHabit?.completionHistory?.[selectedDate]?.value || 0;
 
+  const closeBottomSheet = useCallback(() => {
+    bottomSheetRef.current?.close();
+  }, []);
+
   const handleEdit = useCallback(() => {
     if (liveHabit) {
       router.push({
         pathname: "/add",
         params: { habitId: liveHabit.id },
       });
-      onClose();
+      closeBottomSheet();
     }
-  }, [liveHabit, onClose]);
+  }, [liveHabit, closeBottomSheet]);
 
   const handleDelete = useCallback(() => {
     if (liveHabit) {
       deleteHabit(liveHabit.id);
-      onClose();
+      closeBottomSheet();
     }
-  }, [liveHabit, deleteHabit, onClose]);
+  }, [liveHabit, deleteHabit, closeBottomSheet]);
 
   const handleComplete = useCallback(() => {
     if (liveHabit) {
@@ -58,17 +60,17 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
       } else if (liveHabit.completion.type === "timed" && liveHabit.completion.goal) {
         updateCompletion({ id: liveHabit.id, value: liveHabit.completion.goal });
       }
-      onClose();
+      closeBottomSheet();
     }
-  }, [liveHabit, updateCompletion, onClose]);
+  }, [liveHabit, updateCompletion, closeBottomSheet]);
 
   // Handle marking a habit as incomplete
   const handleReset = useCallback(() => {
     if (liveHabit) {
       updateCompletion({ id: liveHabit.id, value: 0 });
-      onClose();
+      closeBottomSheet();
     }
-  }, [liveHabit, updateCompletion, onClose]);
+  }, [liveHabit, updateCompletion, closeBottomSheet]);
 
   const handleIncrement = useCallback(() => {
     if (liveHabit && liveHabit.completion.type === "repetitions") {
@@ -82,30 +84,18 @@ export default function HabitBottomSheet({ habit, isOpen, onClose }: HabitBottom
     }
   }, [liveHabit, currentValue, updateCompletion]);
 
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    if (isOpen) {
-      // Small delay to allow BottomSheet to measure the newly rendered content
-      timeoutId = setTimeout(() => {
-        bottomSheetRef.current?.expand();
-      }, 50);
-    } else {
-      bottomSheetRef.current?.close();
-    }
-    return () => clearTimeout(timeoutId);
-  }, [isOpen]);
-
   return (
     <AppBottomSheet
       ref={bottomSheetRef}
+      index={0}
       enableDynamicSizing={true}
       onChange={(index) => {
-        if (index === -1) onClose();
+        if (index === -1) onDismiss();
       }}
     >
       {!!liveHabit && (
         <BottomSheetView style={[styles.contentContainer, { paddingBottom: insets.bottom + Spacing.lg }]}>
-          <HabitBottomSheetHeader habit={liveHabit} onClose={onClose} />
+          <HabitBottomSheetHeader habit={liveHabit} onClose={closeBottomSheet} />
           <HabitBottomSheetStatus habit={liveHabit} isCompleted={isCompleted} selectedDate={selectedDate} />
           <HabitBottomSheetActions
             habit={liveHabit}
